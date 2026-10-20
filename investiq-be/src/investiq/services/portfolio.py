@@ -8,7 +8,7 @@ from uuid import UUID
 from sqlalchemy import delete, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from investiq.adapters.market import EXCHANGE_TZ
+from investiq.adapters.market import EXCHANGE_TZ, FIXTURE_DATASETS
 from investiq.analytics.portfolio import allocate
 from investiq.core.errors import AppError
 from investiq.core.security import Principal
@@ -212,7 +212,7 @@ class PortfolioService:
                     PriceSnapshot.source_published_at <= instant,
                     IngestionRun.status == "succeeded",
                     IngestionRun.provider == "investiq-synthetic",
-                    IngestionRun.dataset_version == "fixture-v1",
+                    IngestionRun.dataset_version.in_(FIXTURE_DATASETS),
                     IngestionRun.data_kind == "fixture",
                 )
                 .order_by(Instrument.id)

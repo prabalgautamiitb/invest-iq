@@ -14,6 +14,7 @@ from investiq.schemas.contest import (
     InvitationOut,
     InvitationPage,
     Level,
+    Organizer,
     Status,
     TransitionInput,
     Visibility,
@@ -55,9 +56,10 @@ async def listing(
     principal: Viewer,
     query: Annotated[str, Query(max_length=100)] = "",
     visibility: Visibility | None = None,
+    organizer: Organizer | None = None,
     level: Level | None = None,
     status: Status | None = None,
-    scope: Literal["discover", "joined", "hosted"] = "discover",
+    scope: Literal["discover", "joined", "hosted", "managed"] = "discover",
     sort: Literal["name", "-name"] = "name",
     cursor: Cursor = None,
     limit: Limit = 20,
@@ -66,6 +68,7 @@ async def listing(
         principal,
         query=query,
         visibility=visibility,
+        organizer=organizer,
         level=level,
         status=status,
         scope=scope,
@@ -96,6 +99,18 @@ async def create(
 ) -> ContestOut:
     await identity.rate_limit("contest_write", str(principal.user_id))
     return await contests.create(principal, data, idempotency_key)
+
+
+@router.post("/admin/contests", response_model=ContestOut, status_code=201)
+async def create_platform(
+    data: ContestInput,
+    contests: Service,
+    principal: UserContext,
+    identity: Identity,
+    idempotency_key: Annotated[UUID, Header()],
+) -> ContestOut:
+    await identity.rate_limit("contest_write", str(principal.user_id))
+    return await contests.create(principal, data, idempotency_key, platform=True)
 
 
 @router.get("/contests/{contest_id}", response_model=ContestOut)

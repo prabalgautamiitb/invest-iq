@@ -24,6 +24,8 @@ class Contest(Base):
     __tablename__ = "contests"
     __table_args__ = (
         UniqueConstraint("owner_id", "creation_key"),
+        CheckConstraint("organizer IN ('community', 'platform')", name="organizer"),
+        CheckConstraint("organizer <> 'platform' OR visibility = 'public'", name="platform_public"),
         CheckConstraint("visibility IN ('public', 'private')", name="visibility"),
         CheckConstraint("level IN ('beginner', 'advanced', 'all')", name="level"),
         CheckConstraint(
@@ -40,6 +42,9 @@ class Contest(Base):
     )
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
     owner_id: Mapped[UUID] = mapped_column(ForeignKey("users.id", ondelete="RESTRICT"), index=True)
+    organizer: Mapped[str] = mapped_column(
+        String(12), index=True, default="community", server_default="community"
+    )
     creation_key: Mapped[UUID] = mapped_column()
     request_hash: Mapped[str] = mapped_column(String(64))
     name: Mapped[str] = mapped_column(String(80))

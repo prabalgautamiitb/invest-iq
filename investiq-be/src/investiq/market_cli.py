@@ -1,5 +1,6 @@
 """Development-only, deterministic market fixture initialization."""
 
+import argparse
 import asyncio
 
 from sqlalchemy.ext.asyncio import async_sessionmaker
@@ -10,7 +11,7 @@ from investiq.db.session import make_engine
 from investiq.services.market_ingestion import MarketIngestionService
 
 
-async def seed() -> None:
+async def seed(public_contests: bool = False) -> None:
     settings = Settings()
     engine = make_engine(settings)
     try:
@@ -18,6 +19,10 @@ async def seed() -> None:
             async_sessionmaker(engine, expire_on_commit=False), settings
         )
         runs = await service.seed_fixtures()
+        if public_contests:
+            runs += await MarketIngestionService(
+                async_sessionmaker(engine, expire_on_commit=False), settings
+            ).seed_public_fixtures()
         print(
             f"Synthetic market fixture initialized: {len(runs)} EOD batches. Not real market data."
         )
@@ -32,4 +37,11 @@ async def seed() -> None:
 
 
 if __name__ == "__main__":
-    asyncio.run(seed())
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--public-contests",
+        action="store_true",
+        help="Also release due fixed public-contest scenario prices",
+    )
+    args = parser.parse_args()
+    asyncio.run(seed(args.public_contests))

@@ -48,3 +48,18 @@ Phase 6 verification: **85 backend tests and 12 Chromium browser tests passed**,
 Persistent courses, immutable lesson/question versions, enrollment, quiz attempts/answers, first-pass completion and XP events, achievements and IST streak days are implemented. Academy and the signed-in profile now use actual learning records. Published development content seeds two courses and six lessons without creating learner activity. Verification: 92 backend tests and 14 browser tests passed, including concurrent retry/XP protection, version preservation, server scoring, account isolation and IST date boundaries. See [PHASE-7.md](PHASE-7.md) for contracts and commands. Phase 8 is next.
 
 Phase 7 operational checks also passed: Ruff lint/format, strict mypy, uv lock validation, Alembic model comparison/offline SQL, a disposable PostgreSQL downgrade to 0006 and upgrade to 0007 with seeded content, and wheel curriculum packaging. The rebuilt local API and worker are healthy, one Beat is running, readiness reports PostgreSQL/Redis OK, and the live course API returns the seeded curriculum.
+
+
+## Platform public contests (Phases 4–6 extension)
+
+Implemented a distinct platform organizer, shared verified-admin management, InvestIQ discovery badges/filter and administration forms, public participation through the existing submission/performance/leaderboard services, and publication checks for complete baseline prices and supported scenario dates. A separate due-only synthetic scenario extends development EOD data through November 6, 2026. No users are promoted and no genuine user activity is seeded. See [PLATFORM-CONTESTS.md](PLATFORM-CONTESTS.md). Phase 8 remains next.
+
+Verification: **96 backend tests and 16 Chromium browser tests passed**. Ruff lint/format, strict mypy, dependency lock validation, Alembic model comparison/offline SQL, a migration downgrade/upgrade preserving an existing published community contest, wheel scenario packaging and the rebuilt container stack passed. API/worker are healthy, Beat is running, readiness reports PostgreSQL/Redis OK, and the normal API returns 404 for test-only admin controls.
+
+
+## Results information enhancement
+
+Added reviewed-calendar timelines to contest details, portfolio submission, leaderboard and performance pages. Server responses explain the actual waiting stage and publication times, separate confirmed from ranked portfolios and identify only the current viewer's submission state. Participants see confirmation/next-step guidance and explanations of upcoming metric categories. Non-participating administrators see public-standing/privacy guidance. This is a read-only presentation enhancement; no contest schedule, accepted submission or accounting rule is changed. See [platform contest guidance](PLATFORM-CONTESTS.md#results-timeline-and-submission-guidance).
+
+
+Results information verification: **97 backend tests and 17 Chromium browser tests passed**. Ruff lint/format, strict mypy, frontend syntax/build and Alembic comparison passed. The rebuilt API/worker are healthy. Desktop/mobile inspection of the actual public contest confirms the October 21, 6:00 PM IST first-results timestamp and the distinction between one confirmed portfolio and zero ranked portfolios; the mobile page has no horizontal overflow.

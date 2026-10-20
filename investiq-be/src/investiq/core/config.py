@@ -20,6 +20,7 @@ class Settings(BaseSettings):
     cors_origins: list[str] = ["http://localhost:5173", "http://127.0.0.1:5173"]
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR"] = "INFO"
     dependency_timeout_seconds: float = Field(default=3, gt=0, le=30)
+    public_contest_fixtures_enabled: bool = False
     market_data_mode: Literal["fixture", "disabled"] = "fixture"
     session_days: int = Field(default=7, ge=1, le=30)
     auth_rate_limit: int = Field(default=10, ge=1)

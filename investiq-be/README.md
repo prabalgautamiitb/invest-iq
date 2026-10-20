@@ -24,7 +24,7 @@ uv sync --locked
 # PostgreSQL on 5433 and Redis on 6380; both bind only to loopback.
 docker compose up -d --wait postgres redis mailpit
 uv run --locked alembic upgrade head
-uv run --locked python -m investiq.market_cli
+uv run --locked python -m investiq.market_cli --public-contests
 uv run --locked python -m investiq.learning_cli
 uv run --locked uvicorn investiq.main:create_app --factory --reload --host 127.0.0.1 --port 8080 --no-access-log
 ```
@@ -108,7 +108,7 @@ See [frontend assessment](docs/PHASE-0.md), [architecture decisions](docs/DECISI
 
 ## Market data scope
 
-All prices are fixed synthetic examples for 14–16 October 2026, with explicit freshness checks, source metadata and a reviewed 2026 calendar. They are not actual historical or live quotes. Stale/missing data blocks simulation eligibility; no automatic current-date price generation occurs. Production market reads/fixture seeding are disabled pending an approved feed. See [provider research and policies](docs/PHASE-3.md).
+Prices use fixed synthetic scenarios for October 14–November 6, 2026 (with the public-contest extension enabled), with explicit freshness checks, source metadata and a reviewed 2026 calendar. They are not actual historical or live quotes. Stale/missing data blocks simulation eligibility; no automatic current-date price generation occurs. Production market reads/fixture seeding are disabled pending an approved feed. See [provider research and policies](docs/PHASE-3.md).
 
 ## Phase 4
 
@@ -130,12 +130,17 @@ This creates one retry-safe private fixture draft, with no invented memberships 
 
 Join a published contest, then open **Open contest portfolio** on its detail page or **Portfolio** from My Contests. Choose quantities or weights, **Save draft → Review saved draft → Confirm contest submission**. Each accepted version freezes actual whole shares, price/source evidence, simulated fee and residual cash. Earlier submissions remain immutable; the newest accepted version is authoritative at the entry deadline. Draft-only changes do not replace a submission.
 
-The API rejects stale/incomplete EOD data. Fixtures cover October 14–16, 2026; no current prices are invented. [Phase 5 documentation](docs/PHASE-5.md) includes schema, accounting/rounding, API examples, development starter data and test commands.
+The API rejects stale/incomplete EOD data. The original fixtures cover October 14–16, 2026; the optional fixed public-contest scenario extends coverage through November 6, with due-only EOD publication. [Phase 5 documentation](docs/PHASE-5.md) includes schema, accounting/rounding, API examples, development starter data and test commands.
 
 ## Try Phase 6
 
 After joining/submitting, open **Performance** or **Leaderboard** from My Contests. The signed-in dashboard shows actual activity/results and links to completed-contest history. Workers value all ranked portfolios at one published session close, then finalize once all required contest sessions are complete. Missing prices leave results pending or marked out of date. Everything is virtual; there are no payments or financial settlement.
 
-Fixture prices still cover only October 14–16, 2026. A contest outside those dates cannot produce results until valid prices are supplied; the scheduler never invents them. [Phase 6 documentation](docs/PHASE-6.md) includes the historical test scenario, full schema/API contracts, calculations, job retry rules and exact commands.
+The public-contest scenario extends fixed synthetic EOD coverage through November 6, 2026 when enabled. Outside configured dates, results wait for complete prices; the scheduler never invents them. [Phase 6 documentation](docs/PHASE-6.md) includes the historical test scenario, full schema/API contracts, calculations, job retry rules and exact commands.
 
 Learning setup, API contracts, database rules and verification: [Phase 7](docs/PHASE-7.md).
+
+
+## InvestIQ public contests
+
+Administrators can create platform-managed public contests alongside community leagues. Provision a verified account using the existing operator command, sign in again, then open **Contests → Manage InvestIQ contests → Add InvestIQ contest**. Learners find published contests using the **InvestIQ** filter, join without invitations, confirm a portfolio submission and follow standings. The Compose stack releases due prices from the fixed synthetic public-contest scenario through November 6, 2026. See [platform contest setup, authorization, API contracts and data coverage](docs/PLATFORM-CONTESTS.md).

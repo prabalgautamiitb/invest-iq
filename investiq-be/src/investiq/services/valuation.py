@@ -11,7 +11,7 @@ from sqlalchemy import func, or_, select
 from sqlalchemy.engine import Row
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from investiq.adapters.market import EXCHANGE_TZ
+from investiq.adapters.market import EXCHANGE_TZ, FIXTURE_DATASETS
 from investiq.analytics.valuation import ValuedHolding, value_portfolio
 from investiq.core.errors import AppError
 from investiq.core.security import Principal
@@ -39,6 +39,7 @@ from investiq.schemas.valuation import (
     MetricsOut,
     PerformanceOut,
     RankOut,
+    ResultsTimingOut,
 )
 from investiq.services.contest import ContestService, phase
 from investiq.services.market import decode_cursor, encode_cursor, fingerprint
@@ -222,7 +223,7 @@ class ValuationService:
                         PriceSnapshot.source_published_at <= self.clock(),
                         IngestionRun.status == "succeeded",
                         IngestionRun.provider == "investiq-synthetic",
-                        IngestionRun.dataset_version == "fixture-v1",
+                        IngestionRun.dataset_version.in_(FIXTURE_DATASETS),
                         IngestionRun.data_kind == "fixture",
                     )
                     .order_by(Instrument.id)
@@ -448,6 +449,57 @@ class ValuationService:
             failed.error_code if failed and not current else None,
         )
 
+    async def results_timing(
+        self,
+        db: AsyncSession,
+        c: Contest,
+        run: ValuationRun | None,
+        current: bool,
+        final: bool,
+        error: str | None,
+    ) -> ResultsTimingOut:
+        """Explain the server's current wait using the reviewed calendar, not browser time."""
+        timing = ResultsTimingOut(
+            entry_opens_at=c.entry_opens_at,
+            entry_closes_at=c.entry_closes_at,
+            starts_at=c.starts_at,
+            ends_at=c.ends_at,
+            first_session_closes_at=None,
+            first_results_available_at=None,
+            next_results_available_at=None,
+            state="unavailable",
+        )
+        state = phase(c, self.clock())
+        if state == "cancelled":
+            timing.state = "cancelled"
+        elif final:
+            timing.state = "final"
+        elif state == "draft":
+            timing.state = "draft"
+        try:
+            sessions = await self.sessions(db, c)
+        except AppError:
+            return timing
+        timing.first_session_closes_at = sessions[0].closes_at
+        timing.first_results_available_at = sessions[0].available_at
+        if timing.state in {"cancelled", "final", "draft"}:
+            return timing
+        next_day = next(
+            (day for day in sessions if run is None or day.session_date > run.session_date), None
+        )
+        timing.next_results_available_at = next_day.available_at if next_day else None
+        if error:
+            timing.state = "awaiting_data"
+        elif state in {"scheduled", "open", "locked"}:
+            timing.state = "not_started"
+        elif current:
+            timing.state = "current"
+        elif next_day and next_day.available_at and next_day.available_at > self.clock():
+            timing.state = "awaiting_close"
+        else:
+            timing.state = "processing"
+        return timing
+
     async def leaderboard(
         self,
         identifier: UUID,
@@ -461,6 +513,7 @@ class ValuationService:
             user = await self.contests.actor(db, principal, verified=False) if principal else None
             c = await self.contests.load(db, identifier, user)
             latest, expected, current, final, error = await self.board_state(db, c)
+            timing = await self.results_timing(db, c, latest, current, final, error)
             run = latest
             if run_id:
                 run = await db.scalar(
@@ -530,7 +583,37 @@ class ValuationService:
                 .select_from(ContestMembership)
                 .where(ContestMembership.contest_id == c.id)
             )
+            submitted_count = await db.scalar(
+                select(func.count(func.distinct(PortfolioSubmission.membership_id)))
+                .join(ContestMembership, ContestMembership.id == PortfolioSubmission.membership_id)
+                .where(ContestMembership.contest_id == c.id, PortfolioSubmission.sealed.is_(True))
+            )
+            viewer_member = (
+                await db.scalar(
+                    select(ContestMembership).where(
+                        ContestMembership.contest_id == c.id,
+                        ContestMembership.user_id == user.id,
+                    )
+                )
+                if user
+                else None
+            )
+            has_submission = bool(
+                viewer_member
+                and await db.scalar(
+                    select(PortfolioSubmission.id)
+                    .where(
+                        PortfolioSubmission.membership_id == viewer_member.id,
+                        PortfolioSubmission.sealed.is_(True),
+                    )
+                    .limit(1)
+                )
+            )
             return LeaderboardOut(
+                timing=timing,
+                submitted_count=submitted_count or 0,
+                has_joined=viewer_member is not None,
+                has_submission=has_submission,
                 contest_id=c.id,
                 contest_name=c.name,
                 contest_status=phase(c, self.clock()),
@@ -617,6 +700,7 @@ class ValuationService:
                 await db.execute(query.order_by(ValuationRun.session_date.desc()).limit(limit + 1))
             ).all()
             return PerformanceOut(
+                timing=await self.results_timing(db, c, run, current, final, error),
                 contest_id=c.id,
                 contest_name=c.name,
                 contest_status=phase(c, self.clock()),

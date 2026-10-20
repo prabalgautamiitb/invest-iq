@@ -131,3 +131,13 @@ API pagination binds leaderboard pages to a run ID, and private state is discard
 ## Phase 7 learning connection
 
 `features/learning.js` owns Academy catalogue/lessons, enrollment, attempt submission/feedback/history, progress, achievements and signed-in profile learning metrics. Public GET `/courses` and `/lessons/{id}` expose published content without keys; verified cookie/CSRF-protected enrollment and attempt POSTs persist genuine activity. Quiz POSTs require a UUID Idempotency-Key; retry state preserves it for the same answers after failures. Own GET `/me/learning` and `/lessons/{id}/attempts` expose private progress/history. Server scoring, first-pass-only XP and IST streaks replace sample totals. Account/route generation checks guard stale requests. Guest localStorage is never uploaded. Full backend contracts and commands are in `investiq-be/docs/PHASE-7.md`.
+
+
+## InvestIQ public contests
+
+`ContestOut.organizer` distinguishes community and platform contests. Use `can_manage` for draft editing and publication controls; `is_owner` records original creation only. Admins use `/#/contests/admin` / `/#/contests/create-platform` and POST `/admin/contests`. Public explorer filtering uses `organizer=platform`; admin catalogue uses protected `scope=managed`. Verified learners join through existing entry APIs, confirm portfolio submissions and follow normal standings. Details explicitly distinguish a saved draft from an accepted submission. The local fixed scenario now extends through November 6, 2026 with due-only EOD release; it is not a real-time feed. Full setup and limits: `investiq-be/docs/PLATFORM-CONTESTS.md`.
+
+
+## Results timing and empty states
+
+`features/results-info.js` renders the shared calendar timeline in IST. Contest responses add first-close/first-result timestamps; leaderboard and performance responses add server-derived `timing` with the entry window, start/end, first close/publication and next publication time. `timing.state` distinguishes pre-start, waiting for close, processing, blocked data, current/final/cancelled/draft and unavailable calendar. Preserve server state rather than inferring it from the browser clock. Leaderboard `submitted_count` counts confirmed portfolios, while `participant_count` counts ranked snapshot entries. `has_joined`/`has_submission` are viewer-specific and control submission guidance and private-performance navigation. Upcoming metric categories are described before the first snapshot; no provisional returns or ranks are invented.

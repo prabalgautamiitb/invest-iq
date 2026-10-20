@@ -70,7 +70,7 @@ test('discovery uses server filters and reports API failures without demo fallba
   await expect(page.getByRole('heading',{name:'Contest explorer',exact:true})).toBeVisible();
   await page.getByLabel('Search contests',{exact:true}).fill('nonexistent phase four league');
   await page.getByLabel('Search contests',{exact:true}).press('Tab');
-  await expect(page.getByText('No contests match. Create the first learning league.',{exact:true})).toBeVisible();
+  await expect(page.getByText('No contests match. Check another filter or come back for the next public contest.',{exact:true})).toBeVisible();
   await page.route('**/api/v1/contests?**',route=>route.fulfill({status:503,contentType:'application/json',body:JSON.stringify({error:{message:'Contest service unavailable'}})}));
   await page.getByRole('button',{name:'Refresh contests',exact:true}).click();
   await expect(page.getByRole('alert')).toContainText('Contest service unavailable');

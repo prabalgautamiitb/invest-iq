@@ -40,6 +40,7 @@ export const portfolioApi = {
 };
 
 export const contestApi = {
+  createPlatform: (input, key) => request('/admin/contests', { method: 'POST', body: input, headers: { 'Idempotency-Key': key } }),
   list: (params = {}) => request('/contests?' + new URLSearchParams(params)),
   mine: (params = {}) => request('/me/contests?' + new URLSearchParams(params)),
   invitations: (params = {}) => request('/me/contest-invitations?' + new URLSearchParams(params)),

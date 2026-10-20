@@ -88,3 +88,11 @@ InvestIQ is an educational simulation. Phase 6 calculates virtual portfolio valu
 - Passing every question completes a lesson once. Award 25 integer XP once per stable lesson, including across versions. Serialize writes using the shared user→session lock; preserve attempt/answer/completion/XP evidence in one transaction with unique and deferred database constraints.
 - IST activity days record first completions only. Today/yesterday grace defines current streak; retain longest streak and historical achievements. Retakes do not create streak days, XP multipliers or coins.
 - Development-only curriculum seed creates content, never progress or users. Academy and signed-in profiles show actual learning data, and guest localStorage is never uploaded. No new packages or workers are needed.
+
+
+## Platform public contests (Phases 4–6 extension)
+
+- Distinguish immutable community/platform organizer identity. Existing contests remain community contests; platform contests must be public and are managed by current verified admins rather than a single creator. Keep the creator FK for provenance and return separate `can_manage` capabilities.
+- Reuse the existing public discovery, membership, frozen rules, portfolio submissions and common EOD standings. No automatic memberships, submissions or results. Regular users cannot claim the platform organizer type.
+- Prevent publication of platform contests outside configured fixed scenario coverage or without current common submission prices. Extend development prices through November 6, 2026 using a separate immutable file/version, released only at reviewed session publication times. Do not generate current-date prices or rewrite historical submissions/successful valuations. Production fixtures remain disabled.
+- Reuse existing operator role provisioning; no automatic admin promotion or public role-management endpoint. Browser-only admin helpers are confined to the disposable test harness.

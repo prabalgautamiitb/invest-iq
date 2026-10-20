@@ -24,12 +24,25 @@ class MarketDataProvider(Protocol):
     async def fetch_eod(self, session_date: date) -> ProviderBatch: ...
 
 
+FIXTURE_DATASETS = ("fixture-v1", "public-fixture-v1")
+
+
+def public_fixture_document() -> dict[str, Any]:
+    result: dict[str, Any] = json.loads(
+        files("investiq.data").joinpath("market_public_fixture_v1.json").read_text()
+    )
+    return result
+
+
 class FixtureMarketProvider:
     provider = "investiq-synthetic"
     dataset_version = "fixture-v1"
 
+    def document(self) -> dict[str, Any]:
+        return fixture_document()
+
     async def fetch_eod(self, session_date: date) -> ProviderBatch:
-        document = fixture_document()
+        document = self.document()
         points = document["prices"].get(session_date.isoformat())
         if points is None:
             raise AppError(
@@ -50,3 +63,10 @@ class FixtureMarketProvider:
                 "points": points,
             }
         )
+
+
+class PublicContestFixtureProvider(FixtureMarketProvider):
+    dataset_version = "public-fixture-v1"
+
+    def document(self) -> dict[str, Any]:
+        return public_fixture_document()

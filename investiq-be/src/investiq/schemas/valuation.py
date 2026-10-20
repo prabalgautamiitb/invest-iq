@@ -18,7 +18,32 @@ class RankOut(BaseModel):
     max_drawdown_pct: Decimal
 
 
+class ResultsTimingOut(BaseModel):
+    entry_opens_at: datetime
+    entry_closes_at: datetime
+    starts_at: datetime
+    ends_at: datetime
+    first_session_closes_at: datetime | None
+    first_results_available_at: datetime | None
+    next_results_available_at: datetime | None
+    state: Literal[
+        "draft",
+        "cancelled",
+        "not_started",
+        "awaiting_close",
+        "awaiting_data",
+        "processing",
+        "current",
+        "final",
+        "unavailable",
+    ]
+
+
 class LeaderboardOut(BaseModel):
+    timing: ResultsTimingOut
+    submitted_count: int
+    has_joined: bool
+    has_submission: bool
     contest_id: UUID
     contest_name: str
     contest_status: str
@@ -62,6 +87,7 @@ class MetricsOut(BaseModel):
 
 
 class PerformanceOut(BaseModel):
+    timing: ResultsTimingOut
     contest_id: UUID
     contest_name: str
     contest_status: str

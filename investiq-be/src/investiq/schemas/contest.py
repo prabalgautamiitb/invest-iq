@@ -17,6 +17,7 @@ Status = Literal[
     "draft", "scheduled", "open", "locked", "running", "settling", "completed", "cancelled"
 ]
 Visibility = Literal["public", "private"]
+Organizer = Literal["community", "platform"]
 Level = Literal["beginner", "advanced", "all"]
 Text = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=80)]
 
@@ -76,6 +77,10 @@ class ContestInput(BaseModel):
 
 
 class ContestOut(BaseModel):
+    first_session_closes_at: datetime | None
+    first_results_available_at: datetime | None
+    organizer: Organizer
+    can_manage: bool
     id: UUID
     owner_id: UUID
     name: str

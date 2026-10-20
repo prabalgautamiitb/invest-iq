@@ -7,7 +7,7 @@
     "dev": "vite --host 127.0.0.1",
     "build": "vite build",
     "preview": "vite preview --host 127.0.0.1",
-    "check": "node --check src/app.js && node --check src/main.js && node --check src/api/client.js && node --check src/api/services.js && node --check src/lib/motion.js && node --check src/lib/ambient.js && node --check src/api/market.js && node --check src/features/contests.js && node --check src/features/portfolio.js && node --check src/features/learning.js && node --check src/features/performance.js",
+    "check": "node --check src/app.js && node --check src/main.js && node --check src/api/client.js && node --check src/api/services.js && node --check src/lib/motion.js && node --check src/lib/ambient.js && node --check src/api/market.js && node --check src/features/contests.js && node --check src/features/portfolio.js && node --check src/features/learning.js && node --check src/features/results-info.js && node --check src/features/performance.js",
     "test:e2e": "playwright test"
   },
   "devDependencies": {

@@ -7,8 +7,8 @@ const normal='2026-10-18T12:00:00Z';
 async function clock(request,at){const r=await request.post('http://127.0.0.1:8081/__browser__/clock',{headers:harness,data:{at}});expect(r.ok()).toBeTruthy();}
 async function evaluate(request,id){const r=await request.post(`http://127.0.0.1:8081/__browser__/value/${id}`,{headers:harness});expect(r.ok()).toBeTruthy();return r.json();}
 
-async function scenario(page){
-  return page.evaluate(async()=>{
+async function scenario(page,confirmed=true){
+  return page.evaluate(async confirmed=>{
     const csrf=await (await fetch('/api/v1/auth/csrf')).json();
     const headers={'Content-Type':'application/json','X-CSRF-Token':csrf.csrf_token};
     const post=async(path,body,key)=>{
@@ -24,10 +24,12 @@ async function scenario(page){
     await post(path+'/entries');
     const draft=await fetch('/api/v1'+path+'/portfolio/draft',{method:'PUT',headers,body:JSON.stringify({expected_revision:0,mode:'weight',positions:input.rules.eligible_instrument_ids.slice(0,5).map(instrument_id=>({instrument_id,weight_pct:'20'}))})});
     if(!draft.ok)throw new Error('Scenario draft failed');
-    const reviewed=await post(path+'/portfolio/preview',{draft_revision:1});
-    await post(path+'/submissions',{draft_revision:1,preview_hash:reviewed.preview_hash},crypto.randomUUID());
+    if(confirmed){
+      const reviewed=await post(path+'/portfolio/preview',{draft_revision:1});
+      await post(path+'/submissions',{draft_revision:1,preview_hash:reviewed.preview_hash},crypto.randomUUID());
+    }
     return c.id;
-  });
+  },confirmed);
 }
 
 test('simulated results, dashboard aggregates, private performance and final history use persisted snapshots',async({page,request,browser})=>{
@@ -37,8 +39,17 @@ test('simulated results, dashboard aggregates, private performance and final his
     await verifiedAccount(page,request,`performance-${randomUUID()}@example.com`);
     const id=await scenario(page);
     await page.goto('/#/performance/'+id);
-    await expect(page.getByText('Your accepted portfolio is awaiting complete valuation data.',{exact:true})).toBeVisible();
+    await expect(page.getByRole('heading',{name:'Submission confirmed',exact:true})).toBeVisible();
+    await expect(page.getByRole('region',{name:'Results status'})).toContainText('Contest has not started');
+    await expect(page.getByRole('region',{name:'Contest timeline'})).toContainText('15 Oct 2026');
+    await expect(page.getByRole('region',{name:'Contest timeline'})).toContainText('6:00 pm IST');
+    await expect(page.getByRole('heading',{name:'What will appear after valuation',exact:true})).toBeVisible();
+    await clock(request,'2026-10-15T04:00:00Z');
+    await page.getByRole('button',{name:'Refresh results',exact:true}).click();
+    await expect(page.getByRole('region',{name:'Results status'})).toContainText('Waiting for the session close');
     await clock(request,'2026-10-15T13:00:00Z');
+    await page.getByRole('button',{name:'Refresh results',exact:true}).click();
+    await expect(page.getByRole('region',{name:'Results status'})).toContainText('Valuation is being prepared');
     await evaluate(request,id);
     await page.getByRole('button',{name:'Refresh results',exact:true}).click();
     await expect(page.getByText('Current published snapshot',{exact:true})).toBeVisible();
@@ -77,4 +88,21 @@ test('performance API failures have retry states without sample ranks or returns
   await page.unroute('**/api/v1/me/dashboard');
   await page.getByRole('button',{name:'Retry results',exact:true}).click();
   await expect(page.getByRole('heading',{name:'Latest valued portfolios',exact:true})).toBeVisible();
+});
+
+
+test('saved drafts show a confirmation action and do not look like ranked submissions',async({page,request})=>{
+  await clock(request,'2026-10-14T13:00:00Z');
+  try {
+    await verifiedAccount(page,request,`draft-status-${randomUUID()}@example.com`);
+    const id=await scenario(page,false);
+    await page.goto('/#/performance/'+id);
+    await expect(page.getByRole('heading',{name:'No confirmed submission',exact:true})).toBeVisible();
+    await expect(page.getByRole('region',{name:'Your submission'})).toContainText('Saved drafts are not ranked.');
+    await expect(page.getByRole('link',{name:'Open portfolio builder',exact:true})).toBeVisible();
+    await page.goto('/#/leaderboard/'+id);
+    await expect(page.locator('.main')).toContainText('Confirmed portfolios: 0');
+    await expect(page.locator('.main')).toContainText('Ranked portfolios: 0');
+    await expect(page.getByRole('region',{name:'Results status'})).toContainText('Contest has not started');
+  } finally {await clock(request,normal);}
 });

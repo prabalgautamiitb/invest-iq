@@ -429,3 +429,69 @@ def test_extreme_price_evidence_is_flagged_instead_of_overflowing_persistence():
     with pytest.raises(AppError) as rejected:
         value_portfolio(Decimal("100"), Decimal(0), Decimal(0), Decimal("100"), Decimal("100"), [h])
     assert rejected.value.code == "valuation_out_of_range"
+
+
+@pytest.mark.integration
+async def test_results_information_explains_schedule_submission_and_delayed_data(market_settings):
+    settings, mailer, clock = config(market_settings), CapturedMailer(), [ENTRY]
+    app = create_app(settings, mailer, contest_clock=lambda: clock[0])
+    async with (
+        api_client(app) as participant,
+        api_client(create_app(settings, mailer, contest_clock=lambda: clock[0])) as guest,
+    ):
+        await verified(participant, mailer)
+        c, data, path, _ = await scenario(participant)
+        board = (await participant.get(path + "/leaderboard")).json()
+        timing = board["timing"]
+        assert timing["state"] == "not_started"
+        assert timing["starts_at"] == "2026-10-15T03:45:00Z"
+        assert timing["first_session_closes_at"] == "2026-10-15T10:00:00Z"
+        assert timing["first_results_available_at"] == "2026-10-15T12:30:00Z"
+        assert timing["next_results_available_at"] == timing["first_results_available_at"]
+        assert board["submitted_count"] == 1 and board["participant_count"] == 0
+        assert board["has_joined"] and board["has_submission"]
+        assert c["first_results_available_at"] == timing["first_results_available_at"]
+        public = (await guest.get(path + "/leaderboard")).json()
+        assert public["submitted_count"] == 1 and not public["has_joined"]
+        assert not public["has_submission"]
+        await verified(guest, mailer)
+        assert (await guest.post(path + "/entries", headers=await csrf(guest))).status_code == 200
+        await save(guest, path, weights(data))
+        own = (await guest.get(path + "/performance")).json()
+        assert not own["has_submission"] and own["timing"]["state"] == "not_started"
+        assert (await guest.get(path + "/leaderboard")).json()["submitted_count"] == 1
+        clock[0] = datetime(2026, 10, 15, 4, tzinfo=UTC)
+        own = (await participant.get(path + "/performance")).json()
+        assert own["timing"]["state"] == "awaiting_close"
+        clock[0] = FIRST
+        assert (await participant.get(path + "/leaderboard")).json()["timing"][
+            "state"
+        ] == "processing"
+        async with app.state.sessions() as db, db.begin():
+            point = await db.scalar(
+                select(PriceSnapshot).where(
+                    PriceSnapshot.instrument_id == UUID(data["rules"]["benchmark_id"]),
+                    PriceSnapshot.session_date == date(2026, 10, 15),
+                )
+            )
+            original = {
+                col.name: getattr(point, col.name) for col in PriceSnapshot.__table__.columns
+            }
+            await db.execute(delete(PriceSnapshot).where(PriceSnapshot.id == point.id))
+        assert (await app.state.valuations.evaluate(UUID(c["id"])))["status"] == "blocked"
+        delayed = (await participant.get(path + "/performance")).json()
+        assert delayed["timing"]["state"] == "awaiting_data"
+        assert (
+            delayed["timing"]["first_results_available_at"] == timing["first_results_available_at"]
+        )
+        async with app.state.sessions() as db, db.begin():
+            await db.execute(insert(PriceSnapshot).values(**original))
+        await app.state.valuations.evaluate(UUID(c["id"]))
+        current = (await participant.get(path + "/leaderboard")).json()
+        assert current["timing"]["state"] == "current"
+        assert current["timing"]["next_results_available_at"] == "2026-10-16T12:30:00Z"
+        clock[0] = FINAL
+        await app.state.valuations.evaluate(UUID(c["id"]))
+        final = (await participant.get(path + "/performance")).json()
+        assert final["timing"]["state"] == "final"
+        assert final["timing"]["next_results_available_at"] is None

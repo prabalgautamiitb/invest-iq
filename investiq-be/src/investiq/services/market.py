@@ -9,7 +9,7 @@ from uuid import UUID
 from sqlalchemy import Select, and_, exists, func, or_, select, tuple_
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from investiq.adapters.market import EXCHANGE_TZ
+from investiq.adapters.market import EXCHANGE_TZ, FIXTURE_DATASETS
 from investiq.core.config import Settings
 from investiq.core.errors import AppError
 from investiq.core.security import now
@@ -263,7 +263,7 @@ class MarketService:
                     PriceSnapshot.source_published_at <= cutoff,
                     IngestionRun.status == "succeeded",
                     IngestionRun.provider == "investiq-synthetic",
-                    IngestionRun.dataset_version == "fixture-v1",
+                    IngestionRun.dataset_version.in_(FIXTURE_DATASETS),
                 )
                 .subquery()
             )

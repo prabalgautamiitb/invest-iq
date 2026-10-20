@@ -8,7 +8,12 @@ from sqlalchemy import and_, case, exists, func, literal, or_, select, tuple_
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from sqlalchemy.sql.elements import ColumnElement
 
-from investiq.adapters.market import EXCHANGE_TZ
+from investiq.adapters.market import (
+    EXCHANGE_TZ,
+    FIXTURE_DATASETS,
+    fixture_document,
+    public_fixture_document,
+)
 from investiq.core.errors import AppError
 from investiq.core.security import Principal, now
 from investiq.models.contest import (
@@ -19,7 +24,13 @@ from investiq.models.contest import (
     ContestRules,
 )
 from investiq.models.identity import AuditEvent, User
-from investiq.models.market import ExchangeSession, Instrument, MarketExclusion
+from investiq.models.market import (
+    ExchangeSession,
+    IngestionRun,
+    Instrument,
+    MarketExclusion,
+    PriceSnapshot,
+)
 from investiq.schemas.contest import (
     ContestInput,
     ContestOut,
@@ -27,10 +38,12 @@ from investiq.schemas.contest import (
     InvitationOut,
     InvitationPage,
     Level,
+    Organizer,
     RulesInput,
     Status,
     Visibility,
 )
+from investiq.services.exchange_calendar import expected_session
 from investiq.services.identity import IdentityService
 from investiq.services.market import decode_cursor, encode_cursor, fingerprint
 from investiq.services.market_ingestion import ensure_fixture_mode
@@ -174,7 +187,8 @@ class ContestService:
             return public
         return or_(
             public,
-            Contest.owner_id == user.id,
+            and_(Contest.owner_id == user.id, Contest.organizer == "community"),
+            and_(literal(user.role == "admin"), Contest.organizer == "platform"),
             exists().where(
                 ContestMembership.contest_id == Contest.id, ContestMembership.user_id == user.id
             ),
@@ -204,8 +218,17 @@ class ContestService:
 
     @staticmethod
     def owner(c: Contest, user: User) -> None:
-        if c.owner_id != user.id:
+        if c.organizer == "platform":
+            ContestService.admin(user)
+        elif c.owner_id != user.id:
             raise AppError(403, "contest_owner_required", "Only the host can change this contest")
+
+    @staticmethod
+    def admin(user: User) -> None:
+        if user.role != "admin":
+            raise AppError(
+                403, "admin_required", "Only administrators can manage InvestIQ contests"
+            )
 
     async def rules(self, db: AsyncSession, c: Contest) -> ContestRules:
         rule = await db.scalar(
@@ -265,9 +288,23 @@ class ContestService:
                 )
             )
         )
+        first_session = await db.scalar(
+            select(ExchangeSession).where(
+                ExchangeSession.exchange == "NSE",
+                ExchangeSession.status == "open",
+                ExchangeSession.opens_at == c.starts_at,
+            )
+        )
         return ContestOut(
+            first_session_closes_at=first_session.closes_at if first_session else None,
+            first_results_available_at=first_session.available_at if first_session else None,
             id=c.id,
             owner_id=c.owner_id,
+            organizer=cast(Organizer, c.organizer),
+            can_manage=bool(
+                user
+                and (user.role == "admin" if c.organizer == "platform" else c.owner_id == user.id)
+            ),
             name=c.name,
             description=c.description,
             visibility=cast(Visibility, c.visibility),
@@ -359,10 +396,20 @@ class ContestService:
                 "corporate actions during the contest",
             )
 
-    async def create(self, principal: Principal, data: ContestInput, key: UUID) -> ContestOut:
-        digest = hashlib.sha256(data.model_dump_json().encode()).hexdigest()
+    async def create(
+        self, principal: Principal, data: ContestInput, key: UUID, *, platform: bool = False
+    ) -> ContestOut:
+        digest = hashlib.sha256(
+            (data.model_dump_json() + (":platform" if platform else "")).encode()
+        ).hexdigest()
         async with self.factory() as db, db.begin():
             user = await self.actor(db, principal)
+            if platform:
+                self.admin(user)
+                if data.visibility != "public":
+                    raise AppError(
+                        422, "platform_must_be_public", "InvestIQ contests must be public"
+                    )
             existing = await db.scalar(
                 select(Contest).where(Contest.owner_id == user.id, Contest.creation_key == key)
             )
@@ -377,6 +424,7 @@ class ContestService:
             await self.validate(db, data)
             c = Contest(
                 owner_id=user.id,
+                organizer="platform" if platform else "community",
                 creation_key=key,
                 request_hash=digest,
                 **data.model_dump(exclude={"rules"}),
@@ -384,7 +432,9 @@ class ContestService:
             db.add(c)
             await db.flush()
             await self.append_rules(db, c, data.rules, 1)
-            self.audit(db, user, "contest_created", c.id)
+            self.audit(
+                db, user, "platform_contest_created" if platform else "contest_created", c.id
+            )
             await db.flush()
             return await self.output(db, c, user)
 
@@ -399,6 +449,8 @@ class ContestService:
                 raise AppError(
                     409, "rules_frozen", "Published contest rules and schedule are frozen"
                 )
+            if c.organizer == "platform" and data.visibility != "public":
+                raise AppError(422, "platform_must_be_public", "InvestIQ contests must be public")
             await self.validate(db, data)
             rule = await self.rules(db, c)
             for key, value in data.model_dump(exclude={"rules"}).items():
@@ -407,6 +459,54 @@ class ContestService:
             self.audit(db, user, "contest_rules_revised", c.id)
             await db.flush()
             return await self.output(db, c, user)
+
+    async def validate_platform_publish(self, db: AsyncSession, c: Contest) -> None:
+        covered = set(fixture_document()["prices"])
+        if self.identity.settings.public_contest_fixtures_enabled:
+            covered.update(public_fixture_document()["prices"])
+        days = (
+            await db.scalars(
+                select(ExchangeSession.session_date).where(
+                    ExchangeSession.exchange == "NSE",
+                    ExchangeSession.status == "open",
+                    ExchangeSession.opens_at >= c.starts_at,
+                    ExchangeSession.closes_at <= c.ends_at,
+                )
+            )
+        ).all()
+        if not days or any(day.isoformat() not in covered for day in days):
+            raise AppError(
+                422,
+                "scenario_coverage_missing",
+                "InvestIQ contests must fit the configured fixed simulation price scenario "
+                "(through November 6, 2026 when enabled)",
+            )
+        rule = await self.rule_input(db, await self.rules(db, c))
+        required = {*rule.eligible_instrument_ids, rule.benchmark_id}
+        day = await expected_session(db, self.clock())
+        rows = (
+            await db.execute(
+                select(PriceSnapshot.instrument_id, PriceSnapshot.run_id)
+                .join(IngestionRun, IngestionRun.id == PriceSnapshot.run_id)
+                .where(
+                    PriceSnapshot.session_date == day.session_date,
+                    PriceSnapshot.instrument_id.in_(required),
+                    PriceSnapshot.source_published_at <= self.clock(),
+                    IngestionRun.status == "succeeded",
+                    IngestionRun.provider == "investiq-synthetic",
+                    IngestionRun.dataset_version.in_(FIXTURE_DATASETS),
+                )
+            )
+        ).all()
+        if {row.instrument_id for row in rows} != required or len(
+            {row.run_id for row in rows}
+        ) != 1:
+            raise AppError(
+                409,
+                "platform_prices_unavailable",
+                "Initialize current published simulation prices "
+                "before publishing an InvestIQ contest",
+            )
 
     async def transition(
         self, principal: Principal, identifier: UUID, action: Literal["publish", "cancel"]
@@ -433,6 +533,8 @@ class ContestService:
                             rules=await self.rule_input(db, rule),
                         ),
                     )
+                    if c.organizer == "platform":
+                        await self.validate_platform_publish(db, c)
                     c.status = "scheduled"
                     c.status = phase(c, self.clock())
                     self.audit(db, user, "contest_published", c.id)
@@ -458,9 +560,10 @@ class ContestService:
         *,
         query: str = "",
         visibility: Visibility | None = None,
+        organizer: Organizer | None = None,
         level: Level | None = None,
         status: Status | None = None,
-        scope: Literal["discover", "joined", "hosted"] = "discover",
+        scope: Literal["discover", "joined", "hosted", "managed"] = "discover",
         sort: Literal["name", "-name"] = "name",
         cursor: str | None = None,
         limit: int = 20,
@@ -472,6 +575,12 @@ class ContestService:
             if scope != "discover" and user is None:
                 raise AppError(401, "unauthenticated", "Please sign in")
             statement = select(Contest).where(self.visible(user, instant))
+            if scope == "managed":
+                assert user
+                self.admin(user)
+                statement = statement.where(Contest.organizer == "platform")
+            if organizer:
+                statement = statement.where(Contest.organizer == organizer)
             if scope == "joined":
                 assert user
                 statement = statement.where(
@@ -511,6 +620,7 @@ class ContestService:
                 {
                     "query": query.strip(),
                     "visibility": visibility,
+                    "organizer": organizer,
                     "level": level,
                     "status": status,
                     "scope": scope,

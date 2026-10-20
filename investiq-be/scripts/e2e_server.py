@@ -13,12 +13,14 @@ import asyncpg
 import uvicorn
 from fastapi import HTTPException, Request
 from pydantic import AwareDatetime, BaseModel, SecretStr
+from sqlalchemy import update
 from sqlalchemy.engine import make_url
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
 from investiq.core.config import Settings
 from investiq.db.session import make_engine
 from investiq.main import create_app
+from investiq.models.identity import User
 from investiq.services.learning_seed import seed_curriculum
 from investiq.services.market_ingestion import MarketIngestionService
 
@@ -101,6 +103,13 @@ async def main() -> None:
             harness_only(request)
             clock[0] = data.at
             return {"current_time": data.at.isoformat()}
+
+        @application.post("/__browser__/admin/{identifier}", include_in_schema=False)
+        async def browser_admin(identifier: UUID, request: Request) -> dict[str, str]:
+            harness_only(request)
+            async with application.state.sessions() as db, db.begin():
+                await db.execute(update(User).where(User.id == identifier).values(role="admin"))
+            return {"status": "test_admin_ready"}
 
         @application.post("/__browser__/value/{identifier}", include_in_schema=False)
         async def browser_value(identifier: UUID, request: Request) -> object:

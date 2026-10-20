@@ -67,3 +67,8 @@ Migration `0006_valuations` adds `valuation_runs`, `valuation_prices`, `valuatio
 ## Phase 7 learning
 
 Revision `0007_learning` adds ten learning tables for published courses/lessons/versions, enrollments, attempts/answers, completions, integer XP events, IST activity days and achievements. All are immutable; composite FKs preserve attempt ownership and deferred triggers validate complete scoring/award evidence. See [PHASE-7.md](PHASE-7.md#schema-and-ownership) for columns, constraints, indexes, deletion policy and transaction details.
+
+
+## Platform contest extension
+
+Revision `0008_platform_contests` adds indexed `contests.organizer VARCHAR(12) NOT NULL DEFAULT 'community'`, an enum-like CHECK, a platform-implies-public CHECK and an immutable organizer trigger. Existing ownership/rules/membership/submission/result constraints remain. See [platform contests](PLATFORM-CONTESTS.md) for role ownership, contracts, transactions and the separate fixed market scenario.

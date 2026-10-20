@@ -1,14 +1,21 @@
 import asyncio
 import hashlib
 import json
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, time
 from uuid import UUID
 
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from investiq.adapters.market import FixtureMarketProvider, MarketDataProvider, fixture_document
+from investiq.adapters.market import (
+    EXCHANGE_TZ,
+    FixtureMarketProvider,
+    MarketDataProvider,
+    PublicContestFixtureProvider,
+    fixture_document,
+    public_fixture_document,
+)
 from investiq.core.config import Settings
 from investiq.core.errors import AppError
 from investiq.core.security import now
@@ -87,6 +94,18 @@ class MarketIngestionService:
             await self.ingest(provider, date.fromisoformat(day))
             for day in sorted(document["prices"])
         ]
+
+    async def seed_public_fixtures(self) -> list[UUID]:
+        """Release only already-published entries from the fixed, reviewed scenario."""
+        ensure_fixture_mode(self.settings)
+        provider = PublicContestFixtureProvider()
+        instant = now()
+        due = [
+            date.fromisoformat(day)
+            for day in sorted(public_fixture_document()["prices"])
+            if datetime.combine(date.fromisoformat(day), time(18), EXCHANGE_TZ) <= instant
+        ]
+        return [await self.ingest(provider, day) for day in due]
 
     async def _run(
         self, db: AsyncSession, provider: MarketDataProvider, session_date: date, started: datetime
