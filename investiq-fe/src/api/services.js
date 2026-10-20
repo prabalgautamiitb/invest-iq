@@ -77,3 +77,31 @@ export const performanceApi = {
   dashboard: () => request('/me/dashboard'),
   history: (params = {}) => request('/me/contest-history?' + new URLSearchParams(params)),
 };
+
+
+export const rewardsApi = {
+  catalogue: (params = {}) => request('/rewards?' + new URLSearchParams(params)),
+  get: itemId => request(`/rewards/${id(itemId)}`),
+  wallet: () => request('/me/coins'),
+  ledger: (params = {}) => request('/me/coins/ledger?' + new URLSearchParams(params)),
+  history: (params = {}) => request('/me/redemptions?' + new URLSearchParams(params)),
+  redeem: (input, key) => request('/me/redemptions', { method: 'POST', body: input, headers: { 'Idempotency-Key': key } }),
+};
+
+export const communityApi = {
+  feed: (params={}) => request('/community/posts?'+new URLSearchParams(params)),
+  get: postId => request(`/community/posts/${id(postId)}`),
+  comments: (postId,params={}) => request(`/community/posts/${id(postId)}/comments?`+new URLSearchParams(params)),
+  create: (input,key) => request('/community/posts',{method:'POST',body:input,headers:{'Idempotency-Key':key}}),
+  comment: (postId,input,key) => request(`/community/posts/${id(postId)}/comments`,{method:'POST',body:input,headers:{'Idempotency-Key':key}}),
+  flag: (postId,action,enabled) => request(`/community/posts/${id(postId)}/${id(action)}`,{method:'PUT',body:{enabled}}),
+  vote: (postId,option) => request(`/community/posts/${id(postId)}/vote`,{method:'PUT',body:{option}}),
+  remove: postId => request(`/community/posts/${id(postId)}`,{method:'DELETE'}),
+  report: (postId,reason) => request(`/community/posts/${id(postId)}/reports`,{method:'POST',body:{reason}}),
+  groups: (params={}) => request('/community/groups?'+new URLSearchParams(params)),
+  group: groupId => request(`/community/groups/${id(groupId)}`),
+  createGroup: input => request('/community/groups',{method:'POST',body:input}),
+  membership: (groupId,enabled) => request(`/community/groups/${id(groupId)}/membership`,{method:'PUT',body:{enabled}}),
+  reports: (params={}) => request('/community/reports?'+new URLSearchParams(params)),
+  moderate: (postId,input) => request(`/community/posts/${id(postId)}/moderation`,{method:'POST',body:input}),
+};

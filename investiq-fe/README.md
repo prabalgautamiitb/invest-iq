@@ -102,3 +102,9 @@ Phase 7 connects Academy and signed-in learning profiles to the backend. Enroll 
 
 
 InvestIQ public contests are available under **Contests → InvestIQ**. Verified admins can use **Manage InvestIQ contests** to add/review/publish them. Provision the admin role with the backend operator command and sign in again; ordinary user creation remains available. After joining, confirm a portfolio submission to enter the standings. See `investiq-be/docs/PLATFORM-CONTESTS.md` for the full setup and fixed synthetic price coverage.
+
+
+Phase 8 connects Rewards to the backend: genuine first lesson completions earn 50 virtual coins, tiers use lifetime earnings, and the catalogue supports inventory-checked sandbox redemptions. Use Rewards → Redemption history / Coin ledger to inspect persisted events. No real gift card, shipment, booking or premium entitlement is delivered. Backend Compose seeds the catalogue; host setups run `uv run --locked python -m investiq.rewards_cli`. Existing genuine completion earnings are recovered once, and browser demo balances/history are never uploaded.
+
+
+Community now uses shared backend posts, replies, likes, private saved posts, polls, public groups and administrator moderation. Open `/#/social` with the API running. Sign in and verify email to participate. Public-profile settings control author display names; group content is public. See [Phase 9](../investiq-be/docs/PHASE-9.md) for setup and contracts.

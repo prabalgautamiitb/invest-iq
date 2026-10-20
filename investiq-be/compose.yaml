@@ -66,6 +66,15 @@ services:
       migrate:
         condition: service_completed_successfully
     command: ["python", "-m", "investiq.learning_cli"]
+  rewards-seed:
+    build: .
+    profiles: ["app"]
+    environment:
+      INVESTIQ_DATABASE_URL: postgresql+asyncpg://investiq:investiq_local@postgres:5432/investiq
+    depends_on:
+      learning-seed:
+        condition: service_completed_successfully
+    command: ["python", "-m", "investiq.rewards_cli"]
   api:
     build: .
     profiles: ["app"]
@@ -78,6 +87,8 @@ services:
       - "127.0.0.1:8080:8080"
     depends_on:
       learning-seed:
+        condition: service_completed_successfully
+      rewards-seed:
         condition: service_completed_successfully
       mailpit:
         condition: service_healthy

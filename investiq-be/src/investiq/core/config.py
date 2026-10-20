@@ -25,6 +25,8 @@ class Settings(BaseSettings):
     session_days: int = Field(default=7, ge=1, le=30)
     auth_rate_limit: int = Field(default=10, ge=1)
     auth_rate_window_seconds: int = Field(default=900, ge=1)
+    community_write_limit: int = Field(default=60, ge=1, le=10000)
+    community_rate_window_seconds: int = Field(default=60, ge=1, le=3600)
     csrf_rate_limit: int = Field(default=60, ge=1)
     rate_limit_prefix: str = "investiq:identity"
     frontend_url: str = "http://localhost:5173"

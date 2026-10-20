@@ -39,6 +39,7 @@ from investiq.schemas.learning import (
 )
 from investiq.services.identity import IdentityService
 from investiq.services.market import decode_cursor, encode_cursor, fingerprint
+from investiq.services.rewards import credit_completions
 
 TZ = ZoneInfo("Asia/Kolkata")
 
@@ -274,6 +275,7 @@ class LearningService:
                 if await db.get(LearningDay, (user.id, day)) is None:
                     db.add(LearningDay(user_id=user.id, local_date=day, created_at=instant))
                 await db.flush()
+                await credit_completions(db, user.id, instant)
                 codes = ["first_lesson"]
                 remaining = await db.scalar(
                     select(func.count())

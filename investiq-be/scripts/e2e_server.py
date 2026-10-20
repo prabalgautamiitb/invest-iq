@@ -23,6 +23,7 @@ from investiq.main import create_app
 from investiq.models.identity import User
 from investiq.services.learning_seed import seed_curriculum
 from investiq.services.market_ingestion import MarketIngestionService
+from investiq.services.rewards_seed import seed_rewards
 
 
 class BrowserClock(BaseModel):
@@ -82,6 +83,7 @@ async def main() -> None:
                 async_sessionmaker(engine, expire_on_commit=False), settings
             ).seed_fixtures()
             await seed_curriculum(async_sessionmaker(engine, expire_on_commit=False), settings)
+            await seed_rewards(async_sessionmaker(engine, expire_on_commit=False), settings)
         finally:
             await engine.dispose()
         clock = [datetime(2026, 10, 18, 12, tzinfo=UTC)]

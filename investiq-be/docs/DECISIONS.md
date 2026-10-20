@@ -96,3 +96,21 @@ InvestIQ is an educational simulation. Phase 6 calculates virtual portfolio valu
 - Reuse the existing public discovery, membership, frozen rules, portfolio submissions and common EOD standings. No automatic memberships, submissions or results. Regular users cannot claim the platform organizer type.
 - Prevent publication of platform contests outside configured fixed scenario coverage or without current common submission prices. Extend development prices through November 6, 2026 using a separate immutable file/version, released only at reviewed session publication times. Do not generate current-date prices or rewrite historical submissions/successful valuations. Production fixtures remain disabled.
 - Reuse existing operator role provisioning; no automatic admin promotion or public role-management endpoint. Browser-only admin helpers are confined to the disposable test harness.
+
+
+## Phase 8 — Virtual coin ledger and sandbox rewards
+
+- Credit exactly 50 integer coins per stable first-completion lesson source, including uncredited genuine historical completions. No demo balances, signup grants, contest prizes, arbitrary credit APIs or monetary value. Quiz/XP/coin writes share the user-locked transaction; background recovery replays durable source conditions rather than blind award messages.
+- Keep immutable ledger entries and source FKs, account totals verified against that ledger, consecutive running balances, nonnegative balances and lifetime-earned tiers. Spending does not reduce tier. Recovery is bounded and idempotent under concurrent callers.
+- Redemption locks user/session/account/item/inventory, copies server terms, debits once under a UUID key and consumes one unit atomically. PostgreSQL deferred evidence and stock constraints reject partial writes; refunds/adjustments require future explicit event types.
+- Development catalogue and fulfillment are sandbox only, with no entitlements, shipping/address data, gift codes or provider actions. Seed definitions preserve consumed stock and inactive flags. Frontend confirmations retry with stable keys; private wallet/history caches reload after navigation and clear at account changes.
+
+
+## Phase 9 community
+
+- Public groups only for this slice; explicit membership gates group post/reply creation. Content remains public after leaving. Private groups and invitations require their own visibility model later.
+- Resolve names from current public-profile preferences. Do not expose account/email IDs, member identities, individual votes, reporters or private saves in public DTOs. Old local community activity is never imported or seeded.
+- Freeze post/reply text and poll options in PostgreSQL; soft-delete or moderate visibility rather than rewriting evidence. Store 2–6 options on the immutable poll parent; guard option indexes, expiry and final unique votes with database triggers.
+- Serialize each writer through the existing user/session locks, with content locks for polling/moderation. Bind post/reply retry keys to normalized payload and parent; use set/clear interaction semantics and a separate configurable community Redis bucket (60 writes/minute by default).
+- Record hide/restore/dismiss reasons and audit events transactionally. Recheck current admin role on every request; terminal author deletion cannot be restored. Paginate feeds, replies, groups and report reviews.
+- Keep community participation separate from XP/coins/contest ratings; no fabricated reputation, trending or activity counters. Next work is deterministic AI-coach evidence and workflow integration.

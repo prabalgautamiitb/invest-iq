@@ -1,0 +1,74 @@
+{
+  "tiers": [
+    {
+      "slug": "bronze",
+      "name": "Bronze",
+      "minimum_earned": 0
+    },
+    {
+      "slug": "silver",
+      "name": "Silver",
+      "minimum_earned": 100
+    },
+    {
+      "slug": "gold",
+      "name": "Gold",
+      "minimum_earned": 250
+    },
+    {
+      "slug": "platinum",
+      "name": "Platinum",
+      "minimum_earned": 500
+    }
+  ],
+  "items": [
+    {
+      "slug": "practice-avatar",
+      "name": "Practice avatar voucher",
+      "category": "digital",
+      "cost": 50,
+      "capacity": 100,
+      "description": "Sandbox record for an avatar voucher. No avatar or paid feature is granted."
+    },
+    {
+      "slug": "practice-badge",
+      "name": "Practice badge voucher",
+      "category": "digital",
+      "cost": 100,
+      "capacity": 100,
+      "description": "Sandbox record for a badge voucher. No profile entitlement is granted."
+    },
+    {
+      "slug": "lesson-pack",
+      "name": "Lesson pack voucher",
+      "category": "learning",
+      "cost": 100,
+      "capacity": 100,
+      "description": "Sandbox record for a lesson pack. No additional lessons are unlocked."
+    },
+    {
+      "slug": "workshop",
+      "name": "Workshop seat voucher",
+      "category": "learning",
+      "cost": 200,
+      "capacity": 25,
+      "description": "Sandbox record for a workshop seat. No booking or invitation is sent."
+    },
+    {
+      "slug": "notebook",
+      "name": "InvestIQ notebook preview",
+      "category": "merchandise",
+      "cost": 150,
+      "capacity": 50,
+      "description": "Sandbox record for a notebook. No order, shipment or address collection occurs."
+    },
+    {
+      "slug": "mug",
+      "name": "InvestIQ mug preview",
+      "category": "merchandise",
+      "cost": 250,
+      "capacity": 25,
+      "description": "Sandbox record for a mug. No order or shipment occurs."
+    }
+  ]
+}

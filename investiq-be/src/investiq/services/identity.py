@@ -70,9 +70,19 @@ class IdentityService:
     ) -> None:
         self.factory, self.redis, self.settings, self.mailer = factory, redis, settings, mailer
 
-    async def rate_limit(self, bucket: str, identifier: str, *, bootstrap: bool = False) -> None:
-        window = 60 if bootstrap else self.settings.auth_rate_window_seconds
-        limit = self.settings.csrf_rate_limit if bootstrap else self.settings.auth_rate_limit
+    async def rate_limit(
+        self,
+        bucket: str,
+        identifier: str,
+        *,
+        bootstrap: bool = False,
+        limit: int | None = None,
+        window_seconds: int | None = None,
+    ) -> None:
+        window = window_seconds or (60 if bootstrap else self.settings.auth_rate_window_seconds)
+        limit = limit or (
+            self.settings.csrf_rate_limit if bootstrap else self.settings.auth_rate_limit
+        )
         key = f"{self.settings.rate_limit_prefix}:{bucket}:{digest(identifier)}"
         try:
             count = await cast(Awaitable[int], self.redis.eval(RATE_SCRIPT, 1, key, str(window)))

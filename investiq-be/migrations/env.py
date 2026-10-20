@@ -5,7 +5,16 @@ from alembic import context
 from investiq.core.config import Settings
 from investiq.db.base import Base
 from investiq.db.session import make_engine
-from investiq.models import contest, identity, learning, market, portfolio, valuation  # noqa: F401 -- register domain metadata
+from investiq.models import (  # noqa: F401 -- register domain metadata
+    community,
+    contest,
+    identity,
+    learning,
+    market,
+    portfolio,
+    rewards,
+    valuation,
+)
 
 
 def run_sync(connection: object) -> None:

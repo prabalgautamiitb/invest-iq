@@ -10,6 +10,7 @@ from investiq.core.errors import AppError
 from investiq.core.logging import configure_logging
 from investiq.main import create_app
 from investiq.services.market_ingestion import MarketIngestionService
+from investiq.services.rewards import reconcile_earnings
 from investiq.services.valuation import ValuationService
 
 settings = Settings()
@@ -50,6 +51,7 @@ async def execute(config: Settings | None = None, identifier: UUID | None = None
     # Fresh pools per asyncio.run; no asyncpg connections cross worker event loops/forks.
     application = create_app(config or settings)
     async with application.router.lifespan_context(application):
+        await reconcile_earnings(application.state.sessions)
         config = application.state.settings
         if config.public_contest_fixtures_enabled:
             await MarketIngestionService(application.state.sessions, config).seed_public_fixtures()

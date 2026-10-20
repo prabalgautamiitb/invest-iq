@@ -13,8 +13,8 @@
 - [x] Phase 5: portfolio drafts, validations and immutable submissions.
 - [x] Phase 6: deterministic simulation valuation, jobs, contest result finalization and rankings.
 - [x] Phase 7: learning, quizzes, XP, achievements and streaks.
-- [ ] Phase 8: coin ledger, sandbox rewards and idempotent inventory/redemption.
-- [ ] Phase 9: community and moderation.
+- [x] Phase 8: coin ledger, sandbox rewards and idempotent inventory/redemption.
+- [x] Phase 9: community and moderation.
 - [ ] Phase 10: deterministic evidence, checkpointed AI coach and evaluation.
 - [ ] Phase 11: approved educational RAG, pgvector and grounding evaluation.
 - [ ] Phase 12: notifications, operations, backup/restore, load/security tests and production deployment.
@@ -63,3 +63,17 @@ Added reviewed-calendar timelines to contest details, portfolio submission, lead
 
 
 Results information verification: **97 backend tests and 17 Chromium browser tests passed**. Ruff lint/format, strict mypy, frontend syntax/build and Alembic comparison passed. The rebuilt API/worker are healthy. Desktop/mobile inspection of the actual public contest confirms the October 21, 6:00 PM IST first-results timestamp and the distinction between one confirmed portfolio and zero ranked portfolios; the mobile page has no horizontal overflow.
+
+
+## Phase 8 completed
+
+Added integer virtual coin accounts and immutable earning/debit evidence, first-completion learning awards, bounded genuine-history recovery, lifetime-earning tiers, sandbox catalogue/inventory and atomic idempotent redemption with private histories. Connected Rewards replaces browser balances/redemptions, and every item explicitly disables real fulfillment/entitlements. New-account balances remain zero; demo activity is not migrated. The earlier public-contest/results changes were committed as `09a5ab8` before this phase. See [PHASE-8.md](PHASE-8.md). Phase 9 community is next.
+
+Phase 8 verification: **104 backend tests and 19 Chromium browser tests passed**. Ruff lint/format, strict mypy, dependency lock validation, frontend syntax/build, Alembic model comparison/offline SQL, a disposable populated PostgreSQL rewards downgrade/upgrade with genuine-completion recovery, wheel packaging and the rebuilt hash-locked container stack passed. The API/worker are healthy, one Beat is running, and readiness reports PostgreSQL/Redis OK. Desktop/mobile catalogue inspection passed with six items and no mobile horizontal overflow.
+
+
+## Phase 9 completed
+
+Connected shared public posts/replies, likes, private saved posts, immutable final-vote polls, public groups and membership, private reports and current-admin moderation. Added PostgreSQL migration/guards, verified CSRF writes, normalized retry keys, keyset pagination and a separate Redis write limit. Names follow current profile privacy; hidden/deleted roots also restrict replies. No demo activity or community rewards are imported/generated. See [PHASE-9.md](PHASE-9.md). Phase 10 AI coach is next.
+
+Phase 9 verification: **111 backend tests and 21 Chromium browser tests passed**. Ruff lint/format, strict mypy, frontend syntax/build, dependency lock validation, Alembic model comparison/offline SQL, disposable PostgreSQL downgrade/upgrade preserving existing account records and wheel contents passed. The rebuilt API/worker are healthy; one Beat is running; readiness reports PostgreSQL/Redis OK. Guest desktop/mobile inspection of the live Community route found no console errors or mobile horizontal overflow. Lost-response and route-change browser checks verified retained drafts, same-key post retries and usable moderation controls. Phases 8 and 9 are included in the same implementation commit.

@@ -1,12 +1,12 @@
 # InvestIQ backend
 
-Phases 0–7 are implemented: foundation, identity/onboarding, synthetic market data, contests, portfolio submissions and simulated performance. All backend source, infrastructure, migrations, tests, and documentation live here. Registration, login, verification/recovery, profiles, onboarding and settings now use the API. The portfolio catalogue/search/quotes also use the API; prices are explicitly synthetic. Contest discovery, creation, invitations, memberships and My Contests now use the API. Contest members can now save drafts, review server calculations and submit immutable portfolio versions. Valuation, benchmark comparisons, rankings, dashboard metrics and contest result finalization now use persisted snapshots. Courses, lessons, quizzes, XP, achievements and streaks now use persisted learning records. Rewards remain a later phase.
+Phases 0–9 are implemented: foundation, identity/onboarding, synthetic market data, contests, portfolio submissions and simulated performance. All backend source, infrastructure, migrations, tests, and documentation live here. Registration, login, verification/recovery, profiles, onboarding and settings now use the API. The portfolio catalogue/search/quotes also use the API; prices are explicitly synthetic. Contest discovery, creation, invitations, memberships and My Contests now use the API. Contest members can now save drafts, review server calculations and submit immutable portfolio versions. Valuation, benchmark comparisons, rankings, dashboard metrics and contest result finalization now use persisted snapshots. Courses, lessons, quizzes, XP, achievements and streaks now use persisted learning records. Virtual coin earnings, tiers, sandbox inventory/redemption, ledger and history now use the API. Community posts, replies, likes, private saves, polls, public groups and administrator moderation now use the API.
 
 InvestIQ is simulation-only. Capital, cash and fees are virtual; Phase 6 calculates and finalizes contest results and rankings, with no real trades, payments, payouts or financial settlement.
 
 ## Start the backend
 
-For the complete local Phase 7 stack (API, Celery worker and one Beat scheduler):
+For the complete local Phase 9 stack (API, Celery worker and one Beat scheduler):
 
 ```bash
 cd investiq-be
@@ -26,6 +26,7 @@ docker compose up -d --wait postgres redis mailpit
 uv run --locked alembic upgrade head
 uv run --locked python -m investiq.market_cli --public-contests
 uv run --locked python -m investiq.learning_cli
+uv run --locked python -m investiq.rewards_cli
 uv run --locked uvicorn investiq.main:create_app --factory --reload --host 127.0.0.1 --port 8080 --no-access-log
 ```
 
@@ -48,7 +49,7 @@ An alternative, requiring only Docker, runs the API and migrations in containers
 docker compose --profile app up -d --build --wait
 ```
 
-This runs migrations and idempotent development market and learning seeds before starting the API. Container dependencies use the hash-verified `requirements.lock` export of `uv.lock`; see the dependency guide before updating packages. Do not run the host API and container API simultaneously on port 8080. After code changes use `--build` again. This Compose stack is for local development; image major tags receive upstream patches, whereas Python packages are fully locked.
+This runs migrations and idempotent development market, learning and sandbox reward seeds before starting the API. Container dependencies use the hash-verified `requirements.lock` export of `uv.lock`; see the dependency guide before updating packages. Do not run the host API and container API simultaneously on port 8080. After code changes use `--build` again. This Compose stack is for local development; image major tags receive upstream patches, whereas Python packages are fully locked.
 
 Stop the host API with Ctrl+C, then stop infrastructure with `docker compose down`. Named volumes retain data.
 
@@ -144,3 +145,9 @@ Learning setup, API contracts, database rules and verification: [Phase 7](docs/P
 ## InvestIQ public contests
 
 Administrators can create platform-managed public contests alongside community leagues. Provision a verified account using the existing operator command, sign in again, then open **Contests → Manage InvestIQ contests → Add InvestIQ contest**. Learners find published contests using the **InvestIQ** filter, join without invitations, confirm a portfolio submission and follow standings. The Compose stack releases due prices from the fixed synthetic public-contest scenario through November 6, 2026. See [platform contest setup, authorization, API contracts and data coverage](docs/PLATFORM-CONTESTS.md).
+
+
+Phase 8 connects Rewards to integer virtual coin earnings and sandbox redemption/history. Complete a first lesson to earn 50 coins, then open Rewards. See [PHASE-8.md](docs/PHASE-8.md) for schema, transaction guarantees, API examples, commands and sandbox limits. No real rewards are fulfilled.
+
+
+Community contracts, privacy rules and usage: [Phase 9](docs/PHASE-9.md). Open `http://localhost:5173/#/social`; public activity starts empty. Verified accounts can create public groups and discussions; administrators see the report queue.

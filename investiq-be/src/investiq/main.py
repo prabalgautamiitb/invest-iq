@@ -11,22 +11,26 @@ from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
 from investiq.adapters.mail import Mailer, SmtpMailer
+from investiq.api.community import router as community_router
 from investiq.api.contest import router as contest_router
 from investiq.api.health import router as health_router
 from investiq.api.identity import router as identity_router
 from investiq.api.learning import router as learning_router
 from investiq.api.market import router as market_router
 from investiq.api.portfolio import router as portfolio_router
+from investiq.api.rewards import router as rewards_router
 from investiq.api.valuation import router as valuation_router
 from investiq.core.config import Settings
 from investiq.core.errors import error_response, install_error_handlers
 from investiq.core.logging import configure_logging
 from investiq.db.session import make_engine
+from investiq.services.community import CommunityService
 from investiq.services.contest import ContestService
 from investiq.services.identity import IdentityService
 from investiq.services.learning import LearningService
 from investiq.services.market import MarketService
 from investiq.services.portfolio import PortfolioService
+from investiq.services.rewards import RewardsService
 from investiq.services.valuation import ValuationService
 
 logger = logging.getLogger("investiq.http")
@@ -57,6 +61,8 @@ def create_app(
         app.state.identity = IdentityService(
             app.state.sessions, redis, config, mailer or SmtpMailer(config)
         )
+        app.state.community = CommunityService(app.state.identity)
+        app.state.rewards = RewardsService(app.state.identity)
         app.state.learning = LearningService(app.state.identity, learning_clock)
         app.state.market = MarketService(app.state.sessions, config, market_clock)
         app.state.contests = ContestService(app.state.sessions, app.state.identity, contest_clock)
@@ -128,5 +134,7 @@ def create_app(
     app.include_router(market_router, prefix="/api/v1")
     app.include_router(contest_router, prefix="/api/v1")
     app.include_router(portfolio_router, prefix="/api/v1")
+    app.include_router(community_router, prefix="/api/v1")
+    app.include_router(rewards_router, prefix="/api/v1")
     app.include_router(valuation_router, prefix="/api/v1")
     return app

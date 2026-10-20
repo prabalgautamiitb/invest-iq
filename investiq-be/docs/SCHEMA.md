@@ -72,3 +72,13 @@ Revision `0007_learning` adds ten learning tables for published courses/lessons/
 ## Platform contest extension
 
 Revision `0008_platform_contests` adds indexed `contests.organizer VARCHAR(12) NOT NULL DEFAULT 'community'`, an enum-like CHECK, a platform-implies-public CHECK and an immutable organizer trigger. Existing ownership/rules/membership/submission/result constraints remain. See [platform contests](PLATFORM-CONTESTS.md) for role ownership, contracts, transactions and the separate fixed market scenario.
+
+
+## Phase 8 virtual coins/rewards
+
+Revision `0009_rewards` adds six tables: `coin_accounts`, `coin_ledger`, `reward_tiers`, `reward_items`, `reward_inventory`, `reward_redemptions`. Integer coin units, source-bound unique immutable events, account sequence/totals checks, sandbox-only receipts and deferred inventory/debit evidence protect retries and concurrency. All source/ownership FKs use RESTRICT. Full column/type/index/state/deletion/locking documentation: [PHASE-8.md](PHASE-8.md#schema-and-ownership).
+
+
+## Phase 9 community
+
+Revision `0010_community` adds `community_groups`, `community_members`, `community_content` (posts/replies and immutable poll options), `community_reactions`, `community_saves`, `community_votes`, `community_reports`, and `community_moderation`. UUID ownership/FKs, UTC timestamps, unique retry keys, composite interaction keys, soft deletion, frozen content and database-validated final votes protect activity. Existing privacy and audit records are reused. Full columns, API boundaries and concurrency: [PHASE-9.md](PHASE-9.md#schema-and-ownership).
