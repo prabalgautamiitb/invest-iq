@@ -1,0 +1,21 @@
+/* Slow compositor-friendly background motion. No canvas or runtime loop. */
+.iq-ambient{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;contain:strict;background:#080f1c;isolation:isolate}
+#app{position:relative;z-index:1}
+.landing{background:radial-gradient(ellipse at 80% 20%,#1b61501b,transparent 35%),radial-gradient(ellipse at 0% 38%,#2c426a14,transparent 45%)}
+.iq-ambient .ambient-light{position:absolute;width: min(65vw,760px);height:min(65vw,760px);border-radius:50%;background:radial-gradient(ellipse,#35bc9220 0%,#229f7712 25%,transparent 66%);will-change:transform;animation:ambient-orbit 34s ease-in-out infinite alternate}
+.iq-ambient .light-a{left:27%;top:-38%;animation-delay:-12s}
+.iq-ambient .light-b{left:-18%;top:33%;background:radial-gradient(ellipse,#428ca71b 0%,#28688b0b 33%,transparent 69%);animation:ambient-orbit-b 42s ease-in-out infinite alternate;animation-delay:-23s}
+.iq-ambient .light-c{right:-24%;bottom:-30%;background:radial-gradient(ellipse,#59c99b18 0%,#1c765d0c 30%,transparent 65%);animation-duration:46s;animation-delay:-31s}
+.ambient-grid{position:absolute;inset:-80px;background-image:linear-gradient(#91c9bc07 1px,transparent 1px),linear-gradient(90deg,#91c9bc07 1px,transparent 1px);background-size:72px 72px;mask-image:radial-gradient(ellipse at 70% 30%,#0009,transparent 73%);animation:ambient-grid 42s linear infinite;will-change:transform}
+.ambient-beam{position:absolute;left:-30%;top:-50%;width:140%;height:180%;background:linear-gradient(120deg,transparent 43%,#66d8ad04 46%,#66d8ad08 48%,#66d8ad04 50%,transparent 53%);animation:ambient-beam 38s ease-in-out infinite alternate;animation-delay:-10s;will-change:transform}
+.ambient-particles{position:absolute;inset:0}.ambient-particles span{position:absolute;left:var(--x);top:var(--y);width:var(--size);height:var(--size);border-radius:50%;background:#9af2d19c;box-shadow:0 0 8px #68e3b633;opacity:.22;animation:ambient-particle var(--duration) ease-in-out infinite alternate;animation-delay:var(--delay);will-change:transform}
+.ambient-control{position:fixed;right:17px;bottom:18px;z-index:55;display:flex;align-items:center;gap:7px;border:1px solid #3d5b51;border-radius:30px;padding:8px 12px;background:#111e2eea;backdrop-filter:blur(10px);font-size:11px;color:#b8ceca;min-height:35px;box-shadow:0 4px 15px #02091335}
+.ambient-control:before{content:'';width:5px;height:5px;background:#56d6ac;border-radius:50%}.ambient-control[aria-pressed=false]:before{background:#7c8b9d}.ambient-control:hover{border-color:#67a58a;color:#def4ec}
+body[data-ambient=paused] .iq-ambient *,body[data-ambient=hidden] .iq-ambient *{animation-play-state:paused!important}
+@keyframes ambient-orbit{0%{transform:translate3d(-5%,0,0) scale(.92)}100%{transform:translate3d(12%,16%,0) scale(1.08)}}
+@keyframes ambient-orbit-b{0%{transform:translate3d(0,8%,0) scale(1)}100%{transform:translate3d(17%,-12%,0) scale(1.1)}}
+@keyframes ambient-grid{from{transform:translate3d(0,0,0)}to{transform:translate3d(72px,72px,0)}}
+@keyframes ambient-beam{from{transform:translate3d(-6%,-2%,0)}to{transform:translate3d(11%,8%,0)}}
+@keyframes ambient-particle{0%{transform:translate3d(-8px,14px,0)}100%{transform:translate3d(14px,-46px,0)}}
+@media(max-width:600px){.iq-ambient .ambient-light{width:110vw;height:110vw}.iq-ambient .light-a{left:5%;top:-12%}.iq-ambient .light-b{left:-45%;top:55%}.iq-ambient .light-c,.ambient-beam{display:none}.ambient-particles span:nth-child(n+7){display:none}.ambient-control{bottom:85px;right:12px;padding:7px 10px;min-height:32px;font-size:10px}.ambient-grid{background-size:72px 72px;opacity:.65}}
+@media(prefers-reduced-motion:reduce){.iq-ambient *{animation:none!important;will-change:auto!important}.ambient-particles,.ambient-beam{display:none}.ambient-control{display:none}.iq-ambient .ambient-light{opacity:.7}}

@@ -1,0 +1,32 @@
+{
+  "version": "nse-equities-2026-reviewed-2026-10-18",
+  "exchange": "NSE",
+  "timezone": "Asia/Kolkata",
+  "start_date": "2026-01-01",
+  "end_date": "2026-12-31",
+  "source": "https://www.nseindia.com/resources/exchange-communication-holidays",
+  "regular_open": "09:15",
+  "regular_close": "15:30",
+  "publication_delay_minutes": 150,
+  "holidays": {
+    "2026-01-15": "Maharashtra municipal election",
+    "2026-01-26": "Republic Day",
+    "2026-03-03": "Holi",
+    "2026-03-26": "Shri Ram Navami",
+    "2026-03-31": "Shri Mahavir Jayanti",
+    "2026-04-03": "Good Friday",
+    "2026-04-14": "Ambedkar Jayanti",
+    "2026-05-01": "Maharashtra Day",
+    "2026-05-28": "Bakri Id",
+    "2026-06-26": "Muharram",
+    "2026-09-14": "Ganesh Chaturthi",
+    "2026-10-02": "Gandhi Jayanti",
+    "2026-10-20": "Dussehra",
+    "2026-11-10": "Diwali Balipratipada",
+    "2026-11-24": "Guru Nanak Jayanti",
+    "2026-12-25": "Christmas"
+  },
+  "unsupported": {
+    "2026-11-08": "Muhurat session requires a reviewed special-session schedule"
+  }
+}

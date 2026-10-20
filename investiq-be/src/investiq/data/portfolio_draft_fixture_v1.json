@@ -1,0 +1,26 @@
+{
+  "expected_revision": 0,
+  "mode": "weight",
+  "positions": [
+    {
+      "instrument_id": "2528f8de-1bad-511c-ad9a-45d798e46b17",
+      "weight_pct": "20.0000"
+    },
+    {
+      "instrument_id": "ccda9e20-2fcc-52b3-8f13-b6709fa39d82",
+      "weight_pct": "20.0000"
+    },
+    {
+      "instrument_id": "5d70f22d-a7f4-5194-85e5-c1a3fc9bbb45",
+      "weight_pct": "20.0000"
+    },
+    {
+      "instrument_id": "d7c1a6ff-747d-518f-a4f9-6e0222b05001",
+      "weight_pct": "20.0000"
+    },
+    {
+      "instrument_id": "4e226d27-8f24-5eec-8289-d0d9747196e3",
+      "weight_pct": "20.0000"
+    }
+  ]
+}

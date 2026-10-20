@@ -1,0 +1,12 @@
+{
+  "version": "valuation-scenario-v1",
+  "data_kind": "fixture",
+  "description": "Historical test scenario; does not create user activity automatically.",
+  "entry_clock": "2026-10-14T13:00:00Z",
+  "entry_opens_at": "2026-10-14T12:40:00Z",
+  "entry_closes_at": "2026-10-15T03:40:00Z",
+  "starts_at": "2026-10-15T03:45:00Z",
+  "ends_at": "2026-10-16T10:00:00Z",
+  "first_valuation_clock": "2026-10-15T13:00:00Z",
+  "final_valuation_clock": "2026-10-16T13:00:00Z"
+}

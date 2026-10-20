@@ -1,0 +1,142 @@
+[
+  {
+    "id": "experience",
+    "tag": "Experience",
+    "title": "Where are you in your investing journey?",
+    "description": "We\u2019ll help you start at the right level.",
+    "options": [
+      {
+        "id": "experience:0",
+        "title": "A fresh start",
+        "description": "I\u2019m new and want to understand the basics."
+      },
+      {
+        "id": "experience:1",
+        "title": "Building my knowledge",
+        "description": "I know a little, but haven\u2019t invested yet."
+      },
+      {
+        "id": "experience:2",
+        "title": "Already exploring",
+        "description": "I invest occasionally and want more confidence."
+      },
+      {
+        "id": "experience:3",
+        "title": "Testing my edge",
+        "description": "I actively manage investments and analyze strategies."
+      }
+    ]
+  },
+  {
+    "id": "learning_goal",
+    "tag": "Learning goals",
+    "title": "What would you most like to achieve?",
+    "description": "Let\u2019s make your time here count.",
+    "options": [
+      {
+        "id": "learning_goal:0",
+        "title": "Understand the fundamentals",
+        "description": "Build a strong foundation in markets and investing."
+      },
+      {
+        "id": "learning_goal:1",
+        "title": "Build a balanced portfolio",
+        "description": "Learn how to choose and combine investments."
+      },
+      {
+        "id": "learning_goal:2",
+        "title": "Test investment strategies",
+        "description": "Use practice contests to explore my ideas."
+      },
+      {
+        "id": "learning_goal:3",
+        "title": "Make better decisions",
+        "description": "Understand performance, risk, and my own habits."
+      }
+    ]
+  },
+  {
+    "id": "approach",
+    "tag": "Your approach",
+    "title": "Your virtual portfolio drops 10%. What next?",
+    "description": "No judgment. Tell us how you\u2019d approach uncertainty.",
+    "options": [
+      {
+        "id": "approach:0",
+        "title": "Protect what\u2019s left",
+        "description": "I would sell to limit further losses."
+      },
+      {
+        "id": "approach:1",
+        "title": "Pause and review",
+        "description": "I would examine what changed before acting."
+      },
+      {
+        "id": "approach:2",
+        "title": "Revisit the original thesis",
+        "description": "I would hold if the reasoning still stands."
+      },
+      {
+        "id": "approach:3",
+        "title": "Research opportunities",
+        "description": "I would assess whether buying more makes sense."
+      }
+    ]
+  },
+  {
+    "id": "interest",
+    "tag": "Interests",
+    "title": "Which market topic catches your attention?",
+    "description": "Choose the topic you\u2019d like to explore first.",
+    "options": [
+      {
+        "id": "interest:0",
+        "title": "Technology",
+        "description": "Software, digital businesses, and innovation."
+      },
+      {
+        "id": "interest:1",
+        "title": "Banking & finance",
+        "description": "Banks, financial services, and the wider economy."
+      },
+      {
+        "id": "interest:2",
+        "title": "Energy & industry",
+        "description": "Infrastructure, manufacturing, and energy."
+      },
+      {
+        "id": "interest:3",
+        "title": "A bit of everything",
+        "description": "I want to discover a range of sectors."
+      }
+    ]
+  },
+  {
+    "id": "pace",
+    "tag": "Learning habit",
+    "title": "What pace works for your day?",
+    "description": "Consistency matters more than intensity.",
+    "options": [
+      {
+        "id": "pace:0",
+        "title": "5 minutes a day",
+        "description": "A small, focused learning habit."
+      },
+      {
+        "id": "pace:1",
+        "title": "15 minutes a day",
+        "description": "A lesson and a little practice."
+      },
+      {
+        "id": "pace:2",
+        "title": "30 minutes a day",
+        "description": "Time to explore and reflect."
+      },
+      {
+        "id": "pace:3",
+        "title": "One session a week",
+        "description": "A longer weekend learning session."
+      }
+    ]
+  }
+]

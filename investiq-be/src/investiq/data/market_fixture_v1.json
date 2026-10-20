@@ -1,0 +1,504 @@
+{
+  "provider": "investiq-synthetic",
+  "dataset_version": "fixture-v1",
+  "data_kind": "fixture",
+  "sectors": [
+    {
+      "id": "4a7fded8-1833-5040-803d-d5159b12421e",
+      "slug": "auto",
+      "name": "Auto"
+    },
+    {
+      "id": "02a06fe1-cb15-59c6-84ec-74351a806514",
+      "slug": "banking",
+      "name": "Banking"
+    },
+    {
+      "id": "d3fa6adf-b2ad-56e2-bf71-717e1a66bf85",
+      "slug": "defence",
+      "name": "Defence"
+    },
+    {
+      "id": "f64746d5-d470-5649-8105-2cbb3f357d56",
+      "slug": "electronics",
+      "name": "Electronics"
+    },
+    {
+      "id": "7f84dcd4-7481-5649-a5c0-9c2932228f11",
+      "slug": "energy",
+      "name": "Energy"
+    },
+    {
+      "id": "72a508c8-a607-59ad-a8d5-8bee2309b015",
+      "slug": "fmcg",
+      "name": "FMCG"
+    },
+    {
+      "id": "2d50d4c1-34fb-518c-a47a-9284cfe27b21",
+      "slug": "financials",
+      "name": "Financials"
+    },
+    {
+      "id": "bc2627c2-6d48-55ee-af94-a4e79527720d",
+      "slug": "it",
+      "name": "IT"
+    },
+    {
+      "id": "759af2ad-7d69-5f45-ba78-e8c8d62160d6",
+      "slug": "industrials",
+      "name": "Industrials"
+    },
+    {
+      "id": "16ffa74c-b6a3-53d3-b8cc-6bd1bd0f7240",
+      "slug": "machinery",
+      "name": "Machinery"
+    },
+    {
+      "id": "175b2c46-62a5-5b09-851c-e35bf686e4ce",
+      "slug": "materials",
+      "name": "Materials"
+    }
+  ],
+  "instruments": [
+    {
+      "id": "2528f8de-1bad-511c-ad9a-45d798e46b17",
+      "key": "security-001",
+      "symbol": "RELIANCE",
+      "name": "Reliance Industries",
+      "exchange": "NSE",
+      "kind": "equity",
+      "currency": "INR",
+      "sector_id": "7f84dcd4-7481-5649-a5c0-9c2932228f11",
+      "market_cap": "large",
+      "active": true
+    },
+    {
+      "id": "ccda9e20-2fcc-52b3-8f13-b6709fa39d82",
+      "key": "security-002",
+      "symbol": "HDFCBANK",
+      "name": "HDFC Bank",
+      "exchange": "NSE",
+      "kind": "equity",
+      "currency": "INR",
+      "sector_id": "02a06fe1-cb15-59c6-84ec-74351a806514",
+      "market_cap": "large",
+      "active": true
+    },
+    {
+      "id": "5d70f22d-a7f4-5194-85e5-c1a3fc9bbb45",
+      "key": "security-003",
+      "symbol": "TCS",
+      "name": "Tata Consultancy Services",
+      "exchange": "NSE",
+      "kind": "equity",
+      "currency": "INR",
+      "sector_id": "bc2627c2-6d48-55ee-af94-a4e79527720d",
+      "market_cap": "large",
+      "active": true
+    },
+    {
+      "id": "d7c1a6ff-747d-518f-a4f9-6e0222b05001",
+      "key": "security-004",
+      "symbol": "INFY",
+      "name": "Infosys",
+      "exchange": "NSE",
+      "kind": "equity",
+      "currency": "INR",
+      "sector_id": "bc2627c2-6d48-55ee-af94-a4e79527720d",
+      "market_cap": "large",
+      "active": true
+    },
+    {
+      "id": "4e226d27-8f24-5eec-8289-d0d9747196e3",
+      "key": "security-005",
+      "symbol": "ITC",
+      "name": "ITC Limited",
+      "exchange": "NSE",
+      "kind": "equity",
+      "currency": "INR",
+      "sector_id": "72a508c8-a607-59ad-a8d5-8bee2309b015",
+      "market_cap": "large",
+      "active": true
+    },
+    {
+      "id": "465128c9-7e49-567c-9b90-e5642fb0267e",
+      "key": "security-006",
+      "symbol": "TATAMOTORS",
+      "name": "Tata Motors",
+      "exchange": "NSE",
+      "kind": "equity",
+      "currency": "INR",
+      "sector_id": "4a7fded8-1833-5040-803d-d5159b12421e",
+      "market_cap": "large",
+      "active": true
+    },
+    {
+      "id": "906ab92a-e92f-5346-9a63-a0d43ffd907a",
+      "key": "security-007",
+      "symbol": "PERSISTENT",
+      "name": "Persistent Systems",
+      "exchange": "NSE",
+      "kind": "equity",
+      "currency": "INR",
+      "sector_id": "bc2627c2-6d48-55ee-af94-a4e79527720d",
+      "market_cap": "mid",
+      "active": true
+    },
+    {
+      "id": "0ae28db1-a09a-52dc-aa4b-c8558314608b",
+      "key": "security-008",
+      "symbol": "POLYCAB",
+      "name": "Polycab India",
+      "exchange": "NSE",
+      "kind": "equity",
+      "currency": "INR",
+      "sector_id": "759af2ad-7d69-5f45-ba78-e8c8d62160d6",
+      "market_cap": "mid",
+      "active": true
+    },
+    {
+      "id": "dc5403b1-dce5-5a98-97c1-880b2b9c9ef4",
+      "key": "security-009",
+      "symbol": "DIXON",
+      "name": "Dixon Technologies",
+      "exchange": "NSE",
+      "kind": "equity",
+      "currency": "INR",
+      "sector_id": "f64746d5-d470-5649-8105-2cbb3f357d56",
+      "market_cap": "mid",
+      "active": true
+    },
+    {
+      "id": "baece439-d644-5be3-9e68-a31cfcd31242",
+      "key": "security-010",
+      "symbol": "CDSL",
+      "name": "Central Depository Services",
+      "exchange": "NSE",
+      "kind": "equity",
+      "currency": "INR",
+      "sector_id": "2d50d4c1-34fb-518c-a47a-9284cfe27b21",
+      "market_cap": "mid",
+      "active": true
+    },
+    {
+      "id": "14ccd5d1-acb5-5860-966d-267a9ed81d9d",
+      "key": "security-011",
+      "symbol": "KPITTECH",
+      "name": "KPIT Technologies",
+      "exchange": "NSE",
+      "kind": "equity",
+      "currency": "INR",
+      "sector_id": "bc2627c2-6d48-55ee-af94-a4e79527720d",
+      "market_cap": "mid",
+      "active": true
+    },
+    {
+      "id": "f359d140-e3b6-5b60-9c61-2f3fb2fcb334",
+      "key": "security-012",
+      "symbol": "MAZDOCK",
+      "name": "Mazagon Dock Shipbuilders",
+      "exchange": "NSE",
+      "kind": "equity",
+      "currency": "INR",
+      "sector_id": "d3fa6adf-b2ad-56e2-bf71-717e1a66bf85",
+      "market_cap": "mid",
+      "active": true
+    },
+    {
+      "id": "1ac62955-5970-54e9-9dcd-eddf3fcd77b5",
+      "key": "security-013",
+      "symbol": "GRAVITA",
+      "name": "Gravita India",
+      "exchange": "NSE",
+      "kind": "equity",
+      "currency": "INR",
+      "sector_id": "175b2c46-62a5-5b09-851c-e35bf686e4ce",
+      "market_cap": "small",
+      "active": true
+    },
+    {
+      "id": "36fdae03-4dc8-53ff-b6ab-92eda597d813",
+      "key": "security-014",
+      "symbol": "TEXRAIL",
+      "name": "Texmaco Rail & Engineering",
+      "exchange": "NSE",
+      "kind": "equity",
+      "currency": "INR",
+      "sector_id": "759af2ad-7d69-5f45-ba78-e8c8d62160d6",
+      "market_cap": "small",
+      "active": true
+    },
+    {
+      "id": "49dd273b-9142-5509-955d-2da9b559bef7",
+      "key": "security-015",
+      "symbol": "SHAKTIPUMP",
+      "name": "Shakti Pumps India",
+      "exchange": "NSE",
+      "kind": "equity",
+      "currency": "INR",
+      "sector_id": "759af2ad-7d69-5f45-ba78-e8c8d62160d6",
+      "market_cap": "small",
+      "active": true
+    },
+    {
+      "id": "f590f86e-bb20-52e3-bae6-8f038957304c",
+      "key": "security-016",
+      "symbol": "JYOTICNC",
+      "name": "Jyoti CNC Automation",
+      "exchange": "NSE",
+      "kind": "equity",
+      "currency": "INR",
+      "sector_id": "16ffa74c-b6a3-53d3-b8cc-6bd1bd0f7240",
+      "market_cap": "small",
+      "active": true
+    },
+    {
+      "id": "70cf5ea9-cf9a-5da2-a898-ad7d36c1dde8",
+      "key": "benchmark-001",
+      "symbol": "NIFTY50",
+      "name": "Nifty 50 (synthetic benchmark)",
+      "exchange": "NSE",
+      "kind": "benchmark",
+      "currency": "POINTS",
+      "sector_id": null,
+      "market_cap": null,
+      "active": true
+    },
+    {
+      "id": "2cfd9cbc-43ed-55c1-9269-e66a238bad51",
+      "key": "excluded-001",
+      "symbol": "FIXSPLIT",
+      "name": "Fictional Split Example",
+      "exchange": "NSE",
+      "kind": "equity",
+      "currency": "INR",
+      "sector_id": "759af2ad-7d69-5f45-ba78-e8c8d62160d6",
+      "market_cap": "small",
+      "active": true
+    }
+  ],
+  "prices": {
+    "2026-10-14": [
+      {
+        "instrument_id": "2528f8de-1bad-511c-ad9a-45d798e46b17",
+        "close": "2888.4520"
+      },
+      {
+        "instrument_id": "ccda9e20-2fcc-52b3-8f13-b6709fa39d82",
+        "close": "1648.5070"
+      },
+      {
+        "instrument_id": "5d70f22d-a7f4-5194-85e5-c1a3fc9bbb45",
+        "close": "4046.3220"
+      },
+      {
+        "instrument_id": "d7c1a6ff-747d-518f-a4f9-6e0222b05001",
+        "close": "1836.8630"
+      },
+      {
+        "instrument_id": "4e226d27-8f24-5eec-8289-d0d9747196e3",
+        "close": "453.5440"
+      },
+      {
+        "instrument_id": "465128c9-7e49-567c-9b90-e5642fb0267e",
+        "close": "1004.1080"
+      },
+      {
+        "instrument_id": "906ab92a-e92f-5346-9a63-a0d43ffd907a",
+        "close": "5303.9560"
+      },
+      {
+        "instrument_id": "0ae28db1-a09a-52dc-aa4b-c8558314608b",
+        "close": "6752.6900"
+      },
+      {
+        "instrument_id": "dc5403b1-dce5-5a98-97c1-880b2b9c9ef4",
+        "close": "14033.6000"
+      },
+      {
+        "instrument_id": "baece439-d644-5be3-9e68-a31cfcd31242",
+        "close": "1482.4950"
+      },
+      {
+        "instrument_id": "14ccd5d1-acb5-5860-966d-267a9ed81d9d",
+        "close": "1370.4320"
+      },
+      {
+        "instrument_id": "f359d140-e3b6-5b60-9c61-2f3fb2fcb334",
+        "close": "2166.6820"
+      },
+      {
+        "instrument_id": "1ac62955-5970-54e9-9dcd-eddf3fcd77b5",
+        "close": "1854.7480"
+      },
+      {
+        "instrument_id": "36fdae03-4dc8-53ff-b6ab-92eda597d813",
+        "close": "180.5650"
+      },
+      {
+        "instrument_id": "49dd273b-9142-5509-955d-2da9b559bef7",
+        "close": "923.2580"
+      },
+      {
+        "instrument_id": "f590f86e-bb20-52e3-bae6-8f038957304c",
+        "close": "1125.3340"
+      },
+      {
+        "instrument_id": "70cf5ea9-cf9a-5da2-a898-ad7d36c1dde8",
+        "close": "24500.0000"
+      },
+      {
+        "instrument_id": "2cfd9cbc-43ed-55c1-9269-e66a238bad51",
+        "close": "100.0000"
+      }
+    ],
+    "2026-10-15": [
+      {
+        "instrument_id": "2528f8de-1bad-511c-ad9a-45d798e46b17",
+        "close": "2917.9260"
+      },
+      {
+        "instrument_id": "ccda9e20-2fcc-52b3-8f13-b6709fa39d82",
+        "close": "1665.3285"
+      },
+      {
+        "instrument_id": "5d70f22d-a7f4-5194-85e5-c1a3fc9bbb45",
+        "close": "4087.6110"
+      },
+      {
+        "instrument_id": "d7c1a6ff-747d-518f-a4f9-6e0222b05001",
+        "close": "1855.6065"
+      },
+      {
+        "instrument_id": "4e226d27-8f24-5eec-8289-d0d9747196e3",
+        "close": "458.1720"
+      },
+      {
+        "instrument_id": "465128c9-7e49-567c-9b90-e5642fb0267e",
+        "close": "1014.3540"
+      },
+      {
+        "instrument_id": "906ab92a-e92f-5346-9a63-a0d43ffd907a",
+        "close": "5358.0780"
+      },
+      {
+        "instrument_id": "0ae28db1-a09a-52dc-aa4b-c8558314608b",
+        "close": "6821.5950"
+      },
+      {
+        "instrument_id": "dc5403b1-dce5-5a98-97c1-880b2b9c9ef4",
+        "close": "14176.8000"
+      },
+      {
+        "instrument_id": "baece439-d644-5be3-9e68-a31cfcd31242",
+        "close": "1497.6225"
+      },
+      {
+        "instrument_id": "14ccd5d1-acb5-5860-966d-267a9ed81d9d",
+        "close": "1384.4160"
+      },
+      {
+        "instrument_id": "f359d140-e3b6-5b60-9c61-2f3fb2fcb334",
+        "close": "2188.7910"
+      },
+      {
+        "instrument_id": "1ac62955-5970-54e9-9dcd-eddf3fcd77b5",
+        "close": "1873.6740"
+      },
+      {
+        "instrument_id": "36fdae03-4dc8-53ff-b6ab-92eda597d813",
+        "close": "182.4075"
+      },
+      {
+        "instrument_id": "49dd273b-9142-5509-955d-2da9b559bef7",
+        "close": "932.6790"
+      },
+      {
+        "instrument_id": "f590f86e-bb20-52e3-bae6-8f038957304c",
+        "close": "1136.8170"
+      },
+      {
+        "instrument_id": "70cf5ea9-cf9a-5da2-a898-ad7d36c1dde8",
+        "close": "24750.0000"
+      },
+      {
+        "instrument_id": "2cfd9cbc-43ed-55c1-9269-e66a238bad51",
+        "close": "100.0000"
+      }
+    ],
+    "2026-10-16": [
+      {
+        "instrument_id": "2528f8de-1bad-511c-ad9a-45d798e46b17",
+        "close": "2947.4000"
+      },
+      {
+        "instrument_id": "ccda9e20-2fcc-52b3-8f13-b6709fa39d82",
+        "close": "1682.1500"
+      },
+      {
+        "instrument_id": "5d70f22d-a7f4-5194-85e5-c1a3fc9bbb45",
+        "close": "4128.9000"
+      },
+      {
+        "instrument_id": "d7c1a6ff-747d-518f-a4f9-6e0222b05001",
+        "close": "1874.3500"
+      },
+      {
+        "instrument_id": "4e226d27-8f24-5eec-8289-d0d9747196e3",
+        "close": "462.8000"
+      },
+      {
+        "instrument_id": "465128c9-7e49-567c-9b90-e5642fb0267e",
+        "close": "1024.6000"
+      },
+      {
+        "instrument_id": "906ab92a-e92f-5346-9a63-a0d43ffd907a",
+        "close": "5412.2000"
+      },
+      {
+        "instrument_id": "0ae28db1-a09a-52dc-aa4b-c8558314608b",
+        "close": "6890.5000"
+      },
+      {
+        "instrument_id": "dc5403b1-dce5-5a98-97c1-880b2b9c9ef4",
+        "close": "14320.0000"
+      },
+      {
+        "instrument_id": "baece439-d644-5be3-9e68-a31cfcd31242",
+        "close": "1512.7500"
+      },
+      {
+        "instrument_id": "14ccd5d1-acb5-5860-966d-267a9ed81d9d",
+        "close": "1398.4000"
+      },
+      {
+        "instrument_id": "f359d140-e3b6-5b60-9c61-2f3fb2fcb334",
+        "close": "2210.9000"
+      },
+      {
+        "instrument_id": "1ac62955-5970-54e9-9dcd-eddf3fcd77b5",
+        "close": "1892.6000"
+      },
+      {
+        "instrument_id": "36fdae03-4dc8-53ff-b6ab-92eda597d813",
+        "close": "184.2500"
+      },
+      {
+        "instrument_id": "49dd273b-9142-5509-955d-2da9b559bef7",
+        "close": "942.1000"
+      },
+      {
+        "instrument_id": "f590f86e-bb20-52e3-bae6-8f038957304c",
+        "close": "1148.3000"
+      },
+      {
+        "instrument_id": "70cf5ea9-cf9a-5da2-a898-ad7d36c1dde8",
+        "close": "25000.0000"
+      },
+      {
+        "instrument_id": "2cfd9cbc-43ed-55c1-9269-e66a238bad51",
+        "close": "100.0000"
+      }
+    ]
+  }
+}

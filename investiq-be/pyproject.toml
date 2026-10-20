@@ -1,0 +1,54 @@
+[build-system]
+requires = ["hatchling==1.32.4"]
+build-backend = "hatchling.build"
+
+[project]
+name = "investiq-be"
+version = "0.1.0"
+description = "InvestIQ modular monolith backend"
+requires-python = ">=3.13,<3.14"
+dependencies = [
+  "fastapi==0.143.5",
+  "uvicorn[standard]==0.54.0",
+  "pydantic==2.14.1",
+  "pydantic-settings==2.16.0",
+  "sqlalchemy[asyncio]==2.1.5",
+  "asyncpg==0.32.0",
+  "alembic==1.20.0",
+  "redis==6.4.0",
+  "argon2-cffi==25.1.0",
+  "email-validator==2.3.0",
+  "celery[redis]==5.6.3",
+  "kombu==5.6.2",
+]
+
+[dependency-groups]
+dev = [
+  "pytest==9.1.1", "pytest-asyncio==1.4.0", "httpx==0.28.1",
+  "ruff==0.17.1", "mypy==2.4.0",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/investiq"]
+
+[tool.ruff]
+target-version = "py313"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "ASYNC"]
+
+[tool.mypy]
+python_version = "3.13"
+strict = true
+files = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+addopts = "-ra --strict-markers"
+markers = ["integration: requires migrated real PostgreSQL and Redis"]
+
+[[tool.mypy.overrides]]
+module = ["celery", "celery.*"]
+ignore_missing_imports = true

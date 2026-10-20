@@ -1,0 +1,101 @@
+# InvestIQ — complete frontend development source
+
+This is the complete **editable source project** for the current InvestIQ design, including every page, all interactions, UI refinement, and continuous background animation. It uses **vanilla JavaScript ES modules and Vite**, not React. There is no hidden source or minified bundle needed to customize the application.
+
+## Start developing
+
+Use Node.js 22.12 or newer (Node 24 also works).
+
+```bash
+npm install
+cp .env.example .env
+npm run dev
+```
+
+On Windows, copy `.env.example` to `.env` using Explorer or `Copy-Item .env.example .env` in PowerShell. Open http://localhost:5173. Vite reloads changes during development.
+
+```bash
+npm run check
+npm run build
+npm run preview
+```
+
+`npm run build` generates the deployable `dist/` folder. **Edit `src/`, not generated `dist/`.** The ZIP deliberately excludes `node_modules` and build output; install dependencies using the lockfile.
+
+## Where to customize
+
+| Change | Edit |
+|---|---|
+| Page content, form behavior, navigation | `src/app.js` |
+| Demo users, stocks, contests, lessons and questions | `src/data/demo-data.js` |
+| Layout, desktop/mobile breakpoints | `src/styles/style.css` |
+| Final Lovable design: layout, colors, responsive rules | `src/styles/lovable.css` |
+| Earlier motion and visual foundations | `src/styles/polish.css` |
+| Continuous background appearance | `src/styles/ambient.css` |
+| Motion timing, chart and score animations | `src/lib/motion.js` |
+| Background elements and pause toggle | `src/lib/ambient.js` |
+| Request handling, base URL and errors | `src/api/client.js` |
+| Proposed endpoint service methods | `src/api/services.js` |
+| Local backend proxy | `vite.config.js`, `.env` |
+
+## Backend connection
+
+Phase 2 identity flows use the sibling FastAPI backend: registration/login/logout, verification and recovery, onboarding, profile/settings and session revocation. Start the backend as described in `../investiq-be/README.md`; use http://localhost:5173 for this UI and http://localhost:8025 for the local verification/recovery inbox.
+
+The API client uses HttpOnly cookie sessions and in-memory CSRF values. No account session/token is saved in localStorage. Existing demo activity remains separate and is never uploaded. Phase 3 connects the portfolio instrument catalogue, search/filters/pagination and timestamped synthetic quotes. Portfolio allocations/submission, contests, academy, community, rewards and AI remain previews; the remaining API service methods are future integration points.
+
+`.env.example` sets `VITE_API_BASE_URL=/api/v1` and `API_PROXY_TARGET=http://localhost:8080`. Secrets belong on the backend. The Vite proxy only runs in development; production needs an equivalent reverse proxy and HTTPS cookie/CORS configuration.
+
+For browser tests with local PostgreSQL, Redis and Mailpit running:
+
+```bash
+npm ci
+npx playwright install chromium
+npm run test:e2e
+```
+
+The suite starts isolated API/Vite servers on 8081/5174 and a disposable migrated PostgreSQL database. See `../investiq-be/docs/PHASE-2.md` for full contracts, scope and test details.
+
+## Included pages
+
+Landing; login/signup; password reset; five-step onboarding and learning profile; home dashboard; My Contests; Leaderboard; contests and details; portfolio allocation and submission; academy and lesson quizzes; AI insights and journal; marketplace; social feed; profile; separate settings; privacy; terms; missing-page state.
+
+The application currently uses hash routes (`#/portfolio`, etc.). Demo state is stored in `investiq-demo-v1`; ambient-motion preference uses `investiq-ambient-motion`.
+
+The original files named `dist` were also uncompiled source. This project reorganizes that same design into a conventional development setup with separate data, styles, animation modules, and API scaffolding. It does not convert the application to React or implement a backend.
+
+## Complete Lovable UI redesign
+
+The signed-in Lovable MVP informed the complete navy, emerald and blue design system. The home dashboard now uses a performance hero, learning IQ ring, summary cards, quick actions and contest cards. Contests use compact information strips; Portfolio uses a two-step builder; Academy uses course progress; AI Insights includes benchmark comparisons and review sections. Separate My Contests, Leaderboard and Settings pages follow the reference navigation. All pages share responsive surfaces, typography, controls, and restrained background motion.
+
+Edit `src/styles/lovable.css` for the final design layer. Page templates remain in `src/app.js`. Product rules and demo interactions are preserved; no live backend or Lovable source was imported.
+
+## Page content sync — 18 October 2026
+
+All primary signed-in pages now follow the supplied Lovable app's visible sections and reference fixtures. Shared fixture definitions live in `src/data/demo-data.js`: six contests, sixteen stocks, four course summaries, eight ranked learners, community posts, thirty-eight catalog rewards and achievements. `src/styles/sync.css` contains the final parity layout rules.
+
+Home includes active contests, resume learning, insights, allocation, coins and community highlights. My Contests has a contest switcher and live summary. Contests has search/category filters, full details and local contest creation. Portfolio supports sector/cap filters, quantity/weight entry and 5–12 holdings with a 25% cap. Learn includes quizzes, achievements and streaks. Rewards includes filtering/sorting, details, tiers, earning methods and local redemption history. Community includes filters, polls, saved posts and groups. Profile, AI reports, Settings and Leaderboard now contain their reference sections.
+
+Reference figures are explicitly illustrative. Coins, rewards, standings and course summaries are seeded UI fixtures, not verified activity. Redemptions, community joins, privacy switches and contest creation affect this browser only. No external invitations, posts, reward orders, billing, trading or security operations are performed. API scaffolding is not connected.
+
+On first use, the new reference fixture migration preserves your name, journal and learning answers, while replacing the old practice stock allocations and seeded contest entries. It uses `referenceVersion: 2` inside `investiq-demo-v1`. To start from the reference defaults again, use Settings → Reset local demo.
+
+The app retains its existing hash URLs and also accepts aliases `#/home`, `#/build`, `#/learn`, `#/community` and `#/rewards`. Home remains `#/dashboard`; My Contests is `#/my-contests`.
+
+## Phase 3 market data
+
+Start the backend using its migration and `python -m investiq.market_cli` seed, or the full Docker app profile. The Portfolio screen displays API-backed synthetic EOD prices, source/timestamps, server search/filtering and Load more. Missing/stale quotes disable selection; failed requests offer retry without a local-price fallback. The fixed dataset covers 14–16 October 2026 and will become stale as the expected session advances. It is not a live or real historical feed. Server drafts and submission arrive in Phase 5. Full policy and commands: `../investiq-be/docs/PHASE-3.md`.
+
+## Phase 4 contests
+
+Contests now use the backend for discovery/search/filters, details, configurable draft creation/revision, publication, private in-app invitations, joining and My Contests. Start the backend with the [backend README](../investiq-be/README.md), register and verify your email using local Mailpit, then open Contests. Save a draft and publish to freeze its rules. Joining is separate from the future server portfolio submission. My Contests supports Joined/Hosted views and a contest switcher; it shows genuine memberships without fixture ranks/returns. Invitations appear in the recipient's My Contests; no external email is sent. See [Phase 4 contracts and setup](../investiq-be/docs/PHASE-4.md).
+
+## Phase 5 portfolio builder
+
+Verified contest members now save drafts on the server. Join a contest and open its portfolio from details, My Contests, or the Portfolio chooser. Use quantities or weights, **Save draft → Review saved draft → Confirm contest submission**. Server calculations supply whole shares, exact fees/cash and source evidence. Submitted versions are immutable, with the newest accepted version used at entry close; old versions remain visible. The builder detects conflicting saves from other tabs and does not overwrite them automatically. Signed-out practice drafts remain separate. See [Phase 5 setup, rules and API examples](../investiq-be/docs/PHASE-5.md).
+
+## Phase 6 simulation results
+
+The signed-in dashboard, contest leaderboards, private performance and completed-contest history now use persisted backend valuation snapshots. My Contests shows actual values/returns/ranks with snapshot dates. Use Performance or Leaderboard links after submitting; results wait for a complete published market close. The backend Compose app profile starts the required worker and one scheduler. Prices remain fixed synthetic October 14–16, 2026 fixtures; data outside that range is not invented. [Phase 6 setup and contracts](../investiq-be/docs/PHASE-6.md) explain calculations, freshness, privacy and test scenarios. No real trades, payments or payouts occur.
+
+Phase 7 connects Academy and signed-in learning profiles to the backend. Enroll in a development course, answer its quiz and refresh to see saved XP/completion/history. Email verification is required for enrollment and quiz submission. The local Compose app profile seeds two courses and six lessons; host setups run `uv run --locked python -m investiq.learning_cli` in `investiq-be`. Retakes do not add XP. Rewards and community remain previews.

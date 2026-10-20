@@ -1,0 +1,190 @@
+[
+  {
+    "slug": "simulation-foundations",
+    "title": "Simulation foundations",
+    "description": "Understand the evidence behind a virtual portfolio.",
+    "lessons": [
+      {
+        "title": "Virtual capital and costs",
+        "paragraphs": [
+          "InvestIQ portfolios use virtual capital. Submitting a portfolio does not place an exchange order or transfer real money.",
+          "A simulated fee reduces residual cash once for the accepted portfolio. Valuation adds the value of whole-share holdings and residual cash; it does not deduct that fee again."
+        ],
+        "questions": [
+          {
+            "key": "capital",
+            "prompt": "What happens when you submit an InvestIQ portfolio?",
+            "options": [
+              "A virtual portfolio is recorded",
+              "A real exchange order is sent"
+            ],
+            "correct": 0,
+            "explanation": "The simulation records a virtual portfolio; it does not send real orders."
+          },
+          {
+            "key": "fee",
+            "prompt": "Where is the initial simulated fee reflected?",
+            "options": [
+              "In reduced residual cash",
+              "As a new daily charge"
+            ],
+            "correct": 0,
+            "explanation": "The fee is included once by reducing residual cash at submission."
+          }
+        ]
+      },
+      {
+        "title": "Whole shares and residual cash",
+        "paragraphs": [
+          "Percentage targets are converted to whole shares using the documented submission price and fee reserve. Rounding down can leave uninvested virtual cash.",
+          "Target weights and achieved weights can differ. Review the server calculation before confirming. Cash remains part of total portfolio value."
+        ],
+        "questions": [
+          {
+            "key": "shares",
+            "prompt": "Can rounding down leave residual cash?",
+            "options": [
+              "Yes",
+              "No"
+            ],
+            "correct": 0,
+            "explanation": "Whole shares may cost less than a percentage target, leaving cash."
+          },
+          {
+            "key": "cash",
+            "prompt": "Does residual cash count toward total portfolio value?",
+            "options": [
+              "No",
+              "Yes"
+            ],
+            "correct": 1,
+            "explanation": "Total value includes both holdings and residual cash."
+          }
+        ]
+      },
+      {
+        "title": "Published closes and benchmarks",
+        "paragraphs": [
+          "A valuation snapshot uses a common published session close. A missing or stale price is a limitation, not permission to invent a replacement price.",
+          "Portfolio return includes simulated costs. Benchmark return compares the benchmark close with its frozen baseline. Excess return is the difference between those percentage returns, expressed in percentage points."
+        ],
+        "questions": [
+          {
+            "key": "missing",
+            "prompt": "What should happen when a required closing price is missing?",
+            "options": [
+              "Invent a plausible price",
+              "Wait for complete evidence"
+            ],
+            "correct": 1,
+            "explanation": "Missing evidence blocks a complete valuation."
+          },
+          {
+            "key": "excess",
+            "prompt": "Portfolio return is 4% and benchmark return is 3%. What is excess return?",
+            "options": [
+              "1 percentage point",
+              "4 percentage points"
+            ],
+            "correct": 0,
+            "explanation": "Subtract benchmark return from portfolio return: 4 minus 3 equals 1 percentage point."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "reading-portfolio-metrics",
+    "title": "Reading portfolio metrics",
+    "description": "Interpret simulation metrics and their limits.",
+    "lessons": [
+      {
+        "title": "Concentration and sector counts",
+        "paragraphs": [
+          "The largest-position metric describes how much of total portfolio value sits in one holding. A sector count describes how many sector labels are present.",
+          "These are descriptive measures. A larger sector count alone cannot establish that a portfolio is safe, and several holdings can still move together. InvestIQ equity HHI excludes cash and sums squared equity-value weights."
+        ],
+        "questions": [
+          {
+            "key": "sector",
+            "prompt": "Does a larger sector count by itself prove a portfolio is safe?",
+            "options": [
+              "Yes",
+              "No"
+            ],
+            "correct": 1,
+            "explanation": "Sector count is a description, not a guarantee of safety."
+          },
+          {
+            "key": "hhi",
+            "prompt": "What does this simulation equity HHI exclude?",
+            "options": [
+              "Equity holdings",
+              "Residual cash"
+            ],
+            "correct": 1,
+            "explanation": "Equity HHI normalizes weights over equity holdings and excludes cash."
+          }
+        ]
+      },
+      {
+        "title": "Daily-close drawdown",
+        "paragraphs": [
+          "Drawdown measures a decline from an earlier peak. InvestIQ records the largest decline across the initial virtual capital and available daily-close valuations.",
+          "Daily-close drawdown does not measure every intraday movement. A zero daily-close drawdown does not establish that prices never fell during the day."
+        ],
+        "questions": [
+          {
+            "key": "peak",
+            "prompt": "Drawdown compares a value with what?",
+            "options": [
+              "An earlier peak",
+              "A future prediction"
+            ],
+            "correct": 0,
+            "explanation": "Drawdown is measured relative to an earlier peak."
+          },
+          {
+            "key": "intraday",
+            "prompt": "Do daily closes reveal every intraday decline?",
+            "options": [
+              "No",
+              "Yes"
+            ],
+            "correct": 0,
+            "explanation": "Prices between daily closes are not represented in daily-close snapshots."
+          }
+        ]
+      },
+      {
+        "title": "Interpreting contributions",
+        "paragraphs": [
+          "A holding contribution compares its current value with its original notional value. Holding price contributions exclude the portfolio-level simulated fee.",
+          "Use the recorded submission and price evidence to describe results. A locked portfolio without trades cannot support a claim that its owner sold too early. Outcomes alone do not reveal a learner\u2019s intentions."
+        ],
+        "questions": [
+          {
+            "key": "cost",
+            "prompt": "Do individual holding price contributions include the portfolio-level fee?",
+            "options": [
+              "Yes",
+              "No"
+            ],
+            "correct": 1,
+            "explanation": "The single fee is accounted for at portfolio level."
+          },
+          {
+            "key": "claims",
+            "prompt": "Can a locked portfolio with no trades prove that someone sold too early?",
+            "options": [
+              "No",
+              "Yes"
+            ],
+            "correct": 0,
+            "explanation": "Without a sale in the evidence, this claim is unsupported."
+          }
+        ]
+      }
+    ]
+  }
+]

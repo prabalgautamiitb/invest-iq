@@ -1,0 +1,141 @@
+# InvestIQ backend
+
+Phases 0–7 are implemented: foundation, identity/onboarding, synthetic market data, contests, portfolio submissions and simulated performance. All backend source, infrastructure, migrations, tests, and documentation live here. Registration, login, verification/recovery, profiles, onboarding and settings now use the API. The portfolio catalogue/search/quotes also use the API; prices are explicitly synthetic. Contest discovery, creation, invitations, memberships and My Contests now use the API. Contest members can now save drafts, review server calculations and submit immutable portfolio versions. Valuation, benchmark comparisons, rankings, dashboard metrics and contest result finalization now use persisted snapshots. Courses, lessons, quizzes, XP, achievements and streaks now use persisted learning records. Rewards remain a later phase.
+
+InvestIQ is simulation-only. Capital, cash and fees are virtual; Phase 6 calculates and finalizes contest results and rankings, with no real trades, payments, payouts or financial settlement.
+
+## Start the backend
+
+For the complete local Phase 7 stack (API, Celery worker and one Beat scheduler):
+
+```bash
+cd investiq-be
+docker compose --profile app up -d --build --wait
+```
+
+Host API development is also supported below; run the separate worker/Beat commands in [PHASE-6.md](docs/PHASE-6.md#start-and-operate-locally) to update results automatically.
+
+Prerequisites: Docker Desktop running, Python 3.13, and [uv](https://docs.astral.sh/uv/getting-started/installation/). Run these commands from the project root:
+
+```bash
+cd investiq-be
+cp .env.example .env
+uv sync --locked
+# PostgreSQL on 5433 and Redis on 6380; both bind only to loopback.
+docker compose up -d --wait postgres redis mailpit
+uv run --locked alembic upgrade head
+uv run --locked python -m investiq.market_cli
+uv run --locked python -m investiq.learning_cli
+uv run --locked uvicorn investiq.main:create_app --factory --reload --host 127.0.0.1 --port 8080 --no-access-log
+```
+
+Use `cp` only for initial setup; keep your existing `.env` on subsequent starts. The application reads `.env` relative to this directory. No model key or market-data account is needed.
+
+Open http://127.0.0.1:8080/docs for Swagger. From another terminal:
+
+```bash
+curl -i http://127.0.0.1:8080/api/v1/health/live
+# HTTP 200: {"status":"ok"}
+curl -i http://127.0.0.1:8080/api/v1/health/ready
+# HTTP 200: {"status":"ready","checks":{"postgresql":"ok","redis":"ok"}}
+```
+
+Readiness returns HTTP 503 with `status: unavailable` when a dependency is unreachable or the schema revision is wrong. Liveness stays independent of those dependencies. Check that Docker is running and migrations completed if readiness fails. Ports 5433/6380 avoid common local database ports; change Compose port mappings and `.env` URLs together if needed.
+
+An alternative, requiring only Docker, runs the API and migrations in containers:
+
+```bash
+docker compose --profile app up -d --build --wait
+```
+
+This runs migrations and idempotent development market and learning seeds before starting the API. Container dependencies use the hash-verified `requirements.lock` export of `uv.lock`; see the dependency guide before updating packages. Do not run the host API and container API simultaneously on port 8080. After code changes use `--build` again. This Compose stack is for local development; image major tags receive upstream patches, whereas Python packages are fully locked.
+
+Stop the host API with Ctrl+C, then stop infrastructure with `docker compose down`. Named volumes retain data.
+
+## Verify
+
+From `investiq-be`, with infrastructure running:
+
+```bash
+uv sync --locked
+uv run --locked alembic upgrade head
+uv run --locked alembic check
+uv run --locked ruff check .
+uv run --locked ruff format --check .
+uv run --locked mypy
+uv run --locked pytest
+```
+
+The default test suite includes **real PostgreSQL and Redis** integration tests. Foundation tests use temporary tables; identity tests create and drop a dedicated migrated database. Redis keys have unique namespaces and TTLs; tests never flush Redis or create demo business activity in your application database. The local PostgreSQL test role needs CREATEDB permission. `uv run --locked pytest -m 'not integration'` runs only infrastructure-independent tests. There is no SQLite substitute. HTTP tests use HTTPX ASGI transport and explicitly run application startup/shutdown.
+
+## Frontend connection
+
+From `investiq-fe`, run `npm ci` and `npm run dev`, then open **http://localhost:5173**. The Vite proxy already forwards `/api` to port 8080. Registration/login, onboarding, profile/settings, session revocation and email-link forms are connected. Cookies and CSRF are managed by the API client; no tokens or account records are saved into localStorage.
+
+Open **http://localhost:8025** for local verification/reset emails. Mailpit captures messages locally. No real user activity is seeded and no demo activity is uploaded. The frontend now includes its missing `.env.example`.
+
+See [Phase 2 identity contracts](docs/PHASE-2.md), [Phase 3 market schema, policies and tests](docs/PHASE-3.md), [Phase 4 contests](docs/PHASE-4.md), [Phase 5 portfolios](docs/PHASE-5.md), and [Phase 6 simulated results and worker setup](docs/PHASE-6.md). The portfolio screen uses backend catalogue, filtering and timestamped synthetic EOD quotes. Signed-out portfolio previews remain separate. Signed-in contest members use server-owned drafts and immutable submissions. Contest discovery, draft creation/revision, publication, in-app invitations, joining and My Contests now use PostgreSQL. Verify your email before hosting/joining; invitations appear in My Contests and send no external email. Published rules are frozen. Drafts and submissions are available; valuation and rankings are available through the results APIs.
+
+## Layout and architecture
+
+```text
+src/investiq/
+  main.py              application factory, middleware, dependency lifecycle
+  api/                 HTTP routing, identity dependencies and operational probes
+  schemas/             validated public response and request contracts
+  core/                settings, error handling, JSON logging
+  db/                  declarative base, async engine, request session dependency
+  models/              identity, market, contest, portfolio and valuation persistence/constraints
+  services/            identity, market, contest, portfolio and valuation services
+  analytics/           pure deterministic Decimal allocation/performance
+  jobs/                Celery/Beat periodic simulation valuation
+  valuation_cli.py     manual trusted valuation/backfill command
+  adapters/            SMTP and market provider interfaces/adapters
+  data/                versioned synthetic dataset and reviewed calendar
+  market_cli.py        development market seed
+  contest_cli.py       optional private draft seed for an existing verified host
+  cli.py               operator role provisioning
+migrations/            versioned schema changes (Alembic)
+tests/                 HTTP, configuration, PostgreSQL and Redis verification
+docs/                  assessment, decisions, schema policy, progress
+```
+
+FastAPI routers play the role of Spring MVC controllers; Pydantic schemas are validated DTOs, settings resemble `@ConfigurationProperties`, and `get_session` is a dependency provider. SQLAlchemy's `AsyncSession` is the persistence context. Application services own `async with session.begin()` boundaries, analogous to `@Transactional`; request teardown never silently commits. Alembic provides Flyway/Liquibase-style version history.
+
+Identity, market, contest and portfolio services/models, deterministic allocation, SMTP and a fixture market provider are implemented. Add the remaining domain, job, analytics and AI modules as their phases arrive. They are deliberately not empty service stubs. Celery now runs valuation scans; LangChain, LangGraph and PostgreSQL checkpointing begin with the coach; pgvector begins with retrieval. These packages are not installed before they have a runnable use.
+
+See [frontend assessment](docs/PHASE-0.md), [architecture decisions](docs/DECISIONS.md), [database policy](docs/SCHEMA.md), [dependency verification](docs/DEPENDENCIES.md), and [progress](docs/PROGRESS.md).
+
+## Market data scope
+
+All prices are fixed synthetic examples for 14–16 October 2026, with explicit freshness checks, source metadata and a reviewed 2026 calendar. They are not actual historical or live quotes. Stale/missing data blocks simulation eligibility; no automatic current-date price generation occurs. Production market reads/fixture seeding are disabled pending an approved feed. See [provider research and policies](docs/PHASE-3.md).
+
+## Phase 4
+
+Add contests, versioned frozen rules, discovery, invitations, membership, ownership and lifecycle transitions, then connect contest discovery and My Contests. Server-side portfolio drafts/submission and valuation follow in Phases 5 and 6.
+
+## Try Phase 4
+
+After starting the stack and frontend, open Contests → Create contest. Save a draft, review its rules, then publish. For private contests invite another verified email; the recipient accepts under My Contests. The host joins separately. Empty history is expected for new accounts. All schedules use the reviewed 2026 exchange calendar, with Asia/Kolkata inputs/display.
+
+Optional seed after registering/verifying your account:
+
+```bash
+uv run --locked python -m investiq.contest_cli --owner-email you@example.com
+```
+
+This creates one retry-safe private fixture draft, with no invented memberships or performance. [Phase 4 documentation](docs/PHASE-4.md) includes exact API contracts, concurrency rules, test commands and limitations.
+
+## Try Phase 5
+
+Join a published contest, then open **Open contest portfolio** on its detail page or **Portfolio** from My Contests. Choose quantities or weights, **Save draft → Review saved draft → Confirm contest submission**. Each accepted version freezes actual whole shares, price/source evidence, simulated fee and residual cash. Earlier submissions remain immutable; the newest accepted version is authoritative at the entry deadline. Draft-only changes do not replace a submission.
+
+The API rejects stale/incomplete EOD data. Fixtures cover October 14–16, 2026; no current prices are invented. [Phase 5 documentation](docs/PHASE-5.md) includes schema, accounting/rounding, API examples, development starter data and test commands.
+
+## Try Phase 6
+
+After joining/submitting, open **Performance** or **Leaderboard** from My Contests. The signed-in dashboard shows actual activity/results and links to completed-contest history. Workers value all ranked portfolios at one published session close, then finalize once all required contest sessions are complete. Missing prices leave results pending or marked out of date. Everything is virtual; there are no payments or financial settlement.
+
+Fixture prices still cover only October 14–16, 2026. A contest outside those dates cannot produce results until valid prices are supplied; the scheduler never invents them. [Phase 6 documentation](docs/PHASE-6.md) includes the historical test scenario, full schema/API contracts, calculations, job retry rules and exact commands.
+
+Learning setup, API contracts, database rules and verification: [Phase 7](docs/PHASE-7.md).
