@@ -12,6 +12,7 @@ from sqlalchemy.ext.asyncio import async_sessionmaker
 
 from investiq.adapters.coach import CoachProvider
 from investiq.adapters.mail import Mailer, SmtpMailer
+from investiq.adapters.martin import MartinProvider
 from investiq.api.coach import router as coach_router
 from investiq.api.community import router as community_router
 from investiq.api.contest import router as contest_router
@@ -19,6 +20,7 @@ from investiq.api.health import router as health_router
 from investiq.api.identity import router as identity_router
 from investiq.api.learning import router as learning_router
 from investiq.api.market import router as market_router
+from investiq.api.martin import router as martin_router
 from investiq.api.portfolio import router as portfolio_router
 from investiq.api.rewards import router as rewards_router
 from investiq.api.valuation import router as valuation_router
@@ -32,6 +34,7 @@ from investiq.services.contest import ContestService
 from investiq.services.identity import IdentityService
 from investiq.services.learning import LearningService
 from investiq.services.market import MarketService
+from investiq.services.martin import MartinService
 from investiq.services.portfolio import PortfolioService
 from investiq.services.rewards import RewardsService
 from investiq.services.valuation import ValuationService
@@ -46,6 +49,7 @@ def create_app(
     contest_clock: Callable[[], datetime] | None = None,
     learning_clock: Callable[[], datetime] | None = None,
     coach_provider: CoachProvider | None = None,
+    martin_provider: MartinProvider | None = None,
 ) -> FastAPI:
     config = settings or Settings()
     configure_logging(config.log_level)
@@ -73,6 +77,7 @@ def create_app(
         app.state.portfolios = PortfolioService(app.state.contests)
         app.state.valuations = ValuationService(app.state.contests)
         app.state.coach = CoachService(app.state.valuations, coach_provider)
+        app.state.martin = MartinService(app.state.coach, martin_provider)
         try:
             yield
         finally:
@@ -139,6 +144,7 @@ def create_app(
     app.include_router(market_router, prefix="/api/v1")
     app.include_router(contest_router, prefix="/api/v1")
     app.include_router(portfolio_router, prefix="/api/v1")
+    app.include_router(martin_router, prefix="/api/v1")
     app.include_router(coach_router, prefix="/api/v1")
     app.include_router(community_router, prefix="/api/v1")
     app.include_router(rewards_router, prefix="/api/v1")

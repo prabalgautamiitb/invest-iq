@@ -93,3 +93,8 @@ Phase 10 operational checks: Alembic model/offline comparison, disposable migrat
 Added a standalone disposable database/API/frontend runner and loopback-only control page. Testers can register/verify sandbox accounts, enable a sandbox admin, publish through the normal UI, confirm portfolios and advance the market/contest clock through entry lock, first published valuation and final standings. A separate cookie isolates normal sessions; normal contest rules and production routes are unchanged. See [manual testing](MANUAL-CONTEST-TESTING.md).
 
 Sandbox verification: two new PostgreSQL integration cases passed, covering control security/session isolation and real admin publication/submission through first/final valuation. A live frontend walkthrough created/published an admin contest, confirmed two different learner portfolios, and displayed two ranked portfolios whose values changed across sessions before final completion. Ruff/format, strict mypy and diff checks passed. The walkthrough database was reset before leaving the sandbox available for manual use.
+
+
+### Ask Martin
+
+Connected the floating avatar to private PostgreSQL conversations, durable bounded question processing on the existing worker/Beat, Ollama and optional Gemini adapters, approved lesson retrieval and same-owner current/historical simulation facts. Answers distinguish question intent, synthesize concise replies, and validate citations/personal numeric claims; owned context is available automatically for personal follow-ups. The UI supports follow-ups, contest scope, status, cancellation, retries, history, deletion, mobile/keyboard use and account-boundary resets. Migration: `0012_martin`. Setup and behavior: [Ask Martin](../../investiq-fe/docs/ASK-MARTIN.md).

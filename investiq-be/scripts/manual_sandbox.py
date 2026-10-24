@@ -167,6 +167,13 @@ def application(settings: Settings, token: str, mailer: Mailer | None = None) ->
             "message": "Sandbox admin enabled. Reload the frontend to refresh its account role."
         }
 
+    @app.post("/__sandbox__/martin", include_in_schema=False)
+    async def work_martin(request: Request) -> dict[str, int]:
+        local(request, mutation=True)
+        async with control_lock:
+            result: dict[str, int] = await app.state.martin.sweep()
+            return result
+
     @app.post("/__sandbox__/coach", include_in_schema=False)
     async def work_coach(request: Request) -> dict[str, int]:
         local(request, mutation=True)

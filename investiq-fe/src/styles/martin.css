@@ -1,0 +1,91 @@
+#martin-root{position:fixed;right:24px;bottom:calc(24px + env(safe-area-inset-bottom));z-index:60;font-family:Inter,Arial,sans-serif;color:#e0eaf5}
+#martin-root[hidden],#martin-root [hidden]{display:none!important}
+#martin-root button,#martin-root a,#martin-root textarea{font:inherit;box-sizing:border-box}
+.martin-launcher{position:relative;display:grid;place-items:center;width:68px;height:68px;min-height:68px;padding:3px;border:0;border-radius:50%;background:linear-gradient(135deg,#a7f3cf,#58d7b4 45%,#79b8ff);color:#e1f8ef;box-shadow:0 8px 28px #0007,0 0 24px #64dfb51f;cursor:pointer;transition:transform .2s ease,box-shadow .2s ease}
+.martin-launcher>svg{display:block;width:100%;height:100%;border-radius:50%;border:2px solid #162c3b;box-sizing:border-box}
+.martin-launcher-caption{position:absolute;right:calc(100% + 12px);top:50%;transform:translateY(-50%);padding:9px 13px;border:1px solid #42625e;border-radius:12px;background:#132b32;color:#d7f3e8;font-size:12px;font-weight:600;white-space:nowrap;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .15s ease}
+.martin-launcher:focus-visible .martin-launcher-caption{opacity:1;visibility:visible}
+.martin-launcher-spark{position:absolute;right:-1px;bottom:-1px;display:grid;place-items:center;width:23px;height:23px;border:2px solid #101c2d;border-radius:50%;background:#c0f5df;color:#1c5148;font-size:16px;line-height:1}
+.martin-window{position:absolute;right:0;bottom:82px;width:390px;height:min(620px,calc(100dvh - 132px - env(safe-area-inset-bottom)));display:grid;grid-template-rows:auto minmax(0,1fr) auto;border:1px solid #3b5369;border-radius:22px;background:#101c2d;box-shadow:0 20px 70px #0008;overflow:hidden}
+.martin-header{display:flex;align-items:center;gap:12px;padding:18px;background:linear-gradient(120deg,#163a35,#172b43);border-bottom:1px solid #31485c}
+.martin-avatar{display:grid;place-items:center;width:40px;height:40px;flex-shrink:0;border-radius:50%;background:#8debc7;overflow:hidden;border:1px solid #78c9ad}
+.martin-avatar svg{display:block;width:100%;height:100%}
+.martin-header h2{margin:0;font-size:17px;letter-spacing:-.3px}
+.martin-header p{margin:5px 0 0;font-size:11px;color:#a9c7c6}
+.martin-preview{margin-left:auto;color:#e7ce98;border:1px solid #6c613d;border-radius:20px;padding:4px 7px;font-size:10px}
+.martin-close{display:grid;place-items:center;min-height:36px;width:36px;padding:0;border:1px solid #41616a;border-radius:10px;background:#152c35;color:#cce6e3;cursor:pointer;flex-shrink:0}
+.martin-close svg{width:20px;height:20px;stroke:currentColor;stroke-width:1.8}
+.martin-body{overflow-y:auto;overscroll-behavior:contain;padding:20px;scrollbar-width:thin}
+.martin-context{display:flex;align-items:center;gap:7px;font-size:11px;color:#9bb7cb;margin:0 0 18px}
+.martin-context>span:first-child{color:#7ddfbd;font-size:16px}
+.martin-body h3{font-size:21px;line-height:1.35;letter-spacing:-.5px;margin:0 0 10px}
+.martin-intro{color:#adc1d4;font-size:13px;line-height:1.6;margin:0 0 16px}
+.martin-availability{padding:12px 14px;background:#1d3040;border:1px solid #3b5265;border-radius:12px;font-size:12px;color:#c2d4e4;line-height:1.65;margin:0 0 18px}
+.martin-modes{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.martin-modes button{padding:10px 8px;min-height:42px;border-radius:10px;border:1px solid #344a60;background:#152437;color:#bacee1;cursor:pointer;font-size:12px!important}
+.martin-modes button[aria-pressed=true]{background:#1c443a;border-color:#57bb94;color:#a2f2ce}
+.martin-scope{font-size:12px;color:#adbfce;line-height:1.65;margin:14px 0}
+.martin-small{color:#93a9c0;text-transform:uppercase;letter-spacing:1.2px;font-size:10px;margin:22px 0 10px}
+.martin-prompts{display:grid;gap:8px}
+.martin-prompts button{display:flex;align-items:center;justify-content:space-between;gap:14px;width:100%;text-align:left;padding:12px;border:1px solid #2d4257;background:#142337;color:#d5e4f0;border-radius:11px;font-size:12px!important;line-height:1.5;cursor:pointer}
+.martin-prompts button>span{color:#7dcdae}
+.martin-resources{display:flex;flex-wrap:wrap;align-items:center;gap:14px;margin-top:20px;font-size:11px;line-height:1.6}
+.martin-resources>span{color:#91a8bf}
+.martin-resources a{color:#90d9bd;text-decoration:none}
+.martin-composer{margin:0;padding:15px 18px 14px;border-top:1px solid #30445a;background:#122033}
+.martin-composer label{display:block;color:#bacbdc;font-size:11px;margin-bottom:8px}
+.martin-composer textarea{display:block;width:100%;min-height:70px;max-height:120px;resize:vertical;padding:10px 12px;border:1px solid #3a536a;border-radius:12px;background:#0d1929;color:#e0eaf5;font-size:13px!important;line-height:1.6}
+.martin-composer-actions{display:flex;align-items:center;gap:12px;margin-top:10px}
+.martin-count{color:#92a8be;font-size:10px;margin-right:auto;font-variant-numeric:tabular-nums}
+.martin-composer-actions button{border:0;background:none;padding:8px 0;color:#c0d3e4;font-size:11px!important;cursor:pointer;min-height:34px}
+.martin-composer-actions .martin-send{border:1px solid #3b5364;border-radius:10px;background:#243c44;color:#a2bfb8;padding:8px 12px}
+.martin-send span{margin-left:7px}
+.martin-composer-actions button:disabled{opacity:.65;cursor:not-allowed}
+.martin-composer>p{font-size:10px;line-height:1.6;color:#95a9bd;margin:10px 0 0}
+#martin-root button:focus-visible,#martin-root a:focus-visible,#martin-root textarea:focus-visible{outline:2px solid #83e8c6;outline-offset:3px}
+@media(hover:hover){.martin-prompts button:hover,.martin-modes button:hover{border-color:#66ac98}.martin-resources a:hover{text-decoration:underline}.martin-launcher:hover{transform:translateY(-3px);box-shadow:0 12px 32px #0007,0 0 28px #64dfb536}.martin-launcher:hover .martin-launcher-caption{opacity:1;visibility:visible}}
+@media(max-width:600px){#martin-root{right:14px;bottom:calc(86px + env(safe-area-inset-bottom))}.martin-launcher{width:60px;height:60px;min-height:60px;padding:3px}.martin-window{bottom:74px;width:min(390px,calc(100vw - 28px));height:min(620px,calc(100dvh - 180px - env(safe-area-inset-bottom)));border-radius:18px}.martin-header{padding:14px;gap:10px}.martin-body{padding:16px}.martin-composer{padding:12px 14px}.martin-header h2{font-size:16px}.martin-composer textarea{font-size:16px!important}.martin-body h3{font-size:20px}}
+
+@media(prefers-reduced-motion:reduce){.martin-launcher,.martin-launcher-caption{transition:none}.martin-launcher:hover{transform:none}}
+/* Connected conversations use a fixed composer and a scrollable message history. */
+.martin-window{grid-template-rows:auto auto minmax(0,1fr) auto;height:min(700px,calc(100dvh - 132px - env(safe-area-inset-bottom)))}
+.martin-header .martin-close{margin-left:auto}
+.martin-toolbar{display:flex;gap:6px;padding:8px 14px;border-bottom:1px solid #30445a;background:#122436}
+.martin-toolbar button,.martin-body>button,.martin-assistant-message>button,.martin-history>button{background:#20394b;border:1px solid #3c586a;color:#cce5e6;border-radius:8px;padding:7px 10px;font-size:11px;cursor:pointer}
+.martin-toolbar button:disabled{opacity:.5;cursor:wait}
+.martin-composer .martin-availability{font-size:10px;padding:0;background:none;border:0;margin:0 0 10px;color:#a8c1cd}
+.martin-availability a{color:#94e2bd}
+.martin-composer-actions .martin-send:not(:disabled){color:#10352d;background:#8ce2bc;border-color:#a7efce;cursor:pointer}
+.martin-composer textarea:disabled{opacity:.6;cursor:not-allowed}
+.martin-thread-scope{font-size:11px;color:#a8c1cd;margin-bottom:18px}
+.martin-messages{display:grid;gap:22px}
+.martin-turn p{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.7;font-size:12px;margin:8px 0}
+.martin-user-message{margin-left:35px;background:#21483e;border:1px solid #386b59;padding:12px 14px;border-radius:14px 14px 3px 14px}
+.martin-user-message>span{font-size:10px;color:#97c7b4}
+.martin-user-message p{color:#e2f3eb;margin:4px 0}
+.martin-assistant-message{padding-top:16px}
+.martin-assistant-message>strong{font-size:12px;color:#a5eacb}
+.martin-source{padding:12px 14px;border-left:2px solid #62c5a3;background:#162c3d;border-radius:0 10px 10px 0;margin:14px 0}
+.martin-source p{margin:0 0 10px;color:#cfe0ee}
+.martin-source a{font-size:10px;line-height:1.6;color:#97dcbf;text-decoration:none;overflow-wrap:anywhere;display:block}
+.martin-snapshot{display:block;font-size:10px;color:#e0c48f;margin-top:6px}
+.martin-follow-up{color:#9dd3c4}
+.martin-answer-details{font-size:10px;color:#9eb6c9;line-height:1.7;margin-top:12px}
+.martin-answer-details summary{cursor:pointer}
+.martin-answer-details p{font-size:10px}
+.martin-failure{color:#f2b9ac;font-size:12px;line-height:1.7;padding:10px;border:1px solid #664541;border-radius:10px;overflow-wrap:anywhere;margin-bottom:12px}
+.martin-thinking{color:#c6dce9}
+.martin-notice{font-size:12px;color:#b6dfcc;line-height:1.6;padding:10px;border:1px solid #426356;border-radius:10px}
+.martin-history{display:grid;gap:12px}
+.martin-history article{border:1px solid #344d61;border-radius:12px;padding:12px}
+.martin-history article>button{display:block;background:none;color:#cde0ec;border:0;padding:4px 0;text-align:left;cursor:pointer;font-size:11px;line-height:1.6}
+.martin-history strong{display:block;font-size:12px;overflow-wrap:anywhere}
+.martin-history span{display:block;color:#96aec4;font-size:10px;margin:7px 0}
+.martin-contest-label{display:block;color:#acc6d9;font-size:11px;margin:16px 0}
+.martin-contest-label select{display:block;width:100%;max-width:100%;background:#162a3c;color:#d2e5ef;border:1px solid #3e586b;border-radius:8px;margin-top:8px;padding:10px;font-size:12px}
+@media(max-width:600px){.martin-window{height:min(700px,calc(100dvh - 180px - env(safe-area-inset-bottom)))}.martin-composer>p:last-child{font-size:9px}.martin-source{padding:10px}.martin-user-message{margin-left:20px}}
+@media(max-height:520px){.martin-window{position:fixed;right:12px;bottom:12px;width:min(440px,calc(100vw - 24px));height:calc(100dvh - 24px)}.martin-header{padding:10px 14px}.martin-avatar{width:30px;height:30px}.martin-composer{padding:8px 14px}.martin-composer textarea{min-height:50px;max-height:70px}.martin-composer>p:last-child{font-size:9px;line-height:1.3;margin-top:5px}.martin-composer label{margin-bottom:4px}.martin-composer-actions{margin-top:5px}}
+
+.martin-announcement{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+
+.martin-source summary{cursor:pointer;color:#a9dfcc;font-size:11px;line-height:1.6}.martin-source[open] summary{margin-bottom:10px}

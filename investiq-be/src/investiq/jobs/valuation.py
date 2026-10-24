@@ -31,6 +31,11 @@ app.conf.update(
     timezone="UTC",
     enable_utc=True,
     beat_schedule={
+        "martin-scan": {
+            "task": "investiq.martin.scan",
+            "schedule": settings.ai_scan_seconds,
+            "options": {"expires": settings.ai_scan_seconds},
+        },
         "coach-scan": {
             "task": "investiq.coach.scan",
             "schedule": settings.ai_scan_seconds,
@@ -102,3 +107,20 @@ def coach_scan() -> dict[str, int]:
 
 
 coach_scan_task = app.task(name="investiq.coach.scan", acks_late=True)(coach_scan)
+
+
+async def execute_martin() -> dict[str, int]:
+    application = create_app(settings)
+    async with application.router.lifespan_context(application):
+        result: dict[str, int] = await application.state.martin.sweep()
+        return result
+
+
+def martin_scan() -> dict[str, int]:
+    try:
+        return asyncio.run(execute_martin())
+    except Exception:
+        raise RuntimeError("martin_scan_failed; retry on next scheduled scan") from None
+
+
+martin_scan_task = app.task(name="investiq.martin.scan", acks_late=True)(martin_scan)

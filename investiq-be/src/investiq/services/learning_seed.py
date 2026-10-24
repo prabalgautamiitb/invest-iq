@@ -58,6 +58,9 @@ async def seed_curriculum(factory: async_sessionmaker[AsyncSession], settings: S
     courses = TypeAdapter(list[SeedCourse]).validate_json(
         files("investiq.data").joinpath("learning_curriculum_v1.json").read_text()
     )
+    extensions = TypeAdapter(dict[str, list[str]]).validate_json(
+        files("investiq.data").joinpath("learning_extensions_v1.json").read_text()
+    )
     async with factory() as db, db.begin():
         await db.execute(text("SELECT pg_advisory_xact_lock(742017)"))
         for data in courses:
@@ -91,4 +94,26 @@ async def seed_curriculum(factory: async_sessionmaker[AsyncSession], settings: S
                         "curriculum_changed",
                         "Publish a new version instead of editing existing content",
                     )
+                if lesson_data.title in extensions:
+                    # Append a new published version; prior quiz/report evidence stays immutable.
+                    extended_id = uuid5(lesson_id, "version-2")
+                    extended = await db.get(LessonVersion, extended_id)
+                    extended_values = {
+                        **values,
+                        "paragraphs": extensions[lesson_data.title] + lesson_data.paragraphs,
+                    }
+                    if extended is None:
+                        db.add(
+                            LessonVersion(
+                                id=extended_id, lesson_id=lesson_id, version=2, **extended_values
+                            )
+                        )
+                    elif any(
+                        getattr(extended, key) != value for key, value in extended_values.items()
+                    ):
+                        raise AppError(
+                            409,
+                            "curriculum_changed",
+                            "Publish a new lesson version instead of editing existing content",
+                        )
         await db.flush()

@@ -159,3 +159,6 @@ The AI coach uses Ollama locally by default, without an API key. Open `http://lo
 ## Test a full contest without waiting for market hours
 
 Use the isolated [manual frontend sandbox](docs/MANUAL-CONTEST-TESTING.md). Run `uv run --locked python scripts/manual_sandbox.py` from this directory, then open `http://127.0.0.1:8082/__sandbox__`. It starts a separate frontend at port 5175, uses fresh test accounts and lets you advance from entry to first valuation and final standings. Existing normal-app accounts/contests remain separate; Ctrl+C deletes the temporary sandbox database.
+
+
+Ask Martin now uses private persisted conversations and the existing Ollama/Gemini configuration. Migration `0012_martin` is applied by the Compose app profile; the existing worker/Beat also processes Martin questions. Rebuild/restart the app profile after updating. No extra provider dependency or API key is needed for local Ollama. [Complete chat setup, endpoints and privacy](../investiq-fe/docs/ASK-MARTIN.md).

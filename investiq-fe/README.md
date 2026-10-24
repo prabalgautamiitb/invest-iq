@@ -126,3 +126,8 @@ Schedules, advanced filters, metrics and submission versions are expandable. The
 
 
 AI Insights now opens one report at a time. **Overview** contains up to three key takeaways, what worked, what to review and a next learning step. **Learning** holds suggested lessons and cited excerpts; **Journal** holds private reflections; **Evidence** holds all recorded facts, source references, limitations and technical details; **Past reports** opens saved reports individually. The contest name and snapshot date stay visible, earlier snapshots are labeled, and **Show latest report** returns from a selected historical report. Unsaved journal text survives section changes, and report polling leaves navigation available while generation runs.
+
+
+## Ask Martin
+
+The circular Martin avatar opens private educational chat on workspace pages. Sign in and verify your email, choose a learning or performance question, and send it. Replies cite approved Academy passages and your own recorded contest evidence. Follow-ups, paginated chat history, cancellation, retry and deletion are connected to the backend. Keep Ollama and the backend worker/Beat running. See [setup, API, privacy and grounding](docs/ASK-MARTIN.md).

@@ -115,3 +115,12 @@ export const coachApi = {
   reflections: (contestId,params={}) => request('/me/coach/reflections?'+new URLSearchParams({contest_id:contestId,...params})),
   reflect: (input,key) => request('/me/coach/reflections',{method:'POST',body:input,headers:{'Idempotency-Key':key}}),
 };
+
+export const martinApi = {
+  settings: () => request('/me/martin/settings'),
+  conversations: (params={}) => request('/me/martin/conversations?'+new URLSearchParams(params)),
+  turns: (conversationId,params={}) => request(`/me/martin/conversations/${id(conversationId)}?`+new URLSearchParams(params)),
+  ask: (input,key) => request('/me/martin/turns',{method:'POST',body:input,headers:{'Idempotency-Key':key}}),
+  control: (turnId,action) => request(`/me/martin/turns/${id(turnId)}/${id(action)}`,{method:'POST'}),
+  remove: conversationId => request(`/me/martin/conversations/${id(conversationId)}`,{method:'DELETE'}),
+};

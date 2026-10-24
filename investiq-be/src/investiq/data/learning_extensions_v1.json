@@ -1,0 +1,10 @@
+{
+  "Whole shares and residual cash": [
+    "A portfolio is a collection of holdings and cash. Asset allocation describes how its value is divided among asset types or holdings. A stock represents ownership in a company; a bond is a debt investment in which an issuer owes payments under its terms. An exchange-traded fund (ETF) holds a basket of assets and trades on an exchange; its diversification depends on what it holds.",
+    "Diversification means spreading exposure across different holdings, sectors or asset types instead of depending on one source of returns. It can reduce the impact of a single company's poor performance. It does not remove market-wide risk or guarantee a profit, and correlated holdings can still decline together."
+  ],
+  "Published closes and benchmarks": [
+    "A benchmark is a reference used to compare performance. A market index tracks a defined group of securities under stated rules and can serve as a benchmark. Comparing a portfolio with a relevant benchmark helps describe relative performance; beating it over one period does not prove investing skill or predict future returns.",
+    "Return measures the change in value relative to starting value, after accounting for the costs and cash flows included in the calculation. Compounding means later returns apply to a value that already includes earlier gains or losses. A percentage gain after a percentage loss is applied to the reduced value, so equal percentage changes need not cancel out."
+  ]
+}

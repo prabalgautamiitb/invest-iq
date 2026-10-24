@@ -12,6 +12,7 @@ from investiq.models import (  # noqa: F401 -- register domain metadata
     identity,
     learning,
     market,
+    martin,
     portfolio,
     rewards,
     valuation,

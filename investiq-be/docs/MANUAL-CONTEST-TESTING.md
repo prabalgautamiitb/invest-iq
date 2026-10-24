@@ -85,3 +85,6 @@ Controls bind to loopback, check the expected Host, require the control page's s
 Abrupt machine shutdown/SIGKILL cannot run cleanup. If that happens, an operator may remove only the orphaned `investiq_manual_sandbox_*` database after stopping its processes. Normal exit through Ctrl+C performs cleanup automatically. Unrelated databases and the normal Compose services are preserved.
 
 Verification covers cookie isolation, loopback/Host/token/Origin checks, verified admin promotion, the normal platform-contest creation/publication/submission API, pending results before publication, first/final snapshot changes and terminal completion. Manual browser verification also exercised admin creation, learner signup/join/confirmation and two ranked portfolios through final results.
+
+
+Ask Martin is also available in the sandbox. Send a question in its floating window, then click **Answer one queued Martin question** on the control panel. This calls the real configured local provider against the disposable database. The normal worker processes the normal database, so it cannot answer sandbox questions. Restart an older sandbox runner to pick up the new routes/schema; stopping the runner discards its temporary data.

@@ -32,6 +32,7 @@ class Settings(BaseSettings):
     gemini_api_key: SecretStr = SecretStr("")
     ai_timeout_seconds: int = Field(default=45, ge=5, le=60)
     ai_scan_seconds: int = Field(default=10, ge=5, le=60)
+    martin_request_limit: int = Field(default=20, ge=1, le=1000)
     ai_request_limit: int = Field(default=5, ge=1, le=1000)
     community_write_limit: int = Field(default=60, ge=1, le=10000)
     community_rate_window_seconds: int = Field(default=60, ge=1, le=3600)

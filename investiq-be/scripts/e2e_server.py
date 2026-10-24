@@ -18,15 +18,40 @@ from sqlalchemy.engine import make_url
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
 from investiq.adapters.coach import CoachGeneration
+from investiq.adapters.martin import MartinGeneration
 from investiq.ai.workflow import setup_checkpoints, sweep
 from investiq.core.config import Settings
 from investiq.db.session import make_engine
 from investiq.main import create_app
 from investiq.models.identity import User
 from investiq.schemas.coach import CoachEvidence, CoachPlan
+from investiq.schemas.martin import MartinPlan
 from investiq.services.learning_seed import seed_curriculum
 from investiq.services.market_ingestion import MarketIngestionService
 from investiq.services.rewards_seed import seed_rewards
+
+
+class BrowserMartin:
+    async def generate(self, question, sources, history):
+        personal = any(word in question.lower().split() for word in ["i", "my", "mine"])
+        kinds = {"performance", "status"} if personal else {"lesson"}
+        source = next((s for s in sources if s.kind in kinds), sources[0])
+        return MartinGeneration(
+            MartinPlan(
+                intent="personal_assessment" if personal else "explanation",
+                reply="Your allocation needs a review of concentration and sector spread."
+                if personal
+                else (
+                    "Diversification spreads exposure across holdings. "
+                    "Its benefits depend on the assets."
+                ),
+                source_ids=[source.id],
+                follow_up="Which part would you like to explore?",
+            ),
+            100,
+            20,
+            10,
+        )
 
 
 class BrowserCoach:
@@ -93,6 +118,7 @@ async def main() -> None:
             auth_rate_limit=10000,
             csrf_rate_limit=10000,
             ai_request_limit=1000,
+            martin_request_limit=1000,
             ollama_model="browser-test-only",
             rate_limit_prefix=f"investiq:browser:{uuid4()}",
             frontend_url="http://127.0.0.1:5174",
@@ -114,6 +140,7 @@ async def main() -> None:
             market_clock=lambda: clock[0],
             contest_clock=lambda: clock[0],
             coach_provider=BrowserCoach(),
+            martin_provider=BrowserMartin(),
         )
 
         def harness_only(request: Request) -> None:
@@ -142,6 +169,11 @@ async def main() -> None:
         async def browser_value(identifier: UUID, request: Request) -> object:
             harness_only(request)
             return await application.state.valuations.evaluate(identifier)
+
+        @application.post("/__browser__/martin-work", include_in_schema=False)
+        async def browser_martin_work(request: Request) -> object:
+            harness_only(request)
+            return await application.state.martin.sweep()
 
         @application.post("/__browser__/coach-work", include_in_schema=False)
         async def browser_coach_work(request: Request) -> object:
