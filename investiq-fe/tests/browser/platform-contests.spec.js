@@ -59,7 +59,7 @@ test('admin publishes an InvestIQ contest and another learner joins, submits and
 test('regular learners cannot create or manage platform contests',async({page,request})=>{
   await verifiedAccount(page,request,`platform-denied-${randomUUID()}@example.com`);
   await page.goto('/#/contests');
-  await expect(page.getByRole('link',{name:'Create contest →',exact:true})).toBeVisible();
+  await expect(page.getByRole('link',{name:'Create contest',exact:true})).toBeVisible();
   await expect(page.getByRole('link',{name:'Manage InvestIQ contests',exact:true})).toHaveCount(0);
   await page.goto('/#/contests/create-platform');
   await expect(page.locator('.main')).toContainText('Administrator access is required.');

@@ -1,11 +1,11 @@
 import { academyApi } from '../api/services.js';
 
 export function createLearningController({shell,pagehead,esc,link,render,current,getAccount}) {
-  let notice='';
+  let notice='',courseFilter='all';
   let key='',generation=0,loading=false,loaded=false,error='',courses=[],progress=null,lesson=null,history=[],historyCursor=null,courseCursor=null,result=null,answers={},retry=null;
   const routeKey=()=>JSON.stringify([current(),getAccount()?.id]);
   const lessonId=()=>current().split('/')[1];
-  function reset(){notice='';key='';generation++;loading=false;loaded=false;error='';courses=[];progress=null;lesson=null;history=[];result=null;answers={};retry=null;historyCursor=null;courseCursor=null;}
+  function reset(){notice='';courseFilter='all';key='';generation++;loading=false;loaded=false;error='';courses=[];progress=null;lesson=null;history=[];result=null;answers={};retry=null;historyCursor=null;courseCursor=null;}
   const button=(action,label,id='')=>`<button class="secondary" data-learning-action="${action}" data-id="${esc(id)}" ${loading?'disabled':''}>${label}</button>`;
   async function load() {
     const expected=routeKey();reset();key=expected;const token=generation;loading=true;
@@ -29,7 +29,15 @@ export function createLearningController({shell,pagehead,esc,link,render,current
     if(error)return wrap(body+`<section class="panel" role="alert"><p>${esc(error)}</p>${button('refresh','Retry Academy')}</section>`);
     body+=totals()+(notice?`<p class="callout" role="alert">${esc(notice)}</p>`:'');
     if(!lesson){
-      body+=`<div class="section-heading"><h2>Courses</h2>${button('refresh','Refresh Academy')}</div><div class="grid2">${courses.map(c=>{const enrolled=progress?.enrolled_course_ids.includes(c.id),done=c.lessons.filter(l=>progress?.completed_lesson_ids.includes(l.id)).length;return `<section class="panel"><h2>${esc(c.title)}</h2><p>${esc(c.description)}</p><p>${done} / ${c.lessons.length} lessons completed</p>${getAccount()&&!enrolled?button('enroll','Enroll in course',c.id):enrolled?'<p class="positive">Enrolled</p>':''}${c.lessons.map(l=>`<div class="settingsrow"><div>${link(esc(l.title),'academy/'+l.id,'ghost')}<p class="small">${l.xp} XP · ${progress?.completed_lesson_ids.includes(l.id)?'Completed':'Not completed'}</p></div></div>`).join('')}</section>`;}).join('')||'<section class="panel">No published courses yet.</section>'}</div>${courseCursor?button('courses-more','Load more courses',courseCursor):''}`;
+      const enrolledIds=new Set(progress?.enrolled_course_ids||[]);
+      const enrolledCount=courses.filter(c=>enrolledIds.has(c.id)).length;
+      const visible=courses.filter(c=>courseFilter==='all'||(courseFilter==='enrolled'?enrolledIds.has(c.id):!enrolledIds.has(c.id)));
+      const views=[['all','All courses',courses.length],['enrolled','My courses',enrolledCount],['available','Not enrolled',courses.length-enrolledCount]];
+      const empty=courseFilter==='enrolled'?(courseCursor?"No enrolled courses in the loaded catalogue. Load more courses to browse the rest.":"You haven’t enrolled in a course yet. Browse All courses to get started."):courseFilter==='available'?(courseCursor?'No unenrolled courses in the loaded catalogue. Load more courses to browse the rest.':'You’re enrolled in every published course. You can continue learning in My courses.'):'No published courses yet.';
+      body+=`<div class="section-heading"><h2>Courses</h2>${button('refresh','Refresh Academy')}</div>
+        ${getAccount()?`<div class="tabs" role="group" aria-label="Course views">${views.map(([value,label,count])=>`<button type="button" class="${courseFilter===value?'active':''}" data-learning-action="filter" data-id="${value}" aria-pressed="${courseFilter===value}" ${loading?'disabled':''}>${label} (${count})</button>`).join('')}</div>`:''}
+        <p class="small" role="status">${courses.length} ${courseCursor?'courses loaded':'published courses'}${progress?` · ${enrolledCount} enrolled · ${courses.length-enrolledCount} not enrolled`:''}. ${courseCursor?'Load more to see the rest of the catalogue.':courseFilter==='all'?'This is the complete course catalogue.':''}</p>
+        <div class="grid2">${visible.map(c=>{const enrolled=enrolledIds.has(c.id),done=c.lessons.filter(l=>progress?.completed_lesson_ids.includes(l.id)).length;return `<section class="panel" data-learning-course="${esc(c.id)}"><h2>${esc(c.title)}</h2><p>${esc(c.description)}</p><p>${done} / ${c.lessons.length} lessons completed</p>${getAccount()&&!enrolled?button('enroll','Enroll in course',c.id):enrolled?'<p class="positive">Enrolled</p>':''}${c.lessons.map(l=>`<div class="settingsrow"><div>${link(esc(l.title),'academy/'+l.id,'ghost')}<p class="small">${l.xp} XP · ${progress?.completed_lesson_ids.includes(l.id)?'Completed':'Not completed'}</p></div></div>`).join('')}</section>`;}).join('')||`<section class="panel"><p>${empty}</p>${courseFilter!=='all'?button('filter','Browse all courses','all'):''}</section>`}</div>${courseCursor?button('courses-more','Load more courses',courseCursor):''}`;
       if(progress)body+=`<section class="panel" style="margin-top:22px"><h2>Your achievements</h2>${progress.achievements.map(a=>`<p>${esc({first_lesson:'First lesson completed',first_course:'First course completed',three_day_streak:'Three-day learning streak'}[a.code]||a.code)} · ${esc(new Date(a.awarded_at).toLocaleDateString('en-IN',{timeZone:'Asia/Kolkata'}))}</p>`).join('')||'<p>Complete a lesson to earn your first achievement.</p>'}</section>`;
     } else {
       const enrolled=progress?.enrolled_course_ids.includes(lesson.course_id);
@@ -42,6 +50,7 @@ export function createLearningController({shell,pagehead,esc,link,render,current
     if(b.disabled||loading)return;
     const action=b.dataset.learningAction;
     if(action==='refresh'){reset();render();return;}
+    if(action==='filter'){if(['all','enrolled','available'].includes(b.dataset.id)){courseFilter=b.dataset.id;render();}return;}
     const expected=routeKey(),token=generation;loading=true;notice='';render();
     try {
       if(action==='enroll'){

@@ -40,3 +40,15 @@
 
 @media(max-width:900px) and (min-width:601px){.nav-group-label{display:none}}
 @media(max-width:600px){.main .stat{padding:18px 14px}.main .stat .num{font-size:18px}}
+
+/* Contest destinations stay grouped and visibly interactive at every card width. */
+.contest-card-footer{display:flex;align-items:center;flex-wrap:wrap;gap:14px;margin-top:20px;padding-top:18px;border-top:1px solid #304159}
+.contest-actions{display:flex;align-items:center;flex-wrap:wrap;gap:10px}
+.contest-card-footer .contest-actions{flex:1}
+.main .contest-action{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:10px 14px;border-radius:10px;font-size:12px;font-weight:600;line-height:1.4;white-space:nowrap;text-decoration:none}
+.main .contest-action.secondary{background:#1a2c41;border:1px solid #405771;color:#dfebf8;box-shadow:inset 0 1px 0 #ffffff06}
+.main .contest-action.secondary:hover{background:#233d54;border-color:#6b9baf;color:#fff}
+.main .contest-action:focus-visible{outline:2px solid #70e6c0;outline-offset:4px}
+.main .contest-action .icon,.contest-membership .icon{width:17px;height:17px;flex:none}
+.contest-membership{display:inline-flex;align-items:center;gap:6px;color:#a9c3ce;font-size:12px;white-space:nowrap}
+@media(max-width:600px){.contest-card-footer .contest-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));flex-basis:100%}.main .contest-action{white-space:normal;text-align:center}.contest-card-footer .contest-action{padding:11px 8px}.contest-membership{font-size:11px}}

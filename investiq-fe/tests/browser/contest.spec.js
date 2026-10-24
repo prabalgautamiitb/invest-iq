@@ -52,7 +52,7 @@ test('create, revise, publish, invite, accept and persist real contest membershi
   await expect(guest.getByText('Joined',{exact:true})).toBeVisible();
   await guest.reload();
   await expect(guest.getByText('Joined',{exact:true})).toBeVisible();
-  await guest.getByRole('link',{name:'View contest →',exact:true}).click();
+  await guest.getByRole('link',{name:'View contest',exact:true}).click();
   await expect(guest.getByText('You joined this contest.',{exact:true})).toBeVisible();
   await expect(guest.getByText('Current rank',{exact:true})).toHaveCount(0);
   await page.getByRole('button',{name:'Join contest',exact:true}).click();

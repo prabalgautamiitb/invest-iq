@@ -60,3 +60,33 @@ test('Academy failures can be retried and guests cannot write progress',async({p
   await expect(page.getByRole('link',{name:'Sign in to take the quiz',exact:true})).toBeVisible();
   await expect(page.getByRole('button',{name:'Submit quiz',exact:true})).toHaveCount(0);
 });
+
+test('Academy shows the full catalogue and separates enrolled courses from courses to discover',async({page,request})=>{
+  await verifiedAccount(page,request,`catalogue-${randomUUID()}@example.com`);
+  await page.goto('/#/academy');
+  const cards=page.locator('[data-learning-course]');
+  const all=page.getByRole('button',{name:'All courses (2)',exact:true});
+  await expect(all).toHaveAttribute('aria-pressed','true');
+  await expect(cards).toHaveCount(2);
+  await page.getByRole('button',{name:'My courses (0)',exact:true}).click();
+  await expect(page.getByText('You haven’t enrolled in a course yet.',{exact:false})).toBeVisible();
+  await page.getByRole('button',{name:'Browse all courses',exact:true}).click();
+  const firstId=await cards.first().getAttribute('data-learning-course');
+  await cards.first().getByRole('button',{name:'Enroll in course',exact:true}).click();
+  await expect(page.getByRole('button',{name:'My courses (1)',exact:true})).toBeVisible();
+  await expect(all).toHaveAttribute('aria-pressed','true');
+  await expect(cards).toHaveCount(2);
+  await page.getByRole('button',{name:'My courses (1)',exact:true}).click();
+  await expect(cards).toHaveCount(1);
+  await expect(cards.first()).toHaveAttribute('data-learning-course',firstId);
+  await page.getByRole('button',{name:'Not enrolled (1)',exact:true}).click();
+  await expect(cards).toHaveCount(1);
+  await expect(cards.first()).not.toHaveAttribute('data-learning-course',firstId);
+  await cards.first().getByRole('button',{name:'Enroll in course',exact:true}).click();
+  await expect(page.getByText('You’re enrolled in every published course.',{exact:false})).toBeVisible();
+  await expect(page.getByRole('button',{name:'Not enrolled (0)',exact:true})).toHaveAttribute('aria-pressed','true');
+  await page.reload();
+  await expect(all).toHaveAttribute('aria-pressed','true');
+  await expect(cards).toHaveCount(2);
+  await expect(page.getByRole('status').filter({hasText:'complete course catalogue'})).toContainText('2 published courses · 2 enrolled · 0 not enrolled');
+});
