@@ -1,0 +1,48 @@
+.coach-intro{margin:26px 0}
+.coach-context{display:flex;justify-content:space-between;align-items:center;gap:24px}
+.coach-context h2{margin:0 0 8px}
+.coach-context p{margin:6px 0}
+.coach-context-actions{display:flex;flex-wrap:wrap;align-items:center;gap:10px;flex-shrink:0}
+.coach-nav{display:flex;flex-wrap:wrap;gap:8px;margin:24px 0 18px;padding-bottom:18px;border-bottom:1px solid #2c3c51}
+.coach-nav button{min-height:44px}
+.coach-report-context{display:flex;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:18px}
+.coach-older{color:#ffd28c;font-size:13px;line-height:1.6}
+.coach-section{scroll-margin-top:90px;outline:none}
+.coach-section:focus-visible{outline:2px solid #56dfb2;outline-offset:5px;border-radius:20px}
+.coach-section h3{font-size:17px;line-height:1.5;margin:22px 0 12px}
+.coach-section .row h2{margin:0}
+.coach-takeaways{list-style:none;padding:0;margin:24px 0 30px;display:grid;gap:14px}
+.coach-takeaways li{display:flex;align-items:flex-start;gap:16px;background:#15283a;border:1px solid #2c465b;border-radius:14px;padding:18px}
+.coach-takeaways p{margin:0;color:#dce7f1;font-size:14px;line-height:1.8;overflow-wrap:anywhere}
+.coach-number{display:grid;place-items:center;flex:0 0 28px;height:28px;border-radius:50%;background:#205347;color:#a5f4d0;font-size:13px;font-weight:700}
+.coach-columns{display:grid;grid-template-columns:1fr 1fr;gap:28px;border-top:1px solid #2c3c51}
+.coach-facts{padding-left:20px;margin:14px 0;display:grid;gap:16px}
+.coach-facts li{padding-left:4px;line-height:1.8;overflow-wrap:anywhere}
+.coach-facts p{margin:0}
+.coach-facts details{margin-top:8px;font-size:12px;color:#afc2d8}
+.coach-next{display:flex;justify-content:space-between;align-items:center;gap:24px;margin-top:28px;padding:22px;border:1px solid #336351;border-radius:14px;background:#143128}
+.coach-next p{margin:8px 0 0}
+.coach-next button{flex-shrink:0}
+.coach-lessons{display:grid;gap:20px;margin-top:24px}
+.coach-lessons article{padding:24px;border:1px solid #30435a;border-radius:14px;background:#122135}
+.coach-lessons article h3{margin-top:10px}
+.coach-lessons details{margin-bottom:0}
+.coach-text{white-space:pre-wrap;overflow-wrap:anywhere}
+.coach-prompt{margin:22px 0;padding:16px 20px;border-left:3px solid #56dfb2;color:#c9e5d9;background:#142b29;border-radius:0 12px 12px 0;line-height:1.8}
+.coach-reflection{border-top:1px solid #2c3c51;margin-top:20px;padding-top:12px}
+.coach-history{display:grid;gap:14px;margin-top:22px}
+.coach-history article{display:flex;justify-content:space-between;align-items:center;gap:20px;border:1px solid #30435a;border-radius:12px;padding:18px}
+.coach-history h3{margin:0 0 8px}
+.coach-history p{margin:0}
+.coach-history button{flex-shrink:0}
+.coach-history summary{cursor:pointer;margin-top:10px}
+.coach-metadata{display:grid;grid-template-columns:minmax(100px,1fr) minmax(0,3fr);gap:12px;font-size:12px;line-height:1.8}
+.coach-metadata dt{color:#9fb4cd}
+.coach-metadata dd{margin:0;overflow-wrap:anywhere}
+.coach-disclaimer{margin-top:24px;color:#a3b5ca;line-height:1.8}
+.coach-empty{padding-block:32px}
+@media(max-width:1000px){.coach-context{align-items:flex-start;flex-direction:column}.coach-context-actions{flex-shrink:1}}
+@media(max-width:600px){.coach-columns{grid-template-columns:1fr;gap:0}.coach-nav{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.coach-nav button{padding:10px 8px;font-size:12px}.coach-next{align-items:flex-start;flex-direction:column;padding:18px}.coach-takeaways li{gap:12px;padding:14px}.coach-takeaways p{font-size:13px}.coach-history article{align-items:flex-start;flex-direction:column}.coach-section>.panel{padding:20px}.coach-lessons article{padding:18px}.coach-metadata{grid-template-columns:1fr;gap:6px}.coach-metadata dd{margin-bottom:10px}.coach-overview>.row{flex-wrap:wrap;gap:14px}}
+
+.coach-nav{scroll-margin-top:90px}
+@media(max-width:600px){.coach-context{gap:10px}.coach-context-actions{width:100%;gap:8px}.coach-context-actions .ghost{padding:6px 0;min-height:32px}.coach-nav{scroll-margin-top:140px}}
