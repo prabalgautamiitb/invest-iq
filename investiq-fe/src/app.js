@@ -31,7 +31,7 @@ const score=()=>Math.min(950,620+state.completed.length*35+state.tasks.length*12
 const gauge=()=>`<div class="gauge"><svg viewBox="0 0 180 144" role="img" aria-label="InvestIQ learning score ${score()} out of 1000"><path class="gtrack" d="M33 126 A74 74 0 1 1 147 126"/><path class="gvalue" d="M33 126 A74 74 0 1 1 147 126" pathLength="100" stroke-dasharray="${score()/10} 100"/></svg><div class="gtext"><div class="small">InvestIQ learning score</div><div class="num">${score()}</div><div class="small">OUT OF 1,000</div></div></div>`;
 function nav(){return `<nav class="topnav">${brand()}<div class="toplinks"><a href="#/academy">Academy</a><a href="#/contests">Contests</a><a href="#/login">Log in</a>${link('Get started '+icon('arrow'),'signup')}</div></nav>`}
 const serverContests = createContestController({shell,pagehead:(...args)=>pagehead(...args),esc,money,link,icon,toast,render,current,getAccount:()=>account});
-const serverPortfolio = createPortfolioController({shell,pagehead:(...args)=>pagehead(...args),esc,link,render,current,getAccount:()=>account});
+const serverPortfolio = createPortfolioController({shell,icon,pagehead:(...args)=>pagehead(...args),esc,link,render,current,getAccount:()=>account});
 const martin = createMartinController({getAccount:()=>account,current});
 const serverCoach = createCoachController({shell,pagehead:(...args)=>pagehead(...args),esc,link,render,current,getAccount:()=>account});
 app.addEventListener('click',e=>{const b=e.target.closest('[data-coach-action]');if(b)serverCoach.click(b);});

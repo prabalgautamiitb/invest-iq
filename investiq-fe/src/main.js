@@ -7,6 +7,7 @@ import './styles/sync.css';
 import './styles/clarity.css';
 import './styles/coach.css';
 import './styles/martin.css';
+import './styles/portfolio.css';
 
 // Preserve the rendering order: app first, then progressive motion layers.
 import './app.js';
