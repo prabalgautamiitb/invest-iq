@@ -72,3 +72,106 @@
 @media(max-width:600px){.home-contest-picker{width:100%;flex-wrap:wrap}.home-contest-picker select{width:100%;max-width:100%}.home-portfolio-summary strong{font-size:22px}.home-value-chart .row{flex-wrap:wrap;gap:8px}}
 
 .home-ai-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
+
+/* Contest cards give dates priority and keep the full schedule one click away. */
+.main .contest-scan-card{padding:24px;min-width:0}
+.contest-card-heading{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.contest-source{font-size:11px;color:#b6c7da;text-transform:capitalize}
+.contest-state{display:inline-flex;align-items:center;gap:6px;padding:5px 9px;border-radius:20px;border:1px solid #3c4d64;background:#1b2b3e;font-size:11px;font-weight:600;color:#c8d8ec}
+.contest-state i{width:6px;height:6px;border-radius:50%;background:currentColor}
+.contest-state-open,.contest-state-running{color:#9cedcb;background:#17372e;border-color:#346952}
+.contest-state-scheduled{color:#b1d5ff;background:#1a304b;border-color:#375a7c}
+.contest-state-cancelled{color:#f0b2ba;background:#39242e;border-color:#754250}
+.main .contest-scan-card h3{font-size:19px;line-height:1.4;margin:18px 0 8px;overflow-wrap:anywhere}
+.main .contest-scan-card>.contest-card-description{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;flex:none;min-height:0;font-size:12px;line-height:1.7;margin:0 0 18px}
+.contest-card-schedule{border:1px solid #3a4d65;border-radius:12px;background:#0d1b2b;padding:16px}
+.contest-schedule-label{display:flex;align-items:center;gap:7px;font-size:11px;color:#a8bfd5;margin-bottom:14px}
+.contest-schedule-label .icon{width:15px;height:15px}
+.contest-card-dates{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:0}
+.contest-card-dates>div+div{border-left:1px solid #314359;padding-left:16px}
+.contest-card-dates dt{font-size:11px;color:#b5c6da;margin-bottom:5px}
+.contest-card-dates dd{margin:0}
+.contest-card-dates time{display:grid;gap:4px}
+.contest-card-dates strong{font-size:20px;line-height:1.4;letter-spacing:-.5px;color:#f0f5fc;font-variant-numeric:tabular-nums}
+.contest-card-dates time>span{font-size:12px;color:#c5d5e6;font-variant-numeric:tabular-nums}
+.contest-entry-deadline{display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:5px 10px;border-top:1px solid #314359;padding-top:12px;margin-top:14px;color:#bbcbdc;font-size:11px}
+.contest-entry-deadline>span{font-weight:600}
+.contest-entry-deadline.is-open{color:#a2e7ca}
+.contest-entry-deadline time{font-variant-numeric:tabular-nums}
+.contest-date-unavailable{font-size:12px;color:#b5c6da}
+.contest-schedule-details{margin:8px 0 0;padding:0;border:0}
+.contest-schedule-details summary{font-size:11px;color:#a8bfd5;cursor:pointer;padding:8px 0;width:fit-content}
+.contest-schedule-details summary:hover{color:#c7f2e3}
+.contest-schedule-details summary:focus-visible{outline:2px solid #70e6c0;outline-offset:4px;border-radius:4px}
+.contest-schedule-details dl{display:grid;gap:12px;padding:12px;margin:4px 0 8px;background:#0d1b2b;border-radius:8px}
+.contest-schedule-details dt{font-size:11px;color:#a8bfd5;margin-bottom:4px}
+.contest-schedule-details dd{font-size:12px;color:#dce6f2;margin:0}
+.main .contest-schedule-details p{font-size:11px;margin:8px 0 14px}
+.main .contest-scan-card .contest-info{grid-template-columns:1fr 1fr;background:transparent;border:0;padding:16px 0;margin:0;gap:16px}
+.main .contest-scan-card .contest-info span{font-size:11px}
+.main .contest-scan-card .contest-info strong{font-size:14px}
+.contest-scan-card .contest-card-footer{margin-top:auto;padding-top:16px;gap:12px}
+.contest-scan-card .contest-card-footer .contest-membership{flex-basis:100%;font-size:11px}
+.contest-card-result{display:flex;flex-wrap:wrap;gap:6px 14px;padding:12px 0 16px;font-size:12px}
+.contest-card-result small{flex-basis:100%;font-size:11px;color:#a8bfd5}
+@media(max-width:1100px) and (min-width:601px){.contest-card-dates strong{font-size:17px}.contest-card-schedule{padding:13px}.contest-card-dates{gap:12px}.contest-card-dates>div+div{padding-left:12px}}
+@media(max-width:600px){.main .contest-scan-card{padding:20px}.contest-card-dates strong{font-size:19px}.contest-card-dates{gap:12px}.contest-card-dates>div+div{padding-left:12px}.contest-card-schedule{padding:14px}.contest-scan-card .contest-actions .contest-action{font-size:11px}}
+@media(max-width:360px){.contest-card-dates strong{font-size:16px}.contest-card-heading{align-items:flex-start}.contest-entry-deadline{flex-direction:column}}
+
+.main .contest-scan-card:hover{transform:none}
+.contest-explorer-filters{padding:0;margin:14px 0 20px;border:0}
+.contest-explorer-filters>summary{padding:8px 0}
+
+/* My Contests prioritizes personal results; discovery keeps its own schedule cards. */
+.my-contest-scopes{margin:0 0 20px}
+.my-contest-list{display:grid;gap:20px}
+.my-contest-list.has-many{grid-template-columns:repeat(2,minmax(0,1fr));align-items:start}
+.main .my-contest-card{padding:24px;min-width:0;margin:0}
+.my-contest-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:14px}
+.my-contest-heading>div{min-width:0}
+.my-contest-identity{display:flex;align-items:center;flex-wrap:wrap;gap:14px;font-size:11px;color:#abc1d5}
+.my-contest-identity .contest-membership{font-size:11px}
+.main .my-contest-heading h2{font-size:21px;line-height:1.4;letter-spacing:-.4px;margin:9px 0 0;overflow-wrap:anywhere}
+.my-contest-heading>.contest-state{flex-shrink:0}
+.my-contest-metrics{display:grid;grid-template-columns:minmax(190px,1.5fr) repeat(3,minmax(0,1fr));padding:18px 0;margin:20px 0 0;background:#0c1a29;border:1px solid #30445b;border-radius:12px}
+.my-contest-metric{padding:0 20px;min-width:0}
+.my-contest-metric+.my-contest-metric{border-left:1px solid #2f4257}
+.my-contest-metric dt{font-size:11px;color:#b2c7da;margin-bottom:8px}
+.my-contest-metric dd{margin:0;font-size:23px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.5px;line-height:1.4;overflow-wrap:anywhere}
+.my-contest-value dd{font-size:29px;color:#ecf7ff}
+.my-contest-metric-note{display:block;color:#95adc4;font-size:10px;margin-top:5px}
+.my-contest-metric.is-gain dd{color:#91e5c0}
+.my-contest-metric.is-loss dd{color:#f3a8b2}
+.main .my-contest-guidance{display:flex;align-items:flex-start;gap:8px;font-size:11px;color:#b2c7da;margin:12px 0 18px;line-height:1.6}
+.my-contest-guidance .icon{width:15px;height:15px;flex:none;margin-top:2px}
+.main .my-contest-guidance.needs-action{color:#f0d094}
+.my-contest-dates{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin:0 0 18px}
+.my-contest-dates dt{font-size:10px;color:#99afc6;margin-bottom:5px}
+.my-contest-dates dd{font-size:12px;color:#d0ddeb;margin:0;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.my-contest-footer{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;border-top:1px solid #2f4257;padding-top:16px}
+.my-contest-footer .contest-actions{gap:8px}
+.main .my-contest-footer .contest-action{font-size:11px;padding:9px 12px;min-height:42px}
+.my-contest-details{padding:0;margin:0;border:0}
+.my-contest-details summary{color:#afc6db;font-size:11px;padding:9px 0;cursor:pointer;white-space:nowrap}
+.my-contest-details[open]{flex-basis:100%}
+.my-contest-details>p{font-size:12px;margin:8px 0 14px}
+.my-contest-details .panel{background:#0c1a29;box-shadow:none;margin:12px 0 0!important}
+.my-contest-details .panel h2{font-size:16px}
+.my-contest-list.has-many .my-contest-metrics{grid-template-columns:repeat(2,minmax(0,1fr));gap:18px 0}
+.my-contest-list.has-many .my-contest-metric:nth-child(3){border-left:0}
+.my-contest-list.has-many .my-contest-value dd{font-size:25px}
+.my-contest-list.has-many .my-contest-metric dd{font-size:23px}
+.my-contest-list.has-many .my-contest-dates{grid-template-columns:1fr 1fr;gap:12px}
+.my-contest-list.has-many .my-contest-dates>div:last-child{grid-column:1/-1}
+.my-contest-invitations{margin:28px 0 20px}
+.main .my-contest-invitations h2{font-size:18px;margin:0 0 14px}
+@media(max-width:1150px){.my-contest-list.has-many{grid-template-columns:1fr}}
+@media(max-width:800px){.my-contest-metrics{grid-template-columns:repeat(2,minmax(0,1fr));gap:18px 0}.my-contest-metric:nth-child(3){border-left:0}.my-contest-dates{grid-template-columns:1fr 1fr}.my-contest-dates>div:last-child{grid-column:1/-1}}
+@media(max-width:600px){.main .my-contest-card{padding:18px}.main .my-contest-heading h2{font-size:18px}.my-contest-heading{flex-wrap:wrap;gap:10px}.my-contest-heading>.contest-state{font-size:10px}.my-contest-metric{padding:0 12px}.my-contest-metric dd,.my-contest-list.has-many .my-contest-metric dd{font-size:20px}.my-contest-value dd,.my-contest-list.has-many .my-contest-value dd{font-size:22px}.my-contest-footer .contest-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));width:100%}.main .my-contest-footer .contest-action{font-size:11px;padding:10px 8px;white-space:normal}.my-contest-dates dd{font-size:11px}.my-contest-metric-note{font-size:9px}.my-contest-details{width:100%}}
+
+.my-contest-metrics.is-awaiting{grid-template-columns:repeat(2,minmax(0,1fr))}
+.my-contest-submission dd{font-size:19px;font-weight:600}
+@media(max-width:600px){
+  .my-contest-metric dd,.my-contest-list.has-many .my-contest-metric dd,.my-contest-value dd,.my-contest-list.has-many .my-contest-value dd{font-size:clamp(14px,4.6vw,18px);white-space:nowrap;overflow-wrap:normal}
+  .my-contest-submission dd,.my-contest-list.has-many .my-contest-submission dd{font-size:15px;white-space:normal}
+}

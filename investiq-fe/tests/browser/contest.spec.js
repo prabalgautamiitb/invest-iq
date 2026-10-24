@@ -76,3 +76,51 @@ test('discovery uses server filters and reports API failures without demo fallba
   await expect(page.getByRole('alert')).toContainText('Contest service unavailable');
   await expect(page.getByText('Nifty Sprint Weekly',{exact:true})).toHaveCount(0);
 });
+
+test('contest cards show distinct IST dates, deadlines and expandable result timing',async({browser,request})=>{
+  const context=await browser.newContext({viewport:{width:1440,height:1000},timezoneId:'America/Los_Angeles'});
+  const page=await context.newPage(),errors=[];
+  page.on('pageerror',error=>errors.push(error.message));
+  try {
+    const template=await (await request.get('http://127.0.0.1:8081/api/v1/contest-template')).json();
+    const base={...template,visibility:'public',level:'all',organizer:'platform',joined:false,is_owner:false,can_manage:false,member_count:24,capacity:100,rule_version:1,entry_opens_at:'2026-10-18T20:00:00Z',entry_closes_at:'2026-10-19T03:40:00Z',starts_at:'2026-10-19T03:45:00Z',ends_at:'2026-10-23T10:00:00Z',first_results_available_at:'2026-10-19T12:30:00Z'};
+    const items=[{...base,id:randomUUID(),name:'InvestIQ weekly challenge',status:'open',description:'Build your strategy and follow your portfolio through the week.'},{...base,id:randomUUID(),name:'Next week’s learning league',status:'scheduled',organizer:'user',entry_opens_at:'2026-10-23T12:30:00Z',entry_closes_at:'2026-10-26T03:40:00Z',starts_at:'2026-10-26T03:45:00Z',ends_at:'2026-10-30T10:00:00Z',first_results_available_at:null}];
+    await page.route('**/api/v1/contests?*',route=>route.fulfill({json:{items,next_cursor:null}}));
+    await page.goto('/#/contests');
+    const card=page.locator('.contest-scan-card').filter({has:page.getByRole('heading',{name:items[0].name,exact:true})});
+    await expect(card.locator('.contest-state')).toHaveText('Entries open');
+    const dates=card.locator('.contest-card-dates');
+    await expect(dates).toContainText('Starts');
+    await expect(dates).toContainText('Ends');
+    await expect(dates.locator('time').first()).toContainText('19 Oct 2026');
+    await expect(dates.locator('time').first()).toContainText('9:15 am');
+    await expect(dates.locator('time').last()).toContainText('23 Oct 2026');
+    await expect(dates.locator('time').last()).toContainText('3:30 pm');
+    await expect(card.locator('.contest-entry-deadline')).toContainText('Entry closes');
+    await expect(card.locator('.contest-entry-deadline')).toContainText('9:10 am');
+    await expect(card.getByText('First results after',{exact:true})).toBeHidden();
+    await card.getByText('Schedule details',{exact:true}).click();
+    await expect(card.locator('.contest-schedule-details')).toContainText('19 Oct 2026 · 1:30 am');
+    await expect(card.locator('.contest-schedule-details')).toContainText('19 Oct 2026 · 6:00 pm');
+    await card.getByText('Schedule details',{exact:true}).click();
+    const upcoming=page.locator('.contest-scan-card').last();
+    await expect(upcoming.locator('.contest-state')).toHaveText('Upcoming');
+    await expect(upcoming.locator('.contest-entry-deadline')).toContainText('Entry opens');
+    await upcoming.getByText('Schedule details',{exact:true}).click();
+    await expect(upcoming.locator('.contest-schedule-details')).toContainText('To be announced');
+    await upcoming.getByText('Schedule details',{exact:true}).click();
+    await page.screenshot({path:'/tmp/investiq-contest-dates-desktop.png',fullPage:true});
+    await page.setViewportSize({width:390,height:844});
+    await card.scrollIntoViewIfNeeded();
+    expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+    await card.screenshot({path:'/tmp/investiq-contest-dates-mobile.png'});
+    for(const [status,label] of [['running','Live'],['completed','Completed'],['cancelled','Cancelled']]) {
+      items[0].status=status;
+      await page.getByRole('button',{name:'Refresh contests',exact:true}).click();
+      await expect(card.locator('.contest-state')).toHaveText(label);
+      await expect(card.locator('.contest-entry-deadline')).toContainText(status==='cancelled'?'Entry cancelled':'Entry closed');
+      await expect(card.locator('.contest-card-dates')).toContainText(status==='cancelled'?'Planned end':'Ends');
+    }
+    expect(errors).toEqual([]);
+  } finally {await context.close();}
+});
