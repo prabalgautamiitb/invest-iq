@@ -118,7 +118,7 @@ For an interactive contest lifecycle without waiting for market hours, use the [
 
 ## Clearer results and charts
 
-Signed-in Home shows returns by contest. Performance shows a daily portfolio-versus-benchmark chart, holdings/cash allocation, and holding contributions in percentage points. Leaderboards compare up to ten loaded standings. The builder shows the reviewed server allocation before confirmation.
+Signed-in Home shows a portfolio value chart in virtual INR for a selected contest, its latest value/return, and an AI guidance card with up to two priorities and a suggested lesson. Choose another recent contest from the selector; use **Exact portfolio values** or **Load earlier portfolio values** to inspect history. **Generate AI insights** requests a report through the existing coach worker, with status refreshed every five seconds while Home is open. Existing reports are reused, and reports for an older valuation are labeled. Empty/error states are independent for the chart and insights. Home also shows returns by contest. Performance shows a daily portfolio-versus-benchmark chart, holdings/cash allocation, and holding contributions in percentage points. Leaderboards compare up to ten loaded standings. The builder shows the reviewed server allocation before confirmation.
 
 Charts use saved API evidence, never demonstration results for signed-in users. One close shows a single point; an unvalued contest shows a waiting state. Daily chart points run oldest to newest across the loaded snapshot page; open **Daily snapshots → Load earlier snapshots** for additional history. Different contests can have different snapshot dates, so Home does not present their returns as a single combined return.
 

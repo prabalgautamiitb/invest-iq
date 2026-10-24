@@ -1,23 +1,42 @@
-import { returnChart, comparisonBars, allocationChart } from './charts.js';
+import { returnChart, comparisonBars, allocationChart, portfolioValueChart } from './charts.js';
 import { contestTimeline } from './results-info.js';
-import { performanceApi, contestApi } from '../api/services.js';
+import { performanceApi, contestApi, coachApi } from '../api/services.js';
 
 export function createPerformanceController({shell,pagehead,esc,link,render,current,getAccount}) {
-  let key='',generation=0,loaded=false,loading=false,error='',data=null;
+  let key='',generation=0,loaded=false,loading=false,error='',data=null,homeId='',pollTimer=null;
+  const homeRequests=new Map();
+  function stop(){clearTimeout(pollTimer);pollTimer=null;}
+  function poll(){stop();if(kind()==='dashboard'&&data?.home?.jobs?.items?.some(j=>['queued','running','retry'].includes(j.status))){const expected=routeKey(),token=generation;pollTimer=setTimeout(()=>{if(token===generation&&expected===routeKey())load();},5000);}}
   const routeKey=()=>JSON.stringify([current(),getAccount()?.id]);
   const amount=x=>x===null||x===undefined?'Awaiting valuation':'₹'+esc(Number(x).toLocaleString('en-IN',{maximumFractionDigits:2}));
   const percent=x=>x===null||x===undefined?'—':esc(Number(x).toLocaleString('en-IN',{maximumFractionDigits:2}))+'%';
   const stamp=x=>new Date(x).toLocaleString('en-IN',{timeZone:'Asia/Kolkata',dateStyle:'medium',timeStyle:'short'})+' IST';
   const kind=()=>({home:'dashboard'}[current().split('/')[0]]||current().split('/')[0]);
   const contestId=()=>current().split('/')[1];
-  function reset(){key='';generation++;loaded=false;loading=false;error='';data=null;}
+  function reset(){stop();homeRequests.clear();key='';generation++;loaded=false;loading=false;error='';data=null;homeId='';}
   function button(action,label,cursor=''){return `<button class="secondary" data-performance-action="${action}" data-cursor="${esc(cursor)}" ${loading?'disabled':''}>${label}</button>`;}
   async function load(more='') {
+    stop();
     const expected=routeKey(),token=++generation,id=contestId(),page=kind();
-    key=expected;loading=true;error='';
+    key=expected;loading=true;error='';if(!data)loaded=false;
     try {
       let result;
-      if(page==='dashboard') result=await performanceApi.dashboard();
+      if(page==='dashboard') {
+        if(more&&data?.home?.performance){
+          const earlier=await performanceApi.performance(data.home.id,{cursor:more});
+          result={...data,home:{...data.home,performance:{...data.home.performance,series:[...data.home.performance.series,...earlier.series],next_cursor:earlier.next_cursor}}};
+        }else{
+          result=await performanceApi.dashboard();
+          const selected=result.items.find(c=>c.contest_id===homeId)||result.items.filter(c=>c.total_value!==null&&c.status!=='cancelled').slice().sort((a,b)=>(b.session_date||'').localeCompare(a.session_date||''))[0]||result.items[0];
+          result.home={id:selected?.contest_id||'',performance:null,jobs:null,settings:null,chartError:'',coachError:'',generateError:''};
+          if(selected){
+            const [valuation,reports,settings]=await Promise.allSettled([performanceApi.performance(selected.contest_id),coachApi.jobs({contest_id:selected.contest_id}),coachApi.settings()]);
+            if(valuation.status==='fulfilled')result.home.performance=valuation.value;else result.home.chartError=valuation.reason.message||'Portfolio values could not be loaded.';
+            if(settings.status==='fulfilled')result.home.settings=settings.value;
+            if(reports.status==='fulfilled')result.home.jobs=reports.value;else result.home.coachError=reports.reason.message||'AI insights could not be loaded.';
+          }
+        }
+      }
       else if(page==='contest-history') {
         result=await performanceApi.history(more?{cursor:more}:{});
         if(more) result.items=[...(data?.items||[]),...result.items];
@@ -32,11 +51,11 @@ export function createPerformanceController({shell,pagehead,esc,link,render,curr
         if(more) result.series=[...data.series,...result.series];
       }
       if(token!==generation || expected!==routeKey()) return;
-      data=result;loaded=true;
+      data=result;if(page==='dashboard')homeId=result.home.id;loaded=true;
     } catch(e) {if(token===generation&&expected===routeKey()){error=e.message;loaded=true;}}
-    finally {if(token===generation&&expected===routeKey()){loading=false;render();}}
+    finally {if(token===generation&&expected===routeKey()){loading=false;render();if(page==='dashboard')poll();}}
   }
-  function ensure(){if(key!==routeKey())load();}
+  function ensure(){if(key!==routeKey())load();else if(!loading)poll();}
   function pending(){if(key!==routeKey()||!loaded)return '<section class="panel empty" role="status">Loading simulation results…</section>';if(error)return `<section class="panel" role="alert"><p>${esc(error)}</p>${button('refresh','Retry results')}</section>`;return '';}
   function explanation(code){return {market_data_incomplete:'Waiting for a complete set of published closing prices.',calendar_unavailable:'The exchange calendar needs review before results can be calculated.',unsupported_session:'A changed or special exchange session needs review.'}[code]||'Results are waiting for a review of price and portfolio evidence.';}
   function status(d){
@@ -55,10 +74,22 @@ export function createPerformanceController({shell,pagehead,esc,link,render,curr
   function metricGuide(){return `<section class="panel" style="margin-top:20px"><h2>What will appear after valuation</h2><ul><li><strong>Portfolio value and return:</strong> holdings plus residual cash, with the submission fee already included.</li><li><strong>Benchmark comparison:</strong> your return, benchmark return and excess return in percentage points.</li><li><strong>Concentration and diversification:</strong> largest position, equity concentration and sector count.</li><li><strong>Drawdown:</strong> the largest decline from an earlier peak across recorded daily closes.</li><li><strong>Holding contributions:</strong> each holding’s price gain or loss, with the portfolio fee shown separately.</li></ul><p class="small">Detailed portfolio performance belongs to the participating account. Administrators can view public standings; another learner’s holdings and private metrics remain private.</p></section>`;}
   function contestCards(items,destination){return `<div class="contest-grid">${items.map(c=>`<article class="panel"><h2>${esc(c.name)}</h2><p>${esc(c.status==='settling'?'finalizing results':c.status)}</p>${link('View '+(destination==='leaderboard'?'leaderboard':'performance'),destination+'/'+(c.contest_id||c.id))}</article>`).join('')||'<section class="panel empty">No contests in this view.</section>'}</div>`;}
   function summaryCards(items){return `<div class="grid4">${items.map(([label,value])=>`<section class="panel stat"><p class="small">${label}</p><div class="num">${value}</div></section>`).join('')}</div>`;}
+  function homeInsights(){
+    const h=data.home,p=h.performance;
+    const reports=(h.jobs?.items||[]).filter(j=>j.status==='succeeded'&&j.report);
+    const report=reports.find(j=>j.evidence.run_id===p?.metrics?.run_id)||reports[0];
+    const active=h.jobs?.items?.some(j=>['queued','running','retry'].includes(j.status));
+    const destination=h.id?'insights/'+h.id:'insights';
+    return `<section class="panel home-ai-insights" aria-label="AI guidance"><span class="eyebrow">Review and learn</span><h2>AI insights for you</h2>${h.coachError?`<p role="alert">${esc(h.coachError)}</p>${button('refresh','Retry AI insights')}`:report?`<p class="small">${esc(report.session_date)} · ${report.evidence.is_final?'Final':'Interim'} report${report.evidence.run_id!==p?.metrics?.run_id?' · Earlier snapshot':''}</p>${report.evidence.run_id!==p?.metrics?.run_id?'<p class="callout">This report covers an earlier valuation. Generate an updated report in AI Insights to review the latest results.</p>':''}<h3>Focus on next</h3><ul class="home-insight-list">${report.report.focus.slice(0,2).map(f=>`<li>${esc(f.text)}</li>`).join('')}</ul>${report.report.review_points[0]?`<details class="page-details"><summary>One thing to review</summary><p>${esc(report.report.review_points[0].text)}</p></details>`:''}${report.report.learning_actions[0]?`<div class="home-learning-step"><strong>Your next learning step</strong><p>${esc(report.report.learning_actions[0].title)}</p>${link('Open suggested lesson','academy/'+report.report.learning_actions[0].lesson_id,'secondary')}</div>`:''}`:`<p>${active?'Your coach report is being prepared. Open AI Insights to follow its progress.':!h.id?'Join a contest and confirm a portfolio to start receiving guidance based on your results.':!p?.metrics?'Your personal insights become available after your first published portfolio valuation.':'Get a coach report to identify what worked, what to review and a useful next lesson.'}</p>`}${h.generateError?`<p role="alert">${esc(h.generateError)}</p>`:''}<div class="home-ai-actions">${p?.metrics&&h.settings?.enabled&&getAccount()?.email_verified&&!active&&!reports.some(j=>j.evidence.run_id===p.metrics.run_id)?button('home-generate','Generate AI insights'):''}${link(report?'Read full AI report':active?'View report progress':'Open AI Insights',destination,'secondary')}</div><p class="small">Educational guidance from saved simulation results, using synthetic prices.</p></section>`;
+  }
+  function homePortfolio(){
+    const h=data.home,p=h.performance,m=p?.metrics;
+    return `<section class="home-portfolio" aria-label="Your portfolio analysis"><div class="section-heading"><h2>Your portfolio</h2>${data.items.length?`<div class="home-contest-picker"><label for="home-portfolio-contest">Contest</label><select id="home-portfolio-contest" ${loading?'disabled':''}>${data.items.map(c=>`<option value="${esc(c.contest_id)}" ${c.contest_id===h.id?'selected':''}>${esc(c.name)}</option>`).join('')}</select></div>`:''}</div><p class="small">Value history and AI guidance follow the selected contest. ${data.joined_count>data.items.length?'Your recent memberships are listed here; open Performance to browse all contests.':''}</p><div class="home-analysis-grid"><div>${m?`<section class="panel home-portfolio-summary"><div><span class="small">Latest portfolio value</span><strong>${amount(m.total_value)}</strong></div><div><span class="small">Net return</span><strong>${percent(m.return_pct)}</strong></div><p class="small">Snapshot ${esc(m.session_date)} · ${p.is_final?'Final':p.is_current?'Current':'Earlier result · awaiting a newer valuation'}</p></section>`:''}${h.chartError?`<section class="panel" role="alert"><h2>Portfolio value over time</h2><p>${esc(h.chartError)}</p>${button('refresh','Retry portfolio chart')}</section>`:portfolioValueChart(p?.series||[])}${p?.next_cursor?button('home-more','Load earlier portfolio values',p.next_cursor):''}${h.id?link('Explore full performance','performance/'+h.id,'secondary'):link('Find a contest','contests','secondary')}</div>${homeInsights()}</div></section>`;
+  }
   function dashboard(){
     const wait=pending();
     if(wait)return shell('dashboard',wait);
-    return shell('dashboard',`${pagehead('Your simulation workspace','Hi, '+esc(getAccount()?.name||''),'Follow your contests, review results, and choose your next step.',link('Contest history','contest-history','secondary'))}${summaryCards([['Contests joined',data.joined_count],['Active contests',data.active_count],['Completed contests',data.completed_count],['Contest wins',data.wins]])}<div class="grid2" style="margin-top:22px"><section class="panel"><h2>Latest valued portfolios</h2><p>${amount(data.latest_snapshot_value)} across ${data.valued_count} valued contests.</p><p>Net simulated P&amp;L ${amount(data.latest_snapshot_pnl)}</p><details class="page-details"><summary>How this total works</summary><p class="small">${data.submitted_count} contests have an accepted submission. Totals exclude unvalued and cancelled contests. Each contest uses its own latest snapshot date; this is not a common-time global return.</p></details>${!data.all_valued_current?'<p class="callout">Some results are pending or out of date. Review each contest’s snapshot date.</p>':''}</section><section class="panel"><h2>Build and compete</h2>${link('Find a contest','contests')}${link('Portfolio builder','portfolio','secondary')}${button('refresh','Refresh results')}</section></div>${comparisonBars("Your contest returns",data.items.map(c=>({label:c.name,value:c.return_pct})),"Each contest uses its own latest close. These are separate contest returns, not a combined portfolio return.")}<div class="section-heading"><h2>Your contests</h2>${link('My Contests','my-contests','ghost')}</div>${contestTable(data.items)}`);
+    return shell('dashboard',`${pagehead('Your simulation workspace','Hi, '+esc(getAccount()?.name||''),'Follow your contests, review results, and choose your next step.',link('Contest history','contest-history','secondary'))}${homePortfolio()}${summaryCards([['Contests joined',data.joined_count],['Active contests',data.active_count],['Completed contests',data.completed_count],['Contest wins',data.wins]])}<div class="grid2" style="margin-top:22px"><section class="panel"><h2>Latest valued portfolios</h2><p>${amount(data.latest_snapshot_value)} across ${data.valued_count} valued contests.</p><p>Net simulated P&amp;L ${amount(data.latest_snapshot_pnl)}</p><details class="page-details"><summary>How this total works</summary><p class="small">${data.submitted_count} contests have an accepted submission. Totals exclude unvalued and cancelled contests. Each contest uses its own latest snapshot date; this is not a common-time global return.</p></details>${!data.all_valued_current?'<p class="callout">Some results are pending or out of date. Review each contest’s snapshot date.</p>':''}</section><section class="panel"><h2>Build and compete</h2>${link('Find a contest','contests')}${link('Portfolio builder','portfolio','secondary')}${button('refresh','Refresh results')}</section></div>${comparisonBars("Your contest returns",data.items.map(c=>({label:c.name,value:c.return_pct})),"Each contest uses its own latest close. These are separate contest returns, not a combined portfolio return.")}<div class="section-heading"><h2>Your contests</h2>${link('My Contests','my-contests','ghost')}</div>${contestTable(data.items)}`);
   }
   function contestTable(items){return `<div class="panel tablewrap"><table><thead><tr><th>Contest</th><th>Status</th><th>Snapshot</th><th>Value</th><th>Return</th><th>Rank</th><th></th></tr></thead><tbody>${items.map(c=>`<tr><td>${esc(c.name)}</td><td>${esc(c.status==='settling'?'finalizing results':c.status)}${c.is_final?' · final':''}</td><td>${esc(c.session_date||'Not valued')}${c.session_date&&!c.is_current?' · older snapshot':''}</td><td>${amount(c.total_value)}</td><td>${percent(c.return_pct)}</td><td>${c.rank??'—'}</td><td>${link('Performance','performance/'+c.contest_id,'ghost')}${link('Leaderboard','leaderboard/'+c.contest_id,'ghost')}</td></tr>`).join('')||'<tr><td colspan="7">No recorded contest activity.</td></tr>'}</tbody></table></div>`;}
   function leaderboard(){
@@ -80,6 +111,17 @@ export function createPerformanceController({shell,pagehead,esc,link,render,curr
     if(k==='contest-history'){const wait=pending();return shell('my-contests',`${pagehead('Your history','Completed contests','Finalized simulations and cancelled contests.')}${wait||contestTable(data.items)}${!wait&&data.next_cursor?button('more','Load more contests',data.next_cursor):''}${button('refresh','Refresh results')}`);}
     return performance();
   }
-  function click(buttonEl){if(buttonEl.disabled)return;if(buttonEl.dataset.performanceAction==='more')load(buttonEl.dataset.cursor);else{reset();render();}}
-  return {page,ensure,reset,click,deactivate:()=>{if(loading)reset();}};
+  function change(el){if(el.id==='home-portfolio-contest'&&data?.items.some(c=>c.contest_id===el.value)){homeId=el.value;load();render();}}
+  async function click(buttonEl){if(buttonEl.disabled)return;
+    if(buttonEl.dataset.performanceAction==='home-generate'){
+      const h=data?.home;if(loading||!h?.performance?.metrics)return;
+      const expected=routeKey(),token=generation,requestId=JSON.stringify([getAccount()?.id,h.id,h.performance.metrics.run_id,h.settings?.provider,h.settings?.model]);
+      if(!homeRequests.has(requestId))homeRequests.set(requestId,crypto.randomUUID());
+      loading=true;h.generateError='';render();
+      try{await coachApi.create(h.id,homeRequests.get(requestId));if(token!==generation||expected!==routeKey())return;homeRequests.delete(requestId);await load();}
+      catch(e){if(token===generation&&expected===routeKey()){h.generateError=e.message;loading=false;render();}}
+      return;
+    }
+    if(buttonEl.dataset.performanceAction==='home-more'){load(buttonEl.dataset.cursor);return;}if(buttonEl.dataset.performanceAction==='more')load(buttonEl.dataset.cursor);else if(kind()==='dashboard'){load();render();}else{reset();render();}}
+  return {page,ensure,reset,click,change,deactivate:()=>{stop();if(loading)reset();}};
 }

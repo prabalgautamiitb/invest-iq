@@ -50,6 +50,7 @@ app.addEventListener('click',e=>{const b=e.target.closest('[data-learning-action
 app.addEventListener('change',e=>{if(e.target.matches('[data-learning-question]'))serverLearning.change(e.target);});
 const serverPerformance = createPerformanceController({shell,pagehead:(...args)=>pagehead(...args),esc,link,render,current,getAccount:()=>account});
 app.addEventListener('click',e=>{const button=e.target.closest('[data-performance-action]');if(button)serverPerformance.click(button);});
+app.addEventListener('change',e=>serverPerformance.change(e.target));
 app.addEventListener('click',e=>{const button=e.target.closest('[data-portfolio-action]');if(button)serverPortfolio.click(button);});
 app.addEventListener('input',e=>serverPortfolio.input(e.target));
 app.addEventListener('change',e=>serverPortfolio.change(e.target));

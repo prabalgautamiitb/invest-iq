@@ -30,3 +30,18 @@ export function allocationChart(positions, cash, total) {
   const rows = [...positions.map(p=>({label:p.symbol,value:Number(p.value)})),{label:'Cash',value:Number(cash)}].filter(r=>Number.isFinite(r.value)&&r.value>0);
   return `<section class="panel visual-panel" aria-label="Portfolio allocation"><h2>Portfolio allocation</h2><p class="small">Share of the current virtual portfolio value.</p><div class="allocation-strip" role="img" aria-label="Holdings and cash as a percentage of portfolio value">${rows.map((r,i)=>`<span title="${escape(r.label)} ${pct(r.value/Number(total)*100)}" style="width:${r.value/Number(total)*100}%;background:${colors[i%colors.length]}"></span>`).join('')}</div><div class="allocation-key">${rows.map((r,i)=>`<div><span><i style="background:${colors[i%colors.length]}"></i>${escape(r.label)}</span><strong>${pct(r.value/Number(total)*100)}</strong></div>`).join('')}</div></section>`;
 }
+
+
+export function portfolioValueChart(series) {
+  const rows=series.filter(s=>numeric(s.total_value)).slice().sort((a,b)=>a.session_date.localeCompare(b.session_date));
+  if(!rows.length)return '<section class="panel visual-panel"><h2>Portfolio value over time</h2><p class="chart-empty">Your value chart starts after the first published daily valuation. Confirm a portfolio before entry closes to take part.</p></section>';
+  const money=value=>'₹'+Number(value).toLocaleString('en-IN',{maximumFractionDigits:2});
+  const compact=value=>'₹'+Number(value).toLocaleString('en-IN',{notation:'compact',maximumFractionDigits:2});
+  const values=rows.map(r=>Number(r.total_value)),lo=Math.min(...values),hi=Math.max(...values);
+  const pad=Math.max((hi-lo)*.15,Math.abs(hi)*.002,1),bottom=Math.max(0,lo-pad),top=hi+pad;
+  const x=i=>rows.length===1?350:88+i*518/(rows.length-1);
+  const y=value=>28+(top-Number(value))/(top-bottom)*176;
+  const points=rows.map((r,i)=>`${x(i)},${y(r.total_value)}`).join(' ');
+  const ticks=[top,(top+bottom)/2,bottom].map(v=>`<line x1="88" x2="606" y1="${y(v)}" y2="${y(v)}" stroke="currentColor" opacity=".12"/><text x="78" y="${y(v)+4}" text-anchor="end">${escape(compact(v))}</text>`).join('');
+  return `<section class="panel visual-panel home-value-chart"><div class="row"><h2>Portfolio value over time</h2><span class="small">Virtual INR · daily close</span></div><svg class="results-chart" viewBox="0 0 640 254" role="img" aria-label="Portfolio value across ${rows.length} published daily snapshots">${ticks}${rows.length>1?`<polygon points="${x(0)},204 ${points} ${x(rows.length-1)},204" fill="#56dfb2" opacity=".09"/>`:''}<polyline points="${points}" fill="none" stroke="#56dfb2" stroke-width="3"/>${rows.map((r,i)=>`<circle cx="${x(i)}" cy="${y(r.total_value)}" r="4" fill="#56dfb2"><title>${escape(r.session_date)} · ${escape(money(r.total_value))}</title></circle>`).join('')}<text x="${x(0)}" y="235" ${rows.length===1?'text-anchor="middle"':''}>${escape(rows[0].session_date)}</text>${rows.length>1?`<text x="606" y="235" text-anchor="end">${escape(rows.at(-1).session_date)}</text>`:''}</svg><p class="small">${rows.length===1?'One published close so far. More points appear after each daily valuation.':'Each point shows holdings plus residual cash, with the simulated fee included.'} The value axis is zoomed to show changes.</p><details class="page-details"><summary>Exact portfolio values</summary><div class="tablewrap"><table><thead><tr><th>Daily close</th><th>Virtual value</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${escape(r.session_date)}</td><td>${escape(money(r.total_value))}</td></tr>`).join('')}</tbody></table></div></details></section>`;
+}

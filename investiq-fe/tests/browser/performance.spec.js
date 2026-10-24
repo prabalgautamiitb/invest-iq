@@ -38,6 +38,7 @@ test('simulated results, dashboard aggregates, private performance and final his
   try {
     await verifiedAccount(page,request,`performance-${randomUUID()}@example.com`);
     const id=await scenario(page);
+    const unvaluedId=await scenario(page,false);
     await page.goto('/#/performance/'+id);
     await expect(page.getByRole('heading',{name:'Submission confirmed',exact:true})).toBeVisible();
     await expect(page.getByRole('region',{name:'Results status'})).toContainText('Contest has not started');
@@ -69,6 +70,40 @@ test('simulated results, dashboard aggregates, private performance and final his
     await expect(page.locator('tbody')).toContainText('· you');
     await page.goto('/#/dashboard');
     await expect(page.getByRole('heading',{name:'Latest valued portfolios',exact:true})).toBeVisible();
+    await expect(page.getByRole('img',{name:'Portfolio value across 1 published daily snapshots',exact:true})).toBeVisible();
+    const insight=page.getByRole('region',{name:'AI guidance',exact:true});
+    await expect(insight).toContainText('Get a coach report');
+    await page.getByRole('button',{name:'Generate AI insights',exact:true}).click();
+    await expect(insight).toContainText('Your coach report is being prepared');
+    expect((await request.post('http://127.0.0.1:8081/__browser__/coach-work',{headers:harness})).ok()).toBeTruthy();
+    await expect(insight.locator('.home-insight-list li')).toHaveCount(2,{timeout:12000});
+    await expect(insight.getByRole('link',{name:'Open suggested lesson',exact:true})).toHaveAttribute('href',/#\/academy\//);
+    await expect(insight.getByRole('link',{name:'Read full AI report',exact:true})).toHaveAttribute('href','#/insights/'+id);
+    await page.getByLabel('Contest',{exact:true}).selectOption(unvaluedId,{timeout:5000});
+    await expect(page.getByText('Your value chart starts after the first published daily valuation.',{exact:false})).toBeVisible();
+    await expect(insight.locator('.home-insight-list')).toHaveCount(0);
+    await page.getByRole('button',{name:'Refresh results',exact:true}).click();
+    await expect(page.getByLabel('Contest',{exact:true})).toBeEnabled();
+    await expect(page.getByLabel('Contest',{exact:true})).toHaveValue(unvaluedId);
+    await expect(page.getByText('Your value chart starts after the first published daily valuation.',{exact:false})).toBeVisible();
+    await expect(insight.locator('.home-insight-list')).toHaveCount(0);
+    await page.getByLabel('Contest',{exact:true}).selectOption(id,{timeout:5000});
+    await expect(insight.locator('.home-insight-list li')).toHaveCount(2);
+    await page.route('**/api/v1/me/coach/jobs?*',route=>route.fulfill({status:503,contentType:'application/json',body:JSON.stringify({error:{message:'Insights temporarily unavailable'}})}));
+    await page.getByRole('button',{name:'Refresh results',exact:true}).click();
+    await expect(insight.getByRole('alert')).toContainText('Insights temporarily unavailable');
+    await expect(page.getByRole('img',{name:'Portfolio value across 1 published daily snapshots',exact:true})).toBeVisible();
+    await page.unroute('**/api/v1/me/coach/jobs?*');
+    await page.getByRole('button',{name:'Retry AI insights',exact:true}).click();
+    await expect(insight.locator('.home-insight-list li')).toHaveCount(2);
+    await page.route('**/api/v1/contests/'+id+'/performance?*',route=>route.fulfill({status:503,contentType:'application/json',body:JSON.stringify({error:{message:'Portfolio history temporarily unavailable'}})}));
+    await page.getByRole('button',{name:'Refresh results',exact:true}).click();
+    await expect(page.getByRole('alert').filter({hasText:'Portfolio history temporarily unavailable'})).toBeVisible();
+    await expect(insight.locator('.home-insight-list li')).toHaveCount(2);
+    await page.unroute('**/api/v1/contests/'+id+'/performance?*');
+    await page.getByRole('button',{name:'Retry portfolio chart',exact:true}).click();
+    await expect(page.getByRole('img',{name:'Portfolio value across 1 published daily snapshots',exact:true})).toBeVisible();
+
     await expect(page.getByRole('region',{name:'Your contest returns'})).toContainText('Historical simulation results');
     await expect(page.getByText('Your AI report for Dividend Derby is ready.',{exact:false})).toHaveCount(0);
     await page.goto('/#/my-contests');
@@ -86,6 +121,19 @@ test('simulated results, dashboard aggregates, private performance and final his
     expect(points[0].x).toBeLessThan(points[1].x);
     expect(points[0].label).toContain('2026-10-15');
     expect(points[1].label).toContain('2026-10-16');
+    await page.goto('/#/dashboard');
+    await expect(page.getByRole('img',{name:'Portfolio value across 2 published daily snapshots',exact:true})).toBeVisible();
+    await expect(page.getByRole('region',{name:'AI guidance',exact:true})).toContainText('Earlier snapshot');
+    await page.getByText('Exact portfolio values',{exact:true}).click();
+    const valueRows=page.locator('.home-value-chart tbody tr');
+    await expect(valueRows).toHaveCount(2);
+    await expect(valueRows.first()).toContainText('2026-10-15');
+    await expect(valueRows.last()).toContainText('2026-10-16');
+    await page.screenshot({path:'/tmp/investiq-home-analysis-desktop.png',fullPage:true});
+    await page.setViewportSize({width:390,height:844});
+    expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBeTruthy();
+    await page.screenshot({path:'/tmp/investiq-home-analysis-mobile.png',fullPage:true});
+    await page.goto('/#/performance/'+id);
     await page.screenshot({path:'/tmp/investiq-performance-desktop.png',fullPage:true});
     await page.setViewportSize({width:390,height:844});
     await expect(page.getByRole('region',{name:'Portfolio allocation',exact:true})).toBeVisible();
@@ -100,6 +148,7 @@ test('simulated results, dashboard aggregates, private performance and final his
 });
 
 test('performance API failures have retry states without sample ranks or returns',async({page,request})=>{
+  const errors=[];page.on('pageerror',error=>errors.push(error.message));
   await verifiedAccount(page,request,`failed-results-${randomUUID()}@example.com`);
   await page.route('**/api/v1/me/dashboard',route=>route.fulfill({status:503,contentType:'application/json',body:JSON.stringify({error:{message:'Simulation results unavailable'}})}));
   await page.goto('/#/dashboard');
@@ -108,6 +157,7 @@ test('performance API failures have retry states without sample ranks or returns
   await page.unroute('**/api/v1/me/dashboard');
   await page.getByRole('button',{name:'Retry results',exact:true}).click();
   await expect(page.getByRole('heading',{name:'Latest valued portfolios',exact:true})).toBeVisible();
+  expect(errors).toEqual([]);
 });
 
 
