@@ -82,3 +82,8 @@ Revision `0009_rewards` adds six tables: `coin_accounts`, `coin_ledger`, `reward
 ## Phase 9 community
 
 Revision `0010_community` adds `community_groups`, `community_members`, `community_content` (posts/replies and immutable poll options), `community_reactions`, `community_saves`, `community_votes`, `community_reports`, and `community_moderation`. UUID ownership/FKs, UTC timestamps, unique retry keys, composite interaction keys, soft deletion, frozen content and database-validated final votes protect activity. Existing privacy and audit records are reused. Full columns, API boundaries and concurrency: [PHASE-9.md](PHASE-9.md#schema-and-ownership).
+
+
+## Phase 10 performance coach
+
+Revision `0011_coach` adds `coach_jobs`, `coach_requests`, `coach_reports`, `coach_attempts`, `coach_reflections` and a private `investiq_ai` schema for the pinned LangGraph PostgreSQL saver's checkpoint tables. Jobs freeze same-owner valuation/lesson evidence and provider/prompt/generation policy, bind retry keys, use short claims and bounded leases, and complete atomically with an immutable report. Private reflections are append-only and excluded from inference. SHA-256 evidence fingerprints, source-ownership/immutability/deferred completion triggers, nullable usage/cost telemetry and cursor-bound private history are described in [Phase 10](PHASE-10.md#data-model). The saver manages its own checkpoint-table migrations through the explicit setup CLI, outside Alembic's public-schema model comparison.

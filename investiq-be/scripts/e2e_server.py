@@ -17,13 +17,32 @@ from sqlalchemy import update
 from sqlalchemy.engine import make_url
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
+from investiq.adapters.coach import CoachGeneration
+from investiq.ai.workflow import setup_checkpoints, sweep
 from investiq.core.config import Settings
 from investiq.db.session import make_engine
 from investiq.main import create_app
 from investiq.models.identity import User
+from investiq.schemas.coach import CoachEvidence, CoachPlan
 from investiq.services.learning_seed import seed_curriculum
 from investiq.services.market_ingestion import MarketIngestionService
 from investiq.services.rewards_seed import seed_rewards
+
+
+class BrowserCoach:
+    async def generate(self, evidence: CoachEvidence) -> CoachGeneration:
+        return CoachGeneration(
+            CoachPlan(
+                focus_fact_ids=["return", "benchmark"],
+                worked_fact_ids=[f.id for f in evidence.facts if f.category == "worked"],
+                review_fact_ids=["allocation-review"],
+                lesson_version_ids=[str(evidence.lessons[0].version_id)],
+                reflection="evidence",
+            ),
+            100,
+            50,
+            10,
+        )
 
 
 class BrowserClock(BaseModel):
@@ -73,6 +92,8 @@ async def main() -> None:
             environment="test",
             auth_rate_limit=10000,
             csrf_rate_limit=10000,
+            ai_request_limit=1000,
+            ollama_model="browser-test-only",
             rate_limit_prefix=f"investiq:browser:{uuid4()}",
             frontend_url="http://127.0.0.1:5174",
             cors_origins=["http://127.0.0.1:5174"],
@@ -84,11 +105,15 @@ async def main() -> None:
             ).seed_fixtures()
             await seed_curriculum(async_sessionmaker(engine, expire_on_commit=False), settings)
             await seed_rewards(async_sessionmaker(engine, expire_on_commit=False), settings)
+            await setup_checkpoints(settings)
         finally:
             await engine.dispose()
         clock = [datetime(2026, 10, 18, 12, tzinfo=UTC)]
         application = create_app(
-            settings, market_clock=lambda: clock[0], contest_clock=lambda: clock[0]
+            settings,
+            market_clock=lambda: clock[0],
+            contest_clock=lambda: clock[0],
+            coach_provider=BrowserCoach(),
         )
 
         def harness_only(request: Request) -> None:
@@ -117,6 +142,11 @@ async def main() -> None:
         async def browser_value(identifier: UUID, request: Request) -> object:
             harness_only(request)
             return await application.state.valuations.evaluate(identifier)
+
+        @application.post("/__browser__/coach-work", include_in_schema=False)
+        async def browser_coach_work(request: Request) -> object:
+            harness_only(request)
+            return await sweep(application.state.coach)
 
         await BrowserTestServer(
             uvicorn.Config(

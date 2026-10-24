@@ -1,0 +1,42 @@
+/* Keep the main decision visible; secondary explanations live in disclosures. */
+.main{max-width:1440px;margin-inline:auto;width:100%;box-sizing:border-box}
+.main p{line-height:1.7}
+.main>.callout{padding:20px 24px;margin-block:20px}
+.visual-panel{margin-block:22px;min-width:0}
+.visual-panel h2{margin-bottom:12px}
+.visual-grid{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+.visual-grid>.visual-panel{margin-block:0}
+.results-chart{display:block;width:100%;height:auto;color:#b8c9dc;overflow:visible}
+.results-chart text{fill:currentColor;font:12px Arial,sans-serif}
+.chart-legend{display:flex;flex-wrap:wrap;gap:18px;color:#c2d0e0;font-size:13px;margin-block:14px}
+.chart-legend span,.allocation-key span{display:flex;align-items:center;gap:9px}
+.chart-legend i,.allocation-key i{display:inline-block;width:10px;height:10px;border-radius:3px;flex-shrink:0}
+.chart-empty{padding:32px 12px;text-align:center;border:1px dashed #41536a;border-radius:12px;color:#b8c9dc}
+.comparison-bars{display:grid;gap:17px;margin-block:24px}
+.comparison-row{display:grid;grid-template-columns:minmax(80px,1fr) minmax(70px,2fr) 72px;align-items:center;gap:14px;font-size:13px}
+.bar-label{overflow-wrap:anywhere}
+.comparison-row strong{text-align:right;font-variant-numeric:tabular-nums}
+.bar-track{height:14px;background:#203047;border-radius:4px;position:relative}
+.bar-zero{position:absolute;left:50%;top:-4px;bottom:-4px;width:1px;background:#a5b8cd}
+.bar-value{position:absolute;height:100%;background:#56dfb2;border-radius:3px;min-width:0}
+.bar-value.bar-negative{background:#fa9db6}
+.allocation-strip{display:flex;height:24px;border-radius:8px;overflow:hidden;margin:24px 0}
+.allocation-strip>span{display:block;min-width:0}
+.allocation-key{display:grid;gap:13px;font-size:13px}
+.allocation-key>div{display:flex;justify-content:space-between;gap:16px}
+.page-details{margin-block:18px}
+.page-details>summary{cursor:pointer;padding:12px 0;font-size:14px;font-weight:600;color:#c8d8eb}
+.page-details[open]>summary{margin-bottom:16px}
+.page-details>.panel{margin-block:12px}
+.page-details>summary:focus-visible{outline:2px solid #56dfb2;outline-offset:5px;border-radius:4px}
+.workflow-steps{display:flex;gap:14px;list-style:none;padding:0;margin:0 0 24px;counter-reset:none}
+.workflow-steps li{flex:1;padding:14px 18px;border:1px solid #35485e;border-radius:10px;color:#d4e3f0;background:#122237;font-size:13px}
+.nav-group-label{display:block;color:#9bb1c9;font-size:10px;text-transform:uppercase;letter-spacing:1.4px;margin:22px 16px 8px}
+.sidenav>.nav-group-label:first-child{margin-top:6px}
+.main .tablewrap{max-width:100%;overflow-x:auto}
+.main .stat .num{font-size:clamp(18px,1.8vw,27px);white-space:nowrap;font-variant-numeric:tabular-nums}
+@media(max-width:850px){.visual-grid{grid-template-columns:1fr}.visual-grid>.visual-panel{margin-bottom:0}.workflow-steps{gap:8px}.workflow-steps li{padding:12px 9px;font-size:12px}}
+@media(max-width:600px){.comparison-row{grid-template-columns:minmax(70px,1fr) minmax(60px,1.5fr) 64px;gap:8px;font-size:12px}.workflow-steps{flex-direction:column}.workflow-steps li{padding:10px 14px}.chart-legend{font-size:12px;gap:12px}.visual-panel .row{flex-wrap:wrap}.main .grid4{grid-template-columns:repeat(2,minmax(0,1fr))}.main>.callout{padding:17px}.main .pagehead{gap:16px}}
+
+@media(max-width:900px) and (min-width:601px){.nav-group-label{display:none}}
+@media(max-width:600px){.main .stat{padding:18px 14px}.main .stat .num{font-size:18px}}

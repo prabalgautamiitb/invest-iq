@@ -31,11 +31,16 @@ app.conf.update(
     timezone="UTC",
     enable_utc=True,
     beat_schedule={
+        "coach-scan": {
+            "task": "investiq.coach.scan",
+            "schedule": settings.ai_scan_seconds,
+            "options": {"expires": settings.ai_scan_seconds},
+        },
         "valuation-scan": {
             "task": "investiq.valuation.scan",
             "schedule": settings.valuation_scan_seconds,
             "options": {"expires": settings.valuation_scan_seconds},
-        }
+        },
     },
 )
 
@@ -78,3 +83,22 @@ scan_task = app.task(
     retry_jitter=True,
     retry_kwargs={"max_retries": 3},
 )(scan)
+
+
+async def execute_coach() -> dict[str, int]:
+    from investiq.ai.workflow import sweep
+
+    application = create_app(settings)
+    async with application.router.lifespan_context(application):
+        return await sweep(application.state.coach)
+
+
+def coach_scan() -> dict[str, int]:
+    try:
+        return asyncio.run(execute_coach())
+    except Exception:
+        # No provider messages, prompts or account data in worker exception logs.
+        raise RuntimeError("coach_scan_failed; retry on next scheduled scan") from None
+
+
+coach_scan_task = app.task(name="investiq.coach.scan", acks_late=True)(coach_scan)

@@ -108,3 +108,18 @@ Phase 8 connects Rewards to the backend: genuine first lesson completions earn 5
 
 
 Community now uses shared backend posts, replies, likes, private saved posts, polls, public groups and administrator moderation. Open `/#/social` with the API running. Sign in and verify email to participate. Public-profile settings control author display names; group content is public. See [Phase 9](../investiq-be/docs/PHASE-9.md) for setup and contracts.
+
+
+Insights now opens the private performance coach at `/#/insights`. Select a joined contest with a confirmed submission and published valuation to generate a report with Ollama. Reports show deterministic metrics/evidence references, model-selected learning priorities, versioned lesson excerpts and limitations. Private decision-journal entries are saved and never sent to the model. Generation is queued, retryable and optional; a missing model does not block core features. [AI setup and Gemini configuration](../investiq-be/docs/PHASE-10.md).
+
+
+For an interactive contest lifecycle without waiting for market hours, use the [manual contest sandbox](../investiq-be/docs/MANUAL-CONTEST-TESTING.md). Its frontend runs separately at `http://127.0.0.1:5175`, with a local clock/control page, fresh accounts and a disposable database. Normal development at port 5173 remains separate.
+
+
+## Clearer results and charts
+
+Signed-in Home shows returns by contest. Performance shows a daily portfolio-versus-benchmark chart, holdings/cash allocation, and holding contributions in percentage points. Leaderboards compare up to ten loaded standings. The builder shows the reviewed server allocation before confirmation.
+
+Charts use saved API evidence, never demonstration results for signed-in users. One close shows a single point; an unvalued contest shows a waiting state. Daily chart points run oldest to newest across the loaded snapshot page; open **Daily snapshots → Load earlier snapshots** for additional history. Different contests can have different snapshot dates, so Home does not present their returns as a single combined return.
+
+Schedules, advanced filters, metrics and submission versions are expandable. The portfolio flow remains **Choose stocks → Save draft → Review & confirm**. Chart rendering lives in `src/features/charts.js`; final spacing, chart and mobile styles live in `src/styles/clarity.css`. All chart data is also available as labeled values or expandable tables.

@@ -75,10 +75,26 @@ services:
       learning-seed:
         condition: service_completed_successfully
     command: ["python", "-m", "investiq.rewards_cli"]
+  coach-setup:
+    build: .
+    profiles: ["app"]
+    environment:
+      INVESTIQ_DATABASE_URL: postgresql+asyncpg://investiq:investiq_local@postgres:5432/investiq
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    command: ["python", "-m", "investiq.coach_cli", "setup"]
   api:
     build: .
     profiles: ["app"]
     environment:
+      INVESTIQ_AI_PROVIDER: ${INVESTIQ_AI_PROVIDER:-ollama}
+      INVESTIQ_AI_TIMEOUT_SECONDS: ${INVESTIQ_AI_TIMEOUT_SECONDS:-45}
+      INVESTIQ_AI_REQUEST_LIMIT: ${INVESTIQ_AI_REQUEST_LIMIT:-5}
+      INVESTIQ_OLLAMA_BASE_URL: ${INVESTIQ_OLLAMA_DOCKER_URL:-http://host.docker.internal:11434}
+      INVESTIQ_OLLAMA_MODEL: ${INVESTIQ_OLLAMA_MODEL:-llama3.1:8b}
+      INVESTIQ_GEMINI_MODEL: ${INVESTIQ_GEMINI_MODEL:-}
+      INVESTIQ_GEMINI_API_KEY: ${INVESTIQ_GEMINI_API_KEY:-}
       INVESTIQ_DATABASE_URL: postgresql+asyncpg://investiq:investiq_local@postgres:5432/investiq
       INVESTIQ_PUBLIC_CONTEST_FIXTURES_ENABLED: "true"
       INVESTIQ_REDIS_URL: redis://redis:6379/0
@@ -86,6 +102,8 @@ services:
     ports:
       - "127.0.0.1:8080:8080"
     depends_on:
+      coach-setup:
+        condition: service_completed_successfully
       learning-seed:
         condition: service_completed_successfully
       rewards-seed:
@@ -107,11 +125,20 @@ services:
     build: .
     profiles: ["app"]
     environment:
+      INVESTIQ_AI_PROVIDER: ${INVESTIQ_AI_PROVIDER:-ollama}
+      INVESTIQ_AI_TIMEOUT_SECONDS: ${INVESTIQ_AI_TIMEOUT_SECONDS:-45}
+      INVESTIQ_AI_REQUEST_LIMIT: ${INVESTIQ_AI_REQUEST_LIMIT:-5}
+      INVESTIQ_OLLAMA_BASE_URL: ${INVESTIQ_OLLAMA_DOCKER_URL:-http://host.docker.internal:11434}
+      INVESTIQ_OLLAMA_MODEL: ${INVESTIQ_OLLAMA_MODEL:-llama3.1:8b}
+      INVESTIQ_GEMINI_MODEL: ${INVESTIQ_GEMINI_MODEL:-}
+      INVESTIQ_GEMINI_API_KEY: ${INVESTIQ_GEMINI_API_KEY:-}
       INVESTIQ_DATABASE_URL: postgresql+asyncpg://investiq:investiq_local@postgres:5432/investiq
       INVESTIQ_PUBLIC_CONTEST_FIXTURES_ENABLED: "true"
       INVESTIQ_REDIS_URL: redis://redis:6379/0
       INVESTIQ_CELERY_BROKER_URL: redis://redis:6379/1
     depends_on:
+      coach-setup:
+        condition: service_completed_successfully
       market-seed:
         condition: service_completed_successfully
       redis:
@@ -126,6 +153,7 @@ services:
     build: .
     profiles: ["app"]
     environment:
+      INVESTIQ_AI_SCAN_SECONDS: ${INVESTIQ_AI_SCAN_SECONDS:-10}
       INVESTIQ_DATABASE_URL: postgresql+asyncpg://investiq:investiq_local@postgres:5432/investiq
       INVESTIQ_PUBLIC_CONTEST_FIXTURES_ENABLED: "true"
       INVESTIQ_REDIS_URL: redis://redis:6379/0

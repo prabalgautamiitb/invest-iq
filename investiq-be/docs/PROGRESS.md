@@ -15,7 +15,7 @@
 - [x] Phase 7: learning, quizzes, XP, achievements and streaks.
 - [x] Phase 8: coin ledger, sandbox rewards and idempotent inventory/redemption.
 - [x] Phase 9: community and moderation.
-- [ ] Phase 10: deterministic evidence, checkpointed AI coach and evaluation.
+- [x] Phase 10: deterministic evidence, checkpointed AI coach and evaluation.
 - [ ] Phase 11: approved educational RAG, pgvector and grounding evaluation.
 - [ ] Phase 12: notifications, operations, backup/restore, load/security tests and production deployment.
 
@@ -77,3 +77,19 @@ Phase 8 verification: **104 backend tests and 19 Chromium browser tests passed**
 Connected shared public posts/replies, likes, private saved posts, immutable final-vote polls, public groups and membership, private reports and current-admin moderation. Added PostgreSQL migration/guards, verified CSRF writes, normalized retry keys, keyset pagination and a separate Redis write limit. Names follow current profile privacy; hidden/deleted roots also restrict replies. No demo activity or community rewards are imported/generated. See [PHASE-9.md](PHASE-9.md). Phase 10 AI coach is next.
 
 Phase 9 verification: **111 backend tests and 21 Chromium browser tests passed**. Ruff lint/format, strict mypy, frontend syntax/build, dependency lock validation, Alembic model comparison/offline SQL, disposable PostgreSQL downgrade/upgrade preserving existing account records and wheel contents passed. The rebuilt API/worker are healthy; one Beat is running; readiness reports PostgreSQL/Redis OK. Guest desktop/mobile inspection of the live Community route found no console errors or mobile horizontal overflow. Lost-response and route-change browser checks verified retained drafts, same-key post retries and usable moderation controls. Phases 8 and 9 are included in the same implementation commit.
+
+
+## Phase 10 completed
+
+Added deterministic private valuation evidence and approved lesson snapshots, typed structured coach plans, local Ollama plus explicitly configured Gemini adapters, PostgreSQL-backed LangGraph checkpoints, durable bounded/retryable Celery jobs, immutable validated reports and a private append-only journal. Connected Insights replaces invented AI claims with real evidence, wait/error/status/history/citation flows. The model selects verified observations/lessons; it cannot supply arbitrary numeric or causal prose, invoke tools or mutate accounting. Gemini was contract-tested with mocked transport and remains inactive without explicit configuration. See [PHASE-10.md](PHASE-10.md). Phase 11 educational RAG is next.
+
+Verification: **119 backend tests and 23 Chromium browser tests passed**, including provider contracts, checkpoint resume/lease recovery, grounded references, immutable evidence, lost-response retries, pending valuations and cross-account privacy. A real local `llama3.1:8b` call generated a validated report in a disposable PostgreSQL database in about 22 seconds. Ruff/format, strict mypy, frontend syntax/build and locked dependencies passed. The running worker reaches the host Ollama and finds the selected model. No real account activity was fabricated and no live Gemini request was made.
+
+Phase 10 operational checks: Alembic model/offline comparison, disposable migration downgrade/upgrade preserving existing accounts, repeatable private-schema checkpoint initialization, wheel runtime contents and rebuilt hash-locked containers passed. API/worker are healthy, Beat is running and readiness reports PostgreSQL/Redis OK; test-only coach controls return 404 on the normal API. Generated-report desktop/mobile inspection passed with no console errors or horizontal overflow. Phase 10 changes are uncommitted.
+
+
+## Manual contest testing sandbox
+
+Added a standalone disposable database/API/frontend runner and loopback-only control page. Testers can register/verify sandbox accounts, enable a sandbox admin, publish through the normal UI, confirm portfolios and advance the market/contest clock through entry lock, first published valuation and final standings. A separate cookie isolates normal sessions; normal contest rules and production routes are unchanged. See [manual testing](MANUAL-CONTEST-TESTING.md).
+
+Sandbox verification: two new PostgreSQL integration cases passed, covering control security/session isolation and real admin publication/submission through first/final valuation. A live frontend walkthrough created/published an admin contest, confirmed two different learner portfolios, and displayed two ranked portfolios whose values changed across sessions before final completion. Ruff/format, strict mypy and diff checks passed. The walkthrough database was reset before leaving the sandbox available for manual use.

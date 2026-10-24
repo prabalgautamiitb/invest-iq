@@ -25,6 +25,14 @@ class Settings(BaseSettings):
     session_days: int = Field(default=7, ge=1, le=30)
     auth_rate_limit: int = Field(default=10, ge=1)
     auth_rate_window_seconds: int = Field(default=900, ge=1)
+    ai_provider: Literal["disabled", "ollama", "gemini"] = "ollama"
+    ollama_base_url: str = "http://127.0.0.1:11434"
+    ollama_model: str = Field(default="llama3.1:8b", min_length=1, max_length=120)
+    gemini_model: str = Field(default="", max_length=120)
+    gemini_api_key: SecretStr = SecretStr("")
+    ai_timeout_seconds: int = Field(default=45, ge=5, le=60)
+    ai_scan_seconds: int = Field(default=10, ge=5, le=60)
+    ai_request_limit: int = Field(default=5, ge=1, le=1000)
     community_write_limit: int = Field(default=60, ge=1, le=10000)
     community_rate_window_seconds: int = Field(default=60, ge=1, le=3600)
     csrf_rate_limit: int = Field(default=60, ge=1)
@@ -95,3 +103,21 @@ class Settings(BaseSettings):
             ):
                 raise ValueError("CORS origins must be explicit HTTP(S) origins without paths")
         return origins
+
+    @field_validator("ollama_base_url")
+    @classmethod
+    def validate_ollama_url(cls, value: str) -> str:
+        from urllib.parse import urlsplit
+
+        parsed = urlsplit(value)
+        if (
+            parsed.scheme not in {"http", "https"}
+            or not parsed.hostname
+            or parsed.username
+            or parsed.password
+            or parsed.query
+            or parsed.fragment
+            or parsed.path not in {"", "/"}
+        ):
+            raise ValueError("Use an Ollama HTTP(S) server origin without credentials or a path")
+        return value.rstrip("/")

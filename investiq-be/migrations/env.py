@@ -6,6 +6,7 @@ from investiq.core.config import Settings
 from investiq.db.base import Base
 from investiq.db.session import make_engine
 from investiq.models import (  # noqa: F401 -- register domain metadata
+    coach,
     community,
     contest,
     identity,

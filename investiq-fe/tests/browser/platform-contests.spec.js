@@ -49,6 +49,8 @@ test('admin publishes an InvestIQ contest and another learner joins, submits and
     await expect(learner.locator('tbody tr')).toHaveCount(1);
     await expect(learner.locator('tbody')).toContainText('· you');
     await learner.getByRole('link',{name:'My performance',exact:true}).click();
+    await expect(learner.getByRole('region',{name:'Portfolio allocation',exact:true})).toBeVisible();
+    await learner.getByText('Portfolio details and holding values',{exact:true}).click();
     await expect(learner.getByRole('heading',{name:'Portfolio metrics',exact:true})).toBeVisible();
     expect(errors).toEqual([]);
   } finally {await learnerContext?.close();await clock(request,'2026-10-18T12:00:00Z');}

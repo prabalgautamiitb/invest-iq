@@ -105,3 +105,13 @@ export const communityApi = {
   reports: (params={}) => request('/community/reports?'+new URLSearchParams(params)),
   moderate: (postId,input) => request(`/community/posts/${id(postId)}/moderation`,{method:'POST',body:input}),
 };
+
+export const coachApi = {
+  settings: () => request('/me/coach/settings'),
+  evidence: contestId => request('/me/coach/evidence?'+new URLSearchParams({contest_id:contestId})),
+  jobs: (params={}) => request('/me/coach/jobs?'+new URLSearchParams(params)),
+  job: jobId => request(`/me/coach/jobs/${id(jobId)}`),
+  create: (contestId,key) => request('/me/coach/jobs',{method:'POST',body:{contest_id:contestId},headers:{'Idempotency-Key':key}}),
+  reflections: (contestId,params={}) => request('/me/coach/reflections?'+new URLSearchParams({contest_id:contestId,...params})),
+  reflect: (input,key) => request('/me/coach/reflections',{method:'POST',body:input,headers:{'Idempotency-Key':key}}),
+};

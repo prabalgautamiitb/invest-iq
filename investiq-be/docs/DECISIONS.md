@@ -114,3 +114,14 @@ InvestIQ is an educational simulation. Phase 6 calculates virtual portfolio valu
 - Serialize each writer through the existing user/session locks, with content locks for polling/moderation. Bind post/reply retry keys to normalized payload and parent; use set/clear interaction semantics and a separate configurable community Redis bucket (60 writes/minute by default).
 - Record hide/restore/dismiss reasons and audit events transactionally. Recheck current admin role on every request; terminal author deletion cannot be restored. Paginate feeds, replies, groups and report reviews.
 - Keep community participation separate from XP/coins/contest ratings; no fabricated reputation, trending or activity counters. Next work is deterministic AI-coach evidence and workflow integration.
+
+
+## Phase 10 AI coach
+
+- Develop against the already-installed local Ollama `llama3.1:8b`; add a separate Gemini adapter with backend-only model/key configuration and no automatic fallback. Do not require an LLM for accounting, deterministic evidence, journals or other product flows.
+- Use LangChain native JSON-schema adapters and a typed LangGraph, with persistent PostgreSQL checkpoints in a separate schema initialized explicitly by the pinned saver's setup. Thread IDs are derived internally from owner/job IDs; no public thread or tool-execution interface is exposed.
+- Freeze an own-user successful valuation and published lesson versions at request time. Build every displayed claim deterministically; let the model select observations, review points and educational priorities through validated reference IDs. Reject unsupported/duplicate/wrong-category citations. Do not infer motives, trading history, causal mistakes or a suitability score.
+- Store durable work in PostgreSQL and reuse the existing worker/Beat. Serialize AI calls with an advisory lock, bound attempts/leases/timeouts, resume checkpoints after failure, and persist one report/success/audit transaction. Keep provider calls out of accounting and reward transactions.
+- Deduplicate normalized retry keys and completed/current-source work. After terminal failure, a new explicit key can create the next immutable generation; transport retries retain the original key. Revalidate ownership/account state before model use and persistence.
+- Keep account identity, quiz answers, community and private journal text out of model input. Persist only validated plans/reports and safe token/latency/error metadata. Local API-fee estimates are zero excluding hardware; unknown Gemini costs remain null.
+- Retrieve a bounded set of published Academy versions now; approved-document ingestion, semantic retrieval, educational chat and pgvector belong to Phase 11.

@@ -1,12 +1,12 @@
 # InvestIQ backend
 
-Phases 0–9 are implemented: foundation, identity/onboarding, synthetic market data, contests, portfolio submissions and simulated performance. All backend source, infrastructure, migrations, tests, and documentation live here. Registration, login, verification/recovery, profiles, onboarding and settings now use the API. The portfolio catalogue/search/quotes also use the API; prices are explicitly synthetic. Contest discovery, creation, invitations, memberships and My Contests now use the API. Contest members can now save drafts, review server calculations and submit immutable portfolio versions. Valuation, benchmark comparisons, rankings, dashboard metrics and contest result finalization now use persisted snapshots. Courses, lessons, quizzes, XP, achievements and streaks now use persisted learning records. Virtual coin earnings, tiers, sandbox inventory/redemption, ledger and history now use the API. Community posts, replies, likes, private saves, polls, public groups and administrator moderation now use the API.
+Phases 0–10 are implemented: foundation, identity/onboarding, synthetic market data, contests, portfolio submissions and simulated performance. All backend source, infrastructure, migrations, tests, and documentation live here. Registration, login, verification/recovery, profiles, onboarding and settings now use the API. The portfolio catalogue/search/quotes also use the API; prices are explicitly synthetic. Contest discovery, creation, invitations, memberships and My Contests now use the API. Contest members can now save drafts, review server calculations and submit immutable portfolio versions. Valuation, benchmark comparisons, rankings, dashboard metrics and contest result finalization now use persisted snapshots. Courses, lessons, quizzes, XP, achievements and streaks now use persisted learning records. Virtual coin earnings, tiers, sandbox inventory/redemption, ledger and history now use the API. Community posts, replies, likes, private saves, polls, public groups and administrator moderation now use the API. Private performance-coach jobs/reports and decision journals now use the API, with local Ollama and an explicitly configured Gemini adapter.
 
 InvestIQ is simulation-only. Capital, cash and fees are virtual; Phase 6 calculates and finalizes contest results and rankings, with no real trades, payments, payouts or financial settlement.
 
 ## Start the backend
 
-For the complete local Phase 9 stack (API, Celery worker and one Beat scheduler):
+For the complete local Phase 10 stack (API, Celery worker and one Beat scheduler), start Ollama on the host with `llama3.1:8b` installed (`ollama list`; pull it if missing), then:
 
 ```bash
 cd investiq-be
@@ -151,3 +151,11 @@ Phase 8 connects Rewards to integer virtual coin earnings and sandbox redemption
 
 
 Community contracts, privacy rules and usage: [Phase 9](docs/PHASE-9.md). Open `http://localhost:5173/#/social`; public activity starts empty. Verified accounts can create public groups and discussions; administrators see the report queue.
+
+
+The AI coach uses Ollama locally by default, without an API key. Open `http://localhost:5173/#/insights` after confirming a contest portfolio and its first successful valuation. Docker reaches Ollama at `host.docker.internal:11434`. Set `INVESTIQ_AI_PROVIDER=disabled` to keep deterministic evidence/journals and core features without generation. Gemini is an explicit future backend switch with model/key configuration; there is no automatic cloud fallback. Full configuration, checkpoint setup, worker commands and limitations: [Phase 10](docs/PHASE-10.md).
+
+
+## Test a full contest without waiting for market hours
+
+Use the isolated [manual frontend sandbox](docs/MANUAL-CONTEST-TESTING.md). Run `uv run --locked python scripts/manual_sandbox.py` from this directory, then open `http://127.0.0.1:8082/__sandbox__`. It starts a separate frontend at port 5175, uses fresh test accounts and lets you advance from entry to first valuation and final standings. Existing normal-app accounts/contests remain separate; Ctrl+C deletes the temporary sandbox database.

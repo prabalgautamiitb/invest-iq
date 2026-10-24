@@ -132,3 +132,8 @@ The performance empty state explains the categories that become available after 
 
 
 Results information verification: **97 backend tests and 17 Chromium browser tests passed**. Ruff lint/format, strict mypy, frontend syntax/build and Alembic comparison passed. The rebuilt API/worker are healthy. Desktop/mobile inspection of the actual public contest confirms the October 21, 6:00 PM IST first-results timestamp and the distinction between one confirmed portfolio and zero ranked portfolios; the mobile page has no horizontal overflow.
+
+
+## Manual testing without real-time waiting
+
+Admin contests still obey entry deadlines, session-open starts and published EOD valuation. For interactive frontend testing, use the separate [manual contest sandbox](MANUAL-CONTEST-TESTING.md): fresh database/accounts, suggested October 15–16 fixture schedule, isolated session cookie and local buttons for locking, first valuation and final results. It does not change the current public contest or weaken normal API rules.

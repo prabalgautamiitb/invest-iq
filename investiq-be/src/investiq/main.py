@@ -10,7 +10,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
+from investiq.adapters.coach import CoachProvider
 from investiq.adapters.mail import Mailer, SmtpMailer
+from investiq.api.coach import router as coach_router
 from investiq.api.community import router as community_router
 from investiq.api.contest import router as contest_router
 from investiq.api.health import router as health_router
@@ -24,6 +26,7 @@ from investiq.core.config import Settings
 from investiq.core.errors import error_response, install_error_handlers
 from investiq.core.logging import configure_logging
 from investiq.db.session import make_engine
+from investiq.services.coach import CoachService
 from investiq.services.community import CommunityService
 from investiq.services.contest import ContestService
 from investiq.services.identity import IdentityService
@@ -42,6 +45,7 @@ def create_app(
     market_clock: Callable[[], datetime] | None = None,
     contest_clock: Callable[[], datetime] | None = None,
     learning_clock: Callable[[], datetime] | None = None,
+    coach_provider: CoachProvider | None = None,
 ) -> FastAPI:
     config = settings or Settings()
     configure_logging(config.log_level)
@@ -68,6 +72,7 @@ def create_app(
         app.state.contests = ContestService(app.state.sessions, app.state.identity, contest_clock)
         app.state.portfolios = PortfolioService(app.state.contests)
         app.state.valuations = ValuationService(app.state.contests)
+        app.state.coach = CoachService(app.state.valuations, coach_provider)
         try:
             yield
         finally:
@@ -134,6 +139,7 @@ def create_app(
     app.include_router(market_router, prefix="/api/v1")
     app.include_router(contest_router, prefix="/api/v1")
     app.include_router(portfolio_router, prefix="/api/v1")
+    app.include_router(coach_router, prefix="/api/v1")
     app.include_router(community_router, prefix="/api/v1")
     app.include_router(rewards_router, prefix="/api/v1")
     app.include_router(valuation_router, prefix="/api/v1")
