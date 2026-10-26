@@ -22,9 +22,8 @@ export function createLearningController({shell,pagehead,esc,link,render,current
   function totals(){if(!progress)return `<p>${link('Sign in','login','ghost')} to save learning progress. Guest practice activity is kept separate.</p>`;return `<div class="grid4">${[['Total XP',progress.xp],['Lessons completed',progress.completed_lesson_ids.length],['Current streak',progress.current_streak+' days'],['Longest streak',progress.longest_streak+' days']].map(([label,value])=>`<section class="panel stat"><p class="small">${label}</p><strong class="num">${value}</strong></section>`).join('')}</div><p class="small">Streaks count first-time lesson completions on distinct days in Asia/Kolkata. Pass every quiz question to complete a lesson. Retakes do not award extra XP or coins. First-time lesson completions earn 50 virtual coins in the Rewards sandbox.</p>`;}
   function feedback(a){return `<article class="callout"><strong>${a.passed?'Quiz passed':'Keep learning'} · ${a.correct_count}/${a.total} correct · ${a.xp_awarded} XP awarded</strong>${a.feedback.map(f=>`<p>${f.correct?'✓':'Try again'} · ${esc(f.explanation)}</p>`).join('')}</article>`;}
   function page(){
-    const profilePage=current().split('/')[0]==='profile';
-    const wrap=body=>shell(profilePage?'profile':'academy',body);
-    let body=profilePage?pagehead('Your profile',esc(getAccount()?.name||''),'Your recorded learning progress.',link('Settings','settings','secondary')+link('Contest history','contest-history','secondary')):pagehead('Learn','Your Academy','Development curriculum: simulation mechanics and reading recorded evidence.');
+    const wrap=body=>shell('academy',body);
+    let body=pagehead('Learn','Your Academy','Development curriculum: simulation mechanics and reading recorded evidence.');
     if(key!==routeKey()||!loaded)return wrap(body+'<section class="panel" role="status">Loading Academy…</section>');
     if(error)return wrap(body+`<section class="panel" role="alert"><p>${esc(error)}</p>${button('refresh','Retry Academy')}</section>`);
     body+=totals()+(notice?`<p class="callout" role="alert">${esc(notice)}</p>`:'');

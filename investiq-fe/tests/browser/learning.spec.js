@@ -35,7 +35,7 @@ test('Academy enrolls, scores and persists real progress without repeated XP',as
   await expect(page.getByRole('heading',{name:lesson.title,exact:true})).toBeVisible();
   await expect(page.getByRole('heading',{name:'Your attempt history',exact:true})).toBeVisible();
   expect(await page.evaluate(async()=> (await (await fetch('/api/v1/me/learning')).json()).xp)).toBe(25);
-  await page.goto('/#/profile');
+  await page.goto('/#/academy');
   await expect(page.getByText('First lesson completed',{exact:false})).toBeVisible();
   await expect(page.getByText('Level 12',{exact:false})).toHaveCount(0);
   const context=await browser.newContext();const other=await context.newPage();

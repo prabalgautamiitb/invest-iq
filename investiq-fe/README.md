@@ -172,3 +172,17 @@ category, plus the displayed session’s opening price, closing price and signed
 open-to-close percentage change. Cards label the trading date, source and freshness.
 Missing openings or changes remain unavailable; old closing prices are labelled
 as earlier sessions and cannot be used to add an ineligible holding.
+
+## Mobile navigation and account
+
+On mobile, the bottom navigation contains Home, Contests, AI Insights, Rewards,
+and Community. Contests includes links to Explore, My Contests, and Portfolio;
+AI Insights includes a Learn tab that opens the existing Academy and lessons.
+The contest explorer uses its own search field and hides the header search on
+mobile. Desktop keeps the sidebar and application search.
+
+The header avatar opens the account hub on both screen sizes. Profile information
+uses the existing saved display name and weekly goal; settings, privacy, sessions,
+and password recovery keep their existing backend flows. Course progress and
+achievements live in the Academy. Subscription information describes free
+simulation access; paid subscriptions and billing are not enabled.
