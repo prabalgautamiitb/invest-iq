@@ -2,8 +2,10 @@ import { allocationChart } from './charts.js';
 import { contestTimeline } from './results-info.js';
 import { portfolioApi, contestApi } from '../api/services.js';
 import { marketApi } from '../api/market.js';
+import { newsPlaceholder } from './market-news.js';
 
-export function createPortfolioController({ shell, pagehead, esc, link, render, current, getAccount, icon }) {
+export function createPortfolioController({ shell: layout, pagehead, esc, link, render, current, getAccount, icon }) {
+  const shell = (active, body) => layout(active, body + (getAccount()?.email_verified ? newsPlaceholder() : ''));
   let generation = 0, key = '', loading = false, loaded = false, error = '', operationError = '', busy = false;
   let data = null, positions = new Map(), mode = 'weight', dirty = false, reviewed = null, submitKey = '';
   let query = '', sector = '', cap = '', notice = '', operation = 0, view = '', mobilePanel = 'stocks';

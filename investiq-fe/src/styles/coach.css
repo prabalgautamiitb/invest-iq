@@ -1,4 +1,39 @@
 .coach-intro{margin:26px 0}
+.coach-daily{margin:0 0 32px}
+.coach-daily>header{gap:18px;flex-wrap:wrap}
+.coach-daily h2{margin:8px 0 12px}
+.coach-daily>p{line-height:1.8;max-width:900px}
+.coach-daily-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));margin:24px 0;border:1px solid var(--line);border-radius:14px;background:#0c1b29}
+.coach-daily-metrics>div{padding:20px;border-right:1px solid var(--line);min-width:0}
+.coach-daily-metrics>div:last-child{border:0}
+.coach-daily-metrics dt,.coach-daily-metrics small{color:var(--muted);font-size:12px;line-height:1.6}
+.coach-daily-metrics dd{margin:10px 0;font-size:28px;font-weight:650;font-variant-numeric:tabular-nums}
+.coach-daily-metrics dd span{font-size:16px;color:var(--muted)}
+.coach-daily-columns{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:24px}
+.coach-daily-columns>section{min-width:0;padding:20px;border:1px solid var(--line);border-radius:14px;background:#10252a}
+.coach-daily-columns>section:last-child{background:#232626}
+.coach-daily-columns h3{margin:0 0 14px;font-size:18px}
+.coach-daily-points{list-style:none;margin:0;padding:0;display:grid;gap:20px}
+.coach-daily-points li+li{border-top:1px solid var(--line);padding-top:16px}
+.coach-daily-points p{margin:0;line-height:1.8;overflow-wrap:anywhere}
+.coach-daily-points li:not(.coach-habit)>div,.coach-daily-points .coach-habit-source{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:10px;font-size:11px;color:var(--muted)}
+.coach-daily-points a.ghost{padding:0;min-height:24px;color:#9bdcc9;text-align:left}
+.coach-daily-points details{font-size:12px;line-height:1.8;margin-top:8px;color:var(--muted)}
+.coach-daily-status{padding:12px 16px;border-radius:10px;background:#163043;color:#bad9eb}
+.coach-learning-progress{padding:16px 18px;border-left:3px solid #7ed7bb;border-radius:8px;background:#102d30;margin:20px 0}
+.coach-learning-progress strong{font-size:15px}
+.coach-learning-progress p{font-size:13px;line-height:1.8;margin:8px 0}
+.coach-learning-progress small{font-size:11px;color:var(--muted);line-height:1.6}
+.coach-habit-heading{display:grid;gap:7px;margin:0 0 10px}
+.coach-habit h4{margin:0;font-size:15px;line-height:1.5;color:var(--text)}
+.coach-habit-label{font-size:10px;color:#aed9ca}
+.coach-habit-action{display:block;padding:12px;background:#0b1e26;border-radius:8px;margin-top:12px;font-size:12px;color:var(--text)}
+.coach-habit-action strong{font-size:11px;color:#aadfcd}
+.coach-habit-action p{margin-top:5px;font-size:12px}
+.coach-habit details p{margin:10px 0}
+.coach-habit-source{border:0;padding:0}
+.coach-daily>footer{display:grid;gap:8px;border-top:1px solid var(--line);padding-top:20px;margin-top:24px;font-size:11px;line-height:1.8;color:var(--muted)}
+@media(max-width:650px){.coach-daily{padding:20px}.coach-daily-columns{grid-template-columns:1fr;gap:14px}.coach-daily-metrics{grid-template-columns:1fr}.coach-daily-metrics>div{border-right:0;border-bottom:1px solid var(--line);padding:16px}.coach-daily-metrics dd{font-size:25px}}
 .coach-context{display:flex;justify-content:space-between;align-items:center;gap:24px}
 .coach-context h2{margin:0 0 8px}
 .coach-context p{margin:6px 0}

@@ -12,7 +12,7 @@ from investiq.ai.evidence import PROMPT_VERSION, build_evidence
 from investiq.core.errors import AppError
 from investiq.core.security import Principal, now
 from investiq.models.coach import CoachAttempt, CoachJob, CoachReflection, CoachReport, CoachRequest
-from investiq.models.contest import ContestMembership
+from investiq.models.contest import Contest, ContestMembership
 from investiq.models.identity import AuditEvent, User
 from investiq.models.learning import LessonVersion
 from investiq.models.valuation import ValuationRecord, ValuationRun
@@ -93,7 +93,14 @@ class CoachService:
                 "before a coach report",
             )
         record, run = row
-        _, _, current, final, _ = await self.valuations.board_state(db, contest)
+        return await self.record_evidence(db, record, run, contest)
+
+    async def record_evidence(
+        self, db: AsyncSession, record: ValuationRecord, run: ValuationRun, contest: Contest
+    ) -> CoachEvidence:
+        latest_run, _, current, final, _ = await self.valuations.board_state(db, contest)
+        current = current and latest_run is not None and latest_run.id == run.id
+        final = final and latest_run is not None and latest_run.id == run.id
         versions = (
             await db.scalars(
                 select(LessonVersion)

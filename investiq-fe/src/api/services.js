@@ -111,6 +111,7 @@ export const communityApi = {
 };
 
 export const coachApi = {
+  overview: () => request('/me/coach/overview'),
   settings: () => request('/me/coach/settings'),
   evidence: contestId => request('/me/coach/evidence?'+new URLSearchParams({contest_id:contestId})),
   jobs: (params={}) => request('/me/coach/jobs?'+new URLSearchParams(params)),

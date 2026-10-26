@@ -122,3 +122,48 @@ class UsageOut(BaseModel):
     latency_ms: int | None
     estimated_cost_usd: Decimal | None
     error_code: str | None
+
+
+class OverviewPoint(BaseModel):
+    title: str = ""
+    topic: str = ""
+    assessment: Literal["encouraging", "practice", "not_enough_data"] | None = None
+    text: str
+    why_it_matters: str = ""
+    next_step: str = ""
+    evidence_summary: str = ""
+    assessment_basis: str = ""
+    source: str
+    contest_id: UUID
+    contest_name: str
+    session_date: date
+
+
+class CoachOverviewOut(BaseModel):
+    status: Literal[
+        "no_contests",
+        "awaiting_results",
+        "updating",
+        "ready",
+        "failed",
+        "disabled",
+        "verification_required",
+    ]
+    contest_count: int
+    valued_contests: int = 0
+    completed_contests: int = 0
+    profitable_contests: int = 0
+    outperforming_contests: int = 0
+    latest_session_date: date | None = None
+    earliest_session_date: date | None = None
+    combined_return_pct: Decimal | None = None
+    summary: str | None = None
+    learning_stage: str | None = None
+    learning_summary: str | None = None
+    assessment_version: str = "investor-habits-v1"
+    strengths: list[OverviewPoint] = Field(default_factory=list)
+    improvements: list[OverviewPoint] = Field(default_factory=list)
+    reports_ready: int = 0
+    pending_reports: int = 0
+    failed_reports: int = 0
+    updated_at: datetime | None = None

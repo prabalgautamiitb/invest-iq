@@ -2,6 +2,10 @@
 
 This is the complete **editable source project** for the current InvestIQ design, including every page, all interactions, UI refinement, and continuous background animation. It uses **vanilla JavaScript ES modules and Vite**, not React. There is no hidden source or minified bundle needed to customize the application.
 
+## Daily AI Insights
+
+AI Insights starts with a daily performance overview and plain-language learning checks about diversification, single-company exposure, risk awareness and market comparisons. Each pointer explains why it matters, offers a practical next step and discloses its teaching checkpoint. Progress labels describe observed habits, not an investor score or personal risk rating. Users without contest results see an empty or waiting state. Generated AI contest reports remain below, with their own processing status. The page refreshes an open overview as closing results arrive. Background AI generation requires the worker, Beat and configured provider; unchanged portfolio values reuse an applicable report.
+
 ## Admin workspace
 
 Run the frontend as usual with `npm run dev`, then open these in separate tabs in the same browser:

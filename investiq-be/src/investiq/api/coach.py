@@ -7,6 +7,7 @@ from investiq.api.identity import UserContext
 from investiq.schemas.coach import (
     CoachEvidence,
     CoachJobOut,
+    CoachOverviewOut,
     CoachSettingsOut,
     CreateCoachInput,
     JobPage,
@@ -16,6 +17,7 @@ from investiq.schemas.coach import (
     UsageOut,
 )
 from investiq.services.coach import CoachService
+from investiq.services.coach_overview import overview
 
 router = APIRouter(prefix="/me/coach", tags=["performance coach"])
 
@@ -29,6 +31,11 @@ Service = Annotated[CoachService, Depends(service)]
 Key = Annotated[UUID, Header(alias="Idempotency-Key")]
 Cursor = Annotated[str | None, Query(max_length=1024)]
 Limit = Annotated[int, Query(ge=1, le=20)]
+
+
+@router.get("/overview", response_model=CoachOverviewOut)
+async def user_overview(coach: Service, principal: UserContext) -> CoachOverviewOut:
+    return await overview(coach, principal)
 
 
 @router.get("/settings", response_model=CoachSettingsOut)

@@ -21,6 +21,7 @@ from investiq.api.identity import router as identity_router
 from investiq.api.learning import router as learning_router
 from investiq.api.market import router as market_router
 from investiq.api.martin import router as martin_router
+from investiq.api.news import router as news_router
 from investiq.api.portfolio import router as portfolio_router
 from investiq.api.rewards import router as rewards_router
 from investiq.api.valuation import router as valuation_router
@@ -35,6 +36,7 @@ from investiq.services.identity import IdentityService
 from investiq.services.learning import LearningService
 from investiq.services.market import MarketService
 from investiq.services.martin import MartinService
+from investiq.services.news import MarketNewsService
 from investiq.services.portfolio import PortfolioService
 from investiq.services.rewards import RewardsService
 from investiq.services.valuation import ValuationService
@@ -73,6 +75,7 @@ def create_app(
         app.state.rewards = RewardsService(app.state.identity)
         app.state.learning = LearningService(app.state.identity, learning_clock)
         app.state.market = MarketService(app.state.sessions, config, market_clock)
+        app.state.market_news = MarketNewsService(redis, config)
         app.state.contests = ContestService(app.state.sessions, app.state.identity, contest_clock)
         app.state.portfolios = PortfolioService(app.state.contests)
         app.state.valuations = ValuationService(app.state.contests)
@@ -142,6 +145,7 @@ def create_app(
     app.include_router(identity_router, prefix="/api/v1")
     app.include_router(learning_router, prefix="/api/v1")
     app.include_router(market_router, prefix="/api/v1")
+    app.include_router(news_router, prefix="/api/v1")
     app.include_router(contest_router, prefix="/api/v1")
     app.include_router(portfolio_router, prefix="/api/v1")
     app.include_router(martin_router, prefix="/api/v1")

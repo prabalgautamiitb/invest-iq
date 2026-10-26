@@ -1,33 +1,40 @@
+import { dailyOverview } from './coach-overview.js';
 import { coachApi as api, contestApi } from '../api/services.js';
 
 export function createCoachController({shell,pagehead,esc,link,render,current,getAccount}) {
   let key='',epoch=0,loaded=false,loading=false,busy=false,error='',notice='',contests=[],next=null,evidence=null,config=null,jobs=[],jobNext=null,reflections=[],reflectionNext=null,pollTimer=null,draft='';
-  let section='overview',selectedReport='',contest=null;
+  let section='overview',selectedReport='',contest=null,userOverview=null,overviewError='';
   const requests=new Map();
   const destination=()=>current().split('/')[1]||'';
   const signature=()=>JSON.stringify([current(),getAccount()?.id]);
   const stamp=value=>new Date(value).toLocaleString('en-IN',{timeZone:'Asia/Kolkata',dateStyle:'medium',timeStyle:'short'})+' IST';
   function stop(){clearTimeout(pollTimer);pollTimer=null;}
-  function reset(){stop();epoch++;key='';loaded=false;loading=false;busy=false;error='';notice='';contests=[];next=null;evidence=null;config=null;jobs=[];jobNext=null;reflections=[];reflectionNext=null;draft='';requests.clear();section='overview';selectedReport='';contest=null;}
+  function reset(){stop();epoch++;key='';loaded=false;loading=false;busy=false;error='';notice='';contests=[];next=null;evidence=null;config=null;jobs=[];jobNext=null;reflections=[];reflectionNext=null;draft='';requests.clear();section='overview';selectedReport='';contest=null;userOverview=null;overviewError='';}
   function deactivate(){if(key){stop();epoch++;key='';loaded=false;loading=false;busy=false;}}
   function ensure(){if(getAccount()&&key!==signature()){busy=false;draft='';notice='';section='overview';selectedReport='';contest=null;load();}}
   const button=(action,label)=>`<button class="secondary" data-coach-action="${action}" ${busy||loading?'disabled':''}>${label}</button>`;
-  function poll(){stop();if(jobs.some(j=>['queued','running','retry'].includes(j.status))){const expected=signature(),token=epoch;pollTimer=setTimeout(()=>{if(expected===signature()&&token===epoch)refreshJobs();},2500);}}
+  function poll(){stop();const pending=jobs.some(j=>['queued','running','retry'].includes(j.status))||userOverview?.pending_reports>0;if(pending||userOverview?.valued_contests){const expected=signature(),token=epoch;pollTimer=setTimeout(()=>{if(expected===signature()&&token===epoch){if(destination())refreshJobs();else refreshOverview();}},pending?2500:60000);}}
+  async function refreshOverview(){
+    const expected=signature(),token=epoch;
+    try{const response=await api.overview();if(expected!==signature()||token!==epoch)return;const changed=overviewError||JSON.stringify(userOverview)!==JSON.stringify(response);userOverview=response;overviewError='';if(changed)render();poll();}
+    catch(e){if(expected===signature()&&token===epoch){overviewError='Your performance summary could not be refreshed. '+e.message;render();poll();}}
+  }
   async function refreshJobs(){
     const expected=signature(),token=epoch;
-    try{const response=await api.jobs({contest_id:destination()});if(expected!==signature()||token!==epoch)return;const changed=JSON.stringify(jobs)!==JSON.stringify(response.items);jobs=response.items;jobNext=response.next_cursor;if(changed)render();poll();}
-    catch(e){if(expected===signature()&&token===epoch){notice='Report status could not be refreshed. '+e.message;render();}}
+    try{const [response,summary]=await Promise.all([api.jobs({contest_id:destination()}),api.overview().then(value=>({value,error:''})).catch(e=>({value:null,error:e.message}))]);if(expected!==signature()||token!==epoch)return;const changed=JSON.stringify(jobs)!==JSON.stringify(response.items)||overviewError!==summary.error||(summary.value&&JSON.stringify(userOverview)!==JSON.stringify(summary.value));jobs=response.items;jobNext=response.next_cursor;overviewError=summary.error;if(summary.value)userOverview=summary.value;if(changed)render();poll();}
+    catch(e){if(expected===signature()&&token===epoch){notice='Report status could not be refreshed. '+e.message;render();poll();}}
   }
   async function load(more=false){
-    stop();const expected=signature(),token=++epoch,id=destination();key=expected;loading=true;error='';if(!more)loaded=false;render();
+    stop();const expected=signature(),token=++epoch,id=destination();key=expected;loading=true;error='';overviewError='';if(!more){loaded=false;userOverview=null;jobs=[];}render();
     try{
-      if(!id){const response=await contestApi.mine(more&&next?{cursor:next}:{});if(token!==epoch||expected!==signature())return;contests=more?[...contests,...response.items]:response.items;next=response.next_cursor;}
+      const summaryRequest=api.overview().then(value=>({value,error:''})).catch(e=>({value:null,error:e.message}));
+      if(!id){const [response,summary]=await Promise.all([contestApi.mine(more&&next?{cursor:next}:{}),summaryRequest]);if(token!==epoch||expected!==signature())return;contests=more?[...contests,...response.items]:response.items;next=response.next_cursor;userOverview=summary.value;overviewError=summary.error;}
       else{
-        const [settings,history,journal,details]=await Promise.all([api.settings(),api.jobs({contest_id:id}),api.reflections(id),contestApi.get(id)]);
+        const [settings,history,journal,details,summary]=await Promise.all([api.settings(),api.jobs({contest_id:id}),api.reflections(id),contestApi.get(id),summaryRequest]);
         let facts=null,pending='';
         try{facts=await api.evidence(id);}catch(e){if(e.status===409||e.status===403)pending=e.message;else throw e;}
         if(token!==epoch||expected!==signature())return;
-        contest=details;config=settings;evidence=facts;notice=pending;jobs=history.items;jobNext=history.next_cursor;reflections=journal.items;reflectionNext=journal.next_cursor;
+        contest=details;config=settings;evidence=facts;notice=pending;jobs=history.items;jobNext=history.next_cursor;reflections=journal.items;reflectionNext=journal.next_cursor;userOverview=summary.value;overviewError=summary.error;
       }
       loaded=true;
     }catch(e){if(token===epoch&&expected===signature()){error=e.message;loaded=true;}}
@@ -68,10 +75,11 @@ export function createCoachController({shell,pagehead,esc,link,render,current,ge
     body+=`<div class="flex" style="margin-bottom:20px">${destination()?link('Choose contest','insights','secondary'):''}${button('refresh','Refresh coach')}</div>`;
     if(key!==signature()||!loaded)return shell('insights',body+'<section class="panel" role="status">Loading coach evidence…</section>');
     if(error)return shell('insights',body+`<section class="panel" role="alert">${esc(error)} ${button('refresh','Retry coach')}</section>`);
+    body+=dailyOverview(userOverview,{esc,link,button,error:overviewError});
     if(notice)body+=`<p class="callout" role="status">${esc(notice)}</p>`;
-    if(!destination())return shell('insights',body+`<section class="coach-intro"><h2>Choose a contest to review</h2><p>Reports become available after you confirm a portfolio and its first valuation is published.</p></section><div class="contest-grid">${contests.map(c=>`<section class="panel"><span class="pill neutral">${esc(c.status)}</span><h2>${esc(c.name)}</h2>${link('Open performance coach','insights/'+c.id,'secondary')}</section>`).join('')||'<section class="panel">Join a contest and submit a portfolio to start building report evidence.</section>'}</div>${next?button('more','Load more contests'):''}`);
+    if(!destination())return shell('insights',body+`${contests.length?'<section class="coach-intro"><h2>Per-contest reports</h2><p>Explore each contest’s results, AI review and private journal.</p></section>':''}<div class="contest-grid">${contests.map(c=>`<section class="panel"><span class="pill neutral">${esc(c.status)}</span><h2>${esc(c.name)}</h2>${link('Open performance coach','insights/'+c.id,'secondary')}</section>`).join('')||''}</div>${next?button('more','Load more contests'):''}`);
     const active=jobs.find(j=>['queued','running','retry'].includes(j.status)),existing=evidence&&jobs.find(j=>j.evidence.record_id===evidence.record_id&&j.provider===config?.provider&&j.model===config?.model),job=selectedJob();
-    body+=`<section class="panel coach-context" aria-label="Contest and report status"><div><h2>${esc(contest?.name||'Your contest')}</h2><p>${evidence?`Latest valuation: ${esc(evidence.session_date)} · ${evidence.is_final?'Final':'Interim'}${evidence.is_current?'':' · Waiting for newer results'}`:'Confirm your portfolio and wait for the first published valuation.'}</p>${active?`<div role="status"><h3>${esc(reportLabels[active.status])}</h3></div><p class="small">Status updates automatically. You can use the other sections while you wait.</p>`:!config?.enabled?'<p class="small">AI generation is disabled or not configured. Evidence and your journal remain available.</p>':!getAccount()?.email_verified?'<p>Verify your email before requesting a report.</p>':!evidence?'<p class="small">Your journal is available while you wait for results.</p>':existing?.status==='succeeded'?'<p class="small">Your report for this snapshot is ready.</p>':existing?.status==='failed'?'<p>Your report could not be generated. Retry or check Past reports for details.</p>':''}</div><div class="coach-context-actions">${evidence&&config?.enabled&&getAccount()?.email_verified&&!active&&(!existing||existing.status==='failed')?button('generate',existing?.status==='failed'?'Retry coach report':'Generate coach report'):''}${link('View performance','performance/'+destination(),'ghost')}</div></section><nav class="coach-nav" aria-label="AI Insights sections">${sections.map(([id,label])=>sectionButton(id,label)).join('')}</nav>${reportContext(job)}<div class="coach-section" id="coach-section" tabindex="-1">${section==='overview'?overview(job):section==='learning'?learning(job):section==='journal'?journal(job):section==='evidence'?evidenceView(job):history()}</div><p class="small coach-disclaimer">Educational simulation using synthetic prices. Insights explain saved results and learning priorities; they are not forecasts or trading recommendations.</p>`;
+    body+=`<section class="panel coach-context" aria-label="Contest and report status"><div><h2>${esc(contest?.name||'Your contest')}</h2><p>${evidence?`Latest valuation: ${esc(evidence.session_date)} · ${evidence.is_final?'Final':'Interim'}${evidence.is_current?'':' · Waiting for newer results'}`:'Confirm your portfolio and wait for the first published valuation.'}</p>${active?`<div role="status"><h3>${esc(reportLabels[active.status])}</h3></div><p class="small">Status updates automatically. You can use the other sections while you wait.</p>`:!config?.enabled?'<p class="small">AI generation is disabled or not configured. Evidence and your journal remain available.</p>':!getAccount()?.email_verified?'<p>Verify your email before requesting a report.</p>':!evidence?'<p class="small">Your journal is available while you wait for results.</p>':existing?.status==='succeeded'?'<p class="small">Your report for this snapshot is ready.</p>':existing?.status==='failed'?'<p>Your report could not be generated. Retry or check Past reports for details.</p>':''}</div><div class="coach-context-actions">${evidence&&config?.enabled&&getAccount()?.email_verified&&!active&&(!existing||existing.status==='failed')?button('generate',existing?.status==='failed'?'Retry coach report':'Generate coach report'):''}${link('View performance','performance/'+destination(),'ghost')}</div></section><nav class="coach-nav" aria-label="AI Insights sections">${sections.map(([id,label])=>sectionButton(id,label)).join('')}</nav>${reportContext(job)}<div class="coach-section" id="coach-section" tabindex="-1">${section==='overview'?overview(job):section==='learning'?learning(job):section==='journal'?journal(job):section==='evidence'?evidenceView(job):history()}</div><p class="small coach-disclaimer">Educational simulation using saved closing valuations. Insights explain saved results and learning priorities; they are not forecasts or trading recommendations.</p>`;
     return shell('insights',body);
   }
   async function click(b){

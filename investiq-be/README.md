@@ -179,3 +179,11 @@ Contest schedule and holdings-invariant validation return fixed, actionable mess
 Yahoo EOD prices can power new virtual contests, with Nifty 50 as the benchmark.
 Existing synthetic contests retain their source. Migration `0013_yahoo_eod` and
 worker/Beat support are included. See [setup, behavior and limits](docs/YAHOO-EOD.md).
+
+### Market news
+
+Home includes a rotating market brief beside the Nifty 50 overview, and Portfolio
+lists five recent market headlines linking to the original articles. The existing
+worker/Beat fetches the Economic Times Markets RSS hourly during NSE sessions.
+No news API key or database migration is required. See
+[schedule, caching, local setup and tests](docs/MARKET-NEWS.md).

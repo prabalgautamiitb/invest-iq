@@ -1,0 +1,25 @@
+export function dailyOverview(s,{esc,link,button,error}) {
+  if(error)return `<section class="panel coach-daily" aria-label="Your daily insights"><h2>Your daily insights</h2><p role="alert">${esc(error)}</p>${button('refresh','Retry summary')}</section>`;
+  if(!s)return '';
+  if(!s.valued_contests)return `<section class="panel coach-daily coach-empty" aria-label="Your daily insights"><span class="eyebrow">Your performance</span><h2>${s.status==='no_contests'?'No AI insights yet':'Waiting for your first results'}</h2><p>${s.status==='no_contests'?'Join a contest and submit a portfolio to get insights based on your performance after its first published closing valuation.':'Your contest participation is saved. Insights will appear after a confirmed portfolio has its first published closing valuation.'}</p>${link('Browse contests','contests','secondary')}</section>`;
+  const signed=value=>(Number(value)>0?'+':'')+Number(value).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2})+'%';
+  const day=value=>new Date(value+'T12:00:00+05:30').toLocaleDateString('en-IN',{timeZone:'Asia/Kolkata',day:'numeric',month:'short',year:'numeric'});
+  const points=(items,empty)=>items.length?`<ul class="coach-daily-points">${items.map(p=>{
+    if(p.title){
+      const label={encouraging:'Encouraging habit',practice:'Worth practising',not_enough_data:'More understanding needed'}[p.assessment]||'Learning focus';
+      return `<li class="coach-habit"><div class="coach-habit-heading"><h4>${esc(p.title)}</h4><span class="coach-habit-label">${label}</span></div><p>${esc(p.text)}</p><div class="coach-habit-action"><strong>Try next</strong><p>${esc(p.next_step)}</p></div><details><summary>Why this matters &amp; what we checked</summary><p>${esc(p.why_it_matters)}</p><p>${esc(p.evidence_summary)}</p><p>${esc(p.assessment_basis)}</p></details><div class="coach-habit-source">${link('Example: '+esc(p.contest_name),'insights/'+p.contest_id,'ghost')}<span>${esc(day(p.session_date))}</span></div></li>`;
+    }
+    const first=p.text.split(/(?<=[.!?])\s+|;\s+/)[0];
+    return `<li><p>${esc(first)}${/[.!?]$/.test(first)?'':'.'}</p>${p.text!==first?`<details><summary>Why this matters</summary><p>${esc(p.text)}</p></details>`:''}<div>${link(esc(p.contest_name),'insights/'+p.contest_id,'ghost')}<span>${esc(day(p.session_date))}</span></div></li>`;
+  }).join('')}</ul>`:`<p class="small">${empty}</p>`;
+  const status={ready:'Up to date',updating:'AI review in progress',failed:'Some AI reviews need a retry',disabled:'AI review unavailable',verification_required:'Verify your email for AI review'}[s.status]||'Awaiting results';
+  return `<section class="panel coach-daily" aria-label="Your daily insights">
+    <header class="row"><div><span class="eyebrow">Your performance · across contests</span><h2>Your daily insights</h2></div><span class="pill neutral">${status}</span></header>
+    <p>${esc(s.summary)}</p>${s.learning_stage?`<div class="coach-learning-progress"><strong>Your progress: ${esc(s.learning_stage)}</strong><p>${esc(s.learning_summary)}</p><small>Learning checks from saved portfolios. Your contest AI reviews are shown below.</small></div>`:''}
+    <dl class="coach-daily-metrics"><div><dt>Overall contest return</dt><dd class="${Number(s.combined_return_pct)>=0?'positive':'negative'}">${signed(s.combined_return_pct)}</dd><small>Accounts for each contest’s starting money</small></div><div><dt>Contests with results</dt><dd>${s.valued_contests}</dd><small>${s.completed_contests} completed</small></div><div><dt>Ahead of the market</dt><dd>${s.outperforming_contests} <span>/ ${s.valued_contests}</span></dd><small>Compared with each contest’s index</small></div></dl>
+    ${s.pending_reports?`<p class="coach-daily-status" role="status">Updating AI insights for ${s.pending_reports} contest${s.pending_reports===1?'':'s'}. Current performance figures are already shown.</p>`:''}
+    ${s.failed_reports?'<p class="small">Open the relevant contest report below to retry an AI review. Earlier reports are kept in its history.</p>':''}
+    <div class="coach-daily-columns"><section><h3>Strengths</h3>${points(s.strengths,s.reports_ready?'Start with the practice points alongside. A few results do not define your ability as an investor.':'Your saved results will help identify habits to build on.')}</section><section><h3>Areas to improve</h3>${points(s.improvements,s.reports_ready?'No specific improvement point was identified in the reviewed results.':'Review points will appear after the AI reviews your closing results.')}</section></div>
+    <footer><span>Latest closing results: ${esc(day(s.latest_session_date))}${s.earliest_session_date!==s.latest_session_date?` · Older contest snapshots date back to ${esc(day(s.earliest_session_date))}`:''}</span><span>Refreshes after a published closing valuation changes your portfolio value. Learning checks describe observed portfolio habits, not a personal risk rating or proof of investing skill.</span></footer>
+  </section>`;
+}

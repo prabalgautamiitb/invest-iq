@@ -27,6 +27,7 @@ class Settings(BaseSettings):
     public_contest_fixtures_enabled: bool = False
     market_data_mode: Literal["fixture", "yahoo", "disabled"] = "fixture"
     market_scan_seconds: int = Field(default=300, ge=60, le=3600)
+    market_news_enabled: bool = True
     yahoo_timeout_seconds: int = Field(default=45, ge=5, le=60)
     session_days: int = Field(default=7, ge=1, le=30)
     auth_rate_limit: int = Field(default=10, ge=1)

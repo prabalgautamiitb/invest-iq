@@ -96,3 +96,55 @@ test('coach guests and API failures have explicit states without sample AI claim
  await page.unroute('**/api/v1/me/contests?*');await page.getByRole('button',{name:'Retry coach',exact:true}).click();
  await expect(page.locator('.main')).toContainText('Join a contest and submit a portfolio');
 });
+
+test('daily user summary updates from closing results and keeps contest reports below it',async({page,request})=>{
+ await clock(request,'2026-10-14T13:00:00Z');
+ try{
+  await verifiedAccount(page,request,`daily-coach-${randomUUID()}@example.com`);
+  await page.goto('/#/insights');
+  const summary=page.getByRole('region',{name:'Your daily insights',exact:true});
+  await expect(summary.getByRole('heading',{name:'No AI insights yet',exact:true})).toBeVisible();
+  await expect(summary.getByRole('heading',{name:'Strengths',exact:true})).toHaveCount(0);
+  await expect(page.getByRole('heading',{name:'Per-contest reports',exact:true})).toHaveCount(0);
+  const id=await scenario(page);
+  await page.getByRole('button',{name:'Refresh coach',exact:true}).click();
+  await expect(summary).toContainText('Waiting for your first results');
+  await expect(page.getByRole('heading',{name:'Per-contest reports',exact:true})).toBeVisible();
+  await clock(request,'2026-10-15T13:00:00Z');
+  expect((await request.post(`http://127.0.0.1:8081/__browser__/value/${id}`,{headers:harness})).ok()).toBeTruthy();
+  await page.getByRole('button',{name:'Refresh coach',exact:true}).click();
+  await expect(summary).toContainText('AI review in progress');
+  await expect(summary).toContainText('Overall contest return');
+  expect((await request.post('http://127.0.0.1:8081/__browser__/coach-daily-work',{headers:harness})).ok()).toBeTruthy();
+  await expect(summary).toContainText('Up to date',{timeout:10000});
+  await expect(summary.getByRole('heading',{name:'Strengths',exact:true})).toBeVisible();
+  await expect(summary.getByRole('heading',{name:'Areas to improve',exact:true})).toBeVisible();
+  await expect(summary).toContainText('Know the risk you can live with');
+  await expect(summary).toContainText('Try next');
+  await expect(summary).toContainText('Your progress:');
+  await expect(summary).not.toContainText('contributed positively');
+  await expect(summary).not.toContainText('largest-position weight');
+  await expect(summary).toContainText('15 Oct 2026');
+  const perContest=page.getByRole('heading',{name:'Per-contest reports',exact:true});
+  expect(await summary.evaluate((node)=>node.compareDocumentPosition(document.querySelector('.coach-intro'))&Node.DOCUMENT_POSITION_FOLLOWING)).toBeTruthy();
+  await expect(perContest).toBeVisible();
+  await page.screenshot({path:'/tmp/investiq-daily-insights-desktop.png',fullPage:true});
+  await page.setViewportSize({width:390,height:844});
+  await page.screenshot({path:'/tmp/investiq-daily-insights-mobile.png',fullPage:true});
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBeTruthy();
+  await page.getByRole('link',{name:'Open performance coach',exact:true}).click();
+  await expect(page.getByRole('heading',{name:'Report ready',exact:true})).toBeVisible();
+  await expect(summary).toContainText('Up to date');
+  await page.setViewportSize({width:1280,height:900});
+  await page.goto('/#/insights');
+  await clock(request,'2026-10-16T13:00:00Z');
+  expect((await request.post(`http://127.0.0.1:8081/__browser__/value/${id}`,{headers:harness})).ok()).toBeTruthy();
+  await page.getByRole('button',{name:'Refresh coach',exact:true}).click();
+  await expect(summary).toContainText('AI review in progress');
+  await expect(summary).toContainText('16 Oct 2026');
+  await expect(summary.locator('.coach-habit')).toHaveCount(4);
+  expect((await request.post('http://127.0.0.1:8081/__browser__/coach-daily-work',{headers:harness})).ok()).toBeTruthy();
+  await expect(summary).toContainText('Up to date',{timeout:10000});
+  await expect(summary).toContainText('1 completed');
+ }finally{await clock(request,'2026-10-18T12:00:00Z');}
+});

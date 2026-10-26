@@ -181,6 +181,14 @@ async def main() -> None:
             harness_only(request)
             return await sweep(application.state.coach)
 
+        @application.post("/__browser__/coach-daily-work", include_in_schema=False)
+        async def browser_daily_coach_work(request: Request) -> object:
+            from investiq.services.coach_overview import queue_daily
+
+            harness_only(request)
+            queued = await queue_daily(application.state.coach)
+            return {"queued": queued, **await sweep(application.state.coach)}
+
         await BrowserTestServer(
             uvicorn.Config(
                 application,

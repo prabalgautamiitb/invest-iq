@@ -8,6 +8,7 @@ import { createRewardsController } from './features/rewards.js';
 import { createLearningController } from './features/learning.js';
 import { createPerformanceController } from './features/performance.js';
 import { createPortfolioController } from './features/portfolio.js';
+import { createMarketNews } from './features/market-news.js';
 import { createContestController } from './features/contests.js';
 import { marketApi } from './api/market.js';
 'use strict';
@@ -34,6 +35,7 @@ const gauge=()=>`<div class="gauge"><svg viewBox="0 0 180 144" role="img" aria-l
 function nav(){if(isAdminPortal)return `<nav class="mvp-authnav">${brand()}<span class="pill neutral">Administration</span></nav>`;return `<nav class="topnav">${brand()}<div class="toplinks"><a href="#/academy">Academy</a><a href="#/contests">Contests</a><a href="#/login">Log in</a>${link('Get started '+icon('arrow'),'signup')}</div></nav>`}
 const serverContests = createContestController({shell,pagehead:(...args)=>pagehead(...args),esc,money,link,icon,toast,render,current,getAccount:()=>account});
 const serverPortfolio = createPortfolioController({shell,icon,pagehead:(...args)=>pagehead(...args),esc,link,render,current,getAccount:()=>account});
+createMarketNews({root:app,esc});
 const martin = createMartinController({getAccount:()=>account,current});
 const serverAdmin = createAdminController({shell,pagehead:(...args)=>pagehead(...args),esc,link,icon,render,current,getAccount:()=>account});
 app.addEventListener('click',e=>{const b=e.target.closest('[data-admin-action]');if(b)serverAdmin.click(b);});

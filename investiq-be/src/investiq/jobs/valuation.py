@@ -31,6 +31,11 @@ app.conf.update(
     timezone="UTC",
     enable_utc=True,
     beat_schedule={
+        "market-news-scan": {
+            "task": "investiq.news.scan",
+            "schedule": 60,
+            "options": {"expires": 60},
+        },
         "market-scan": {
             "task": "investiq.market.scan",
             "schedule": settings.market_scan_seconds,
@@ -97,9 +102,11 @@ scan_task = app.task(
 
 async def execute_coach() -> dict[str, int]:
     from investiq.ai.workflow import sweep
+    from investiq.services.coach_overview import queue_daily
 
     application = create_app(settings)
     async with application.router.lifespan_context(application):
+        await queue_daily(application.state.coach)
         return await sweep(application.state.coach)
 
 
@@ -157,3 +164,20 @@ def market_scan() -> dict[str, object]:
 
 
 market_scan_task = app.task(name="investiq.market.scan", acks_late=True)(market_scan)
+
+
+async def execute_news() -> dict[str, object]:
+    application = create_app(settings)
+    async with application.router.lifespan_context(application):
+        result: dict[str, object] = await application.state.market_news.refresh()
+        return result
+
+
+def news_scan() -> dict[str, object]:
+    try:
+        return asyncio.run(execute_news())
+    except Exception:
+        raise RuntimeError("news_scan_failed; retry on next scheduled scan") from None
+
+
+news_scan_task = app.task(name="investiq.news.scan", acks_late=True)(news_scan)
