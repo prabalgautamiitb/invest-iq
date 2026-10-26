@@ -12,6 +12,7 @@ from pydantic import (
     StringConstraints,
     model_validator,
 )
+from pydantic_core import PydanticCustomError
 
 Status = Literal[
     "draft", "scheduled", "open", "locked", "running", "settling", "completed", "cancelled"
@@ -47,12 +48,19 @@ class RulesInput(BaseModel):
 
     @model_validator(mode="after")
     def coherent(self) -> Self:
-        if (
-            self.min_holdings > self.max_holdings
-            or len(set(self.eligible_instrument_ids)) != len(self.eligible_instrument_ids)
-            or len(self.eligible_instrument_ids) < self.min_holdings
-        ):
-            raise ValueError("Holdings limits must fit a distinct eligible universe")
+        if self.min_holdings > self.max_holdings:
+            raise PydanticCustomError(
+                "contest_holdings_order", "Maximum holdings must be at least minimum holdings."
+            )
+        if len(set(self.eligible_instrument_ids)) != len(self.eligible_instrument_ids):
+            raise PydanticCustomError(
+                "contest_eligible_duplicates", "Choose each eligible stock only once."
+            )
+        if len(self.eligible_instrument_ids) < self.min_holdings:
+            raise PydanticCustomError(
+                "contest_eligible_count",
+                "Select at least as many eligible stocks as minimum holdings.",
+            )
         return self
 
 
@@ -71,12 +79,24 @@ class ContestInput(BaseModel):
 
     @model_validator(mode="after")
     def schedule(self) -> Self:
-        if not self.entry_opens_at < self.entry_closes_at < self.starts_at < self.ends_at:
-            raise ValueError("Require entry open < entry close < start < end")
+        if self.entry_opens_at >= self.entry_closes_at:
+            raise PydanticCustomError(
+                "contest_entry_order", "Entry opens must be before entry closes."
+            )
+        if self.entry_closes_at >= self.starts_at:
+            raise PydanticCustomError(
+                "contest_lock_order", "Entry closes must be before the contest starts."
+            )
+        if self.starts_at >= self.ends_at:
+            raise PydanticCustomError(
+                "contest_end_order", "Contest ends must be after the contest starts."
+            )
         return self
 
 
 class ContestOut(BaseModel):
+    market_data_kind: Literal["fixture", "yahoo"] = "fixture"
+    server_time: datetime
     first_session_closes_at: datetime | None
     first_results_available_at: datetime | None
     organizer: Organizer

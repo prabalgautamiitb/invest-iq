@@ -1,0 +1,25 @@
+.admin-shell .sidenav a{display:flex;align-items:center;gap:12px}
+.admin-shell .sidenav a .icon,.admin-shell .bottomnav .icon{width:20px;height:20px}
+.admin-shell .appbar{justify-content:space-between}
+.admin-shell .sidebarbottom{margin-top:auto}
+.admin-mobile-signout{display:none}
+.admin-editor{max-width:900px;margin-top:24px}
+.admin-editor-fields{border:0;margin:0;padding:0;min-width:0}
+.admin-editor .field{margin:18px 0}
+.admin-editor textarea{width:100%;resize:vertical;line-height:1.7;min-height:80px}
+.admin-editor small{color:var(--muted);line-height:1.6}
+.admin-editor .callout{margin-top:24px}
+.admin-editor-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:18px}
+.admin-shell .primary,.admin-shell a.secondary{display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.admin-shell button .icon,.admin-shell a .icon{flex-shrink:0;width:18px;height:18px}
+.admin-question{border:1px solid var(--line);border-radius:14px;padding:8px 20px 20px;margin:24px 0;min-width:0}
+.admin-question legend{padding:0 8px;color:var(--text);font-weight:600}
+.admin-courses{margin-bottom:24px}
+.admin-courses article{display:flex;flex-direction:column;align-items:flex-start;gap:14px}
+.admin-courses h2,.admin-courses p{margin:0}
+.admin-courses a{margin-top:auto}
+.admin-course-summary li{line-height:1.8;padding:4px}
+.admin-course-summary li span{margin-left:8px}
+.admin-shell .bottomnav{grid-template-columns:repeat(2,1fr)}
+@media(max-width:900px){.admin-mobile-signout{display:inline-flex}.admin-shell .appbar>.pill{display:none}}
+@media(max-width:600px){.admin-editor{padding:18px}.admin-question{padding:8px 12px 16px}.admin-editor .grid2{grid-template-columns:1fr}.admin-shell .appbar>strong{font-size:13px}}

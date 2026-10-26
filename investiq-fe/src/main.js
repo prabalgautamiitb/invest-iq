@@ -8,6 +8,8 @@ import './styles/clarity.css';
 import './styles/coach.css';
 import './styles/martin.css';
 import './styles/portfolio.css';
+import './styles/contests.css';
+import './styles/admin.css';
 
 // Preserve the rendering order: app first, then progressive motion layers.
 import './app.js';

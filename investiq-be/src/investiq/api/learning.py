@@ -9,11 +9,15 @@ from investiq.schemas.learning import (
     AttemptInput,
     AttemptOut,
     AttemptPage,
+    CourseContentInput,
     CoursePage,
+    LessonContentInput,
     LessonOut,
+    LessonSummary,
     ProgressOut,
 )
 from investiq.services.learning import LearningService
+from investiq.services.learning_admin import create_course, publish_lesson, require_admin
 
 router = APIRouter(tags=["learning"])
 
@@ -26,6 +30,35 @@ def service(request: Request) -> LearningService:
 Service = Annotated[LearningService, Depends(service)]
 Cursor = Annotated[str | None, Query(max_length=1024)]
 Limit = Annotated[int, Query(ge=1, le=50)]
+
+
+@router.get("/admin/courses", response_model=CoursePage)
+async def admin_courses(
+    learning: Service, principal: UserContext, cursor: Cursor = None, limit: Limit = 20
+) -> CoursePage:
+    async with learning.factory() as db, db.begin():
+        await require_admin(learning, db, principal)
+    return await learning.courses(cursor, limit)
+
+
+@router.post("/admin/courses", status_code=201)
+async def publish_course(
+    data: CourseContentInput, learning: Service, principal: UserContext, identity: Identity
+) -> dict[str, UUID]:
+    await identity.rate_limit("learning_write", str(principal.user_id))
+    return {"id": await create_course(learning, principal, data)}
+
+
+@router.post("/admin/courses/{course_id}/lessons", response_model=LessonSummary, status_code=201)
+async def add_course_lesson(
+    course_id: UUID,
+    data: LessonContentInput,
+    learning: Service,
+    principal: UserContext,
+    identity: Identity,
+) -> LessonSummary:
+    await identity.rate_limit("learning_write", str(principal.user_id))
+    return await publish_lesson(learning, principal, course_id, data)
 
 
 @router.get("/courses", response_model=CoursePage)

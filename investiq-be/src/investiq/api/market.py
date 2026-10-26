@@ -10,6 +10,8 @@ from investiq.schemas.market import (
     InstrumentKind,
     InstrumentPage,
     MarketCap,
+    MarketDataKind,
+    MarketStatusOut,
     QuoteBatchOut,
     SectorPage,
     SessionPage,
@@ -27,6 +29,11 @@ def service(request: Request) -> MarketService:
 Service = Annotated[MarketService, Depends(service)]
 
 
+@router.get("/market/status", response_model=MarketStatusOut)
+async def market_status(market: Service) -> MarketStatusOut:
+    return await market.status()
+
+
 @router.get("/sectors", response_model=SectorPage)
 async def sectors(market: Service) -> SectorPage:
     return await market.sectors()
@@ -39,12 +46,16 @@ async def instruments(
     sector: UUID | None = None,
     market_cap: MarketCap | None = None,
     kind: InstrumentKind = "equity",
+    data_kind: MarketDataKind | None = None,
+    include_legacy: bool = False,
     eligible_only: bool = True,
     sort: Literal["symbol", "-symbol", "name", "-name"] = "symbol",
     cursor: Annotated[str | None, Query(max_length=1024)] = None,
     limit: Annotated[int, Query(ge=1, le=100)] = 20,
 ) -> InstrumentPage:
     return await market.instruments(
+        data_kind=data_kind,
+        include_legacy=include_legacy,
         query=query,
         sector=sector,
         market_cap=market_cap,

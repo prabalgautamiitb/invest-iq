@@ -106,3 +106,64 @@ async def test_production_disables_docs() -> None:
     async with api_client(create_app(Settings(_env_file=None, environment="production"))) as client:
         assert (await client.get("/docs")).status_code == 404
         assert (await client.get("/openapi.json")).status_code == 404
+
+
+@pytest.mark.parametrize(
+    ("field", "value", "expected_field", "expected_message"),
+    [
+        (
+            "entry_opens_at",
+            "2026-10-26T18:30:00+05:30",
+            "entry_closes_at",
+            "Entry opens must be before entry closes.",
+        ),
+        (
+            "entry_closes_at",
+            "2026-10-27T09:15:00+05:30",
+            "starts_at",
+            "Entry closes must be before the contest starts.",
+        ),
+        (
+            "ends_at",
+            "2026-10-27T09:15:00+05:30",
+            "ends_at",
+            "Contest ends must be after the contest starts.",
+        ),
+    ],
+)
+async def test_contest_schedule_errors_are_specific_without_echoing_request_data(
+    field: str,
+    value: str,
+    expected_field: str,
+    expected_message: str,
+) -> None:
+    from investiq.schemas.contest import ContestInput
+
+    app = create_app(Settings(_env_file=None))
+
+    @app.post("/contest-validation-probe")
+    async def probe(body: ContestInput) -> dict[str, bool]:
+        return {"valid": True}
+
+    payload = dict(
+        name="CONFIDENTIAL_CONTEST_NAME",
+        description="CONFIDENTIAL_CONTEST_DESCRIPTION",
+        entry_opens_at="2026-10-26T06:30:00+05:30",
+        entry_closes_at="2026-10-26T09:10:00+05:30",
+        starts_at="2026-10-27T09:15:00+05:30",
+        ends_at="2026-10-30T15:30:00+05:30",
+        rules={
+            "benchmark_id": str(UUID(int=1)),
+            "eligible_instrument_ids": [str(UUID(int=i)) for i in range(2, 7)],
+        },
+    )
+    payload[field] = value
+    async with api_client(app) as client:
+        response = await client.post("/contest-validation-probe", json=payload)
+        assert response.status_code == 422
+        error = response.json()["error"]
+        assert error["message"] == expected_message
+        assert error["details"][0]["location"] == ["body", expected_field]
+        assert error["details"][0]["message"] == expected_message
+        assert "CONFIDENTIAL" not in response.text
+        assert "input" not in error["details"][0] and "ctx" not in error["details"][0]

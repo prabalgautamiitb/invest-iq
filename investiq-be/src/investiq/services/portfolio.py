@@ -8,7 +8,7 @@ from uuid import UUID
 from sqlalchemy import delete, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from investiq.adapters.market import EXCHANGE_TZ, FIXTURE_DATASETS
+from investiq.adapters.market import EXCHANGE_TZ
 from investiq.analytics.portfolio import allocate
 from investiq.core.errors import AppError
 from investiq.core.security import Principal
@@ -35,6 +35,7 @@ from investiq.schemas.portfolio import (
 from investiq.services.contest import ContestService, phase
 from investiq.services.exchange_calendar import expected_session
 from investiq.services.market import decode_cursor, encode_cursor, fingerprint
+from investiq.services.market_sources import price_source
 
 
 class PortfolioService:
@@ -117,6 +118,7 @@ class PortfolioService:
         rule = await db.get(ContestRules, member.rule_id)
         assert rule
         rules = await self.contests.rule_input(db, rule)
+        kind = await self.contests.data_kind(db, c)
         ids = [p.instrument_id for p in positions]
         if not set(ids).issubset(rules.eligible_instrument_ids):
             raise AppError(
@@ -148,9 +150,7 @@ class PortfolioService:
         )
         if (
             len(instruments) != len(ids)
-            or any(
-                not i.active or i.kind != "equity" or i.data_kind != "fixture" for i in instruments
-            )
+            or any(not i.active or i.kind != "equity" or i.data_kind != kind for i in instruments)
             or blocked
         ):
             raise AppError(
@@ -197,6 +197,7 @@ class PortfolioService:
         positions = await self.positions(db, draft)
         rule = await self.eligibility(db, c, member, positions)
         rules = await self.contests.rule_input(db, rule)
+        kind = await self.contests.data_kind(db, c)
         instant = self.clock()
         expected = await expected_session(db, instant)
         identifiers = [p.instrument_id for p in positions] + [rules.benchmark_id]
@@ -211,9 +212,7 @@ class PortfolioService:
                     PriceSnapshot.observed_at == expected.closes_at,
                     PriceSnapshot.source_published_at <= instant,
                     IngestionRun.status == "succeeded",
-                    IngestionRun.provider == "investiq-synthetic",
-                    IngestionRun.dataset_version.in_(FIXTURE_DATASETS),
-                    IngestionRun.data_kind == "fixture",
+                    price_source(kind, instant),
                 )
                 .order_by(Instrument.id)
                 .with_for_update(read=True, of=[PriceSnapshot, Instrument])
@@ -235,7 +234,7 @@ class PortfolioService:
         if (
             len(points) != len(set(identifiers))
             or blocked
-            or any(not i.active or i.data_kind != "fixture" for _, i, _ in points.values())
+            or any(not i.active or i.data_kind != kind for _, i, _ in points.values())
         ):
             raise AppError(
                 409,
@@ -298,6 +297,7 @@ class PortfolioService:
         digest = hashlib.sha256(json.dumps(evidence, sort_keys=True).encode()).hexdigest()
         self.editable(c)
         return PreviewOut(
+            data_kind=kind,
             contest_id=c.id,
             rule_id=rule.id,
             draft_revision=revision,
@@ -334,6 +334,7 @@ class PortfolioService:
             )
         )
         return SubmissionOut(
+            data_kind=await self.contests.data_kind(db, c),
             id=submission.id,
             version=submission.version,
             submitted_at=submission.submitted_at,

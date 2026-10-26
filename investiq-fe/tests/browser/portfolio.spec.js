@@ -19,6 +19,40 @@ const signup=(page,request)=>verifiedAccount(page,request,`portfolio-${randomUUI
 const draft=(page,id)=>page.evaluate(async id=>(await (await fetch(`/api/v1/contests/${id}/portfolio/draft`)).json()),id);
 const button=(page,name)=>page.getByRole('button',{name,exact:true});
 
+test('legacy contest explains its smaller universe while new Nifty 50 portfolios show all 50 stocks',async({page,request})=>{
+  await signup(page,request);
+  const id=await league(page);
+  await page.route('**/api/v1/market/status',route=>route.fulfill({json:{mode:'yahoo'}}));
+  await page.goto('/#/portfolio/'+id);
+  const discovery=page.getByRole('region',{name:'Stock discovery'});
+  await expect(discovery).toContainText('16 contest stocks');
+  const explanation=page.getByRole('complementary',{name:'Contest stock list'});
+  await expect(explanation).toContainText('It uses synthetic prices');
+  await expect(explanation).toContainText('New contests offer all 50 Nifty 50 stocks');
+  await expect(explanation.getByRole('link',{name:'Create a Nifty 50 contest'})).toHaveAttribute('href','#/contests/create');
+  await button(page,'Use starter weights').click();
+  await button(page,'Save draft').click();
+  await expect.poll(async()=>(await draft(page,id)).revision).toBe(1);
+  await page.reload();
+  await expect(page.locator('[name="portfolio-position"]')).toHaveCount(5);
+  await expect(explanation).toBeVisible();
+
+  // Model a newly published Yahoo contest without modifying the saved legacy contest.
+  const instruments=await page.evaluate(async()=> (await (await fetch('/api/v1/instruments?limit=100&eligible_only=false')).json()).items);
+  const expanded=Array.from({length:50},(_,i)=>({...instruments[i%instruments.length],id:i<instruments.length?instruments[i].id:randomUUID(),symbol:'NIFTY'+i,name:'Nifty company '+i,data_kind:'yahoo'}));
+  await page.route(`**/api/v1/contests/${id}`,async route=>{
+    const response=await route.fetch();const contest=await response.json();
+    await route.fulfill({json:{...contest,market_data_kind:'yahoo',rules:{...contest.rules,eligible_instrument_ids:expanded.map(i=>i.id)}}});
+  });
+  await page.route('**/api/v1/instruments?*',route=>route.fulfill({json:{items:expanded,next_cursor:null}}));
+  await page.route('**/api/v1/quotes?*',route=>route.fulfill({json:{items:[],expected_session_date:'2026-10-16'}}));
+  await page.reload();
+  await expect(discovery).toContainText('50 contest stocks');
+  await expect(page.locator('#server-stockrows .portfolio-stock')).toHaveCount(50);
+  await expect(explanation).toHaveCount(0);
+  await expect(page.locator('[name="portfolio-position"]')).toHaveCount(5);
+});
+
 test('save, reload, review, submit, convert to quantities and retain immutable versions',async({page,request})=>{
   const errors=[]; page.on('pageerror',e=>errors.push(e.message));
   await signup(page,request);
@@ -191,5 +225,66 @@ test('live discovery and allocation guidance preserve edits and work on mobile',
   await expect(positions.first()).toHaveValue('19');
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);
   await page.screenshot({path:'/tmp/investiq-portfolio-mobile.png',fullPage:true});
+  expect(errors).toEqual([]);
+});
+
+test('stock discovery shows dated opening/closing prices and signed changes without inventing missing data',async({page,request})=>{
+  const errors=[];page.on('pageerror',error=>errors.push(error.message));
+  await signup(page,request);
+  const id=await league(page,'Daily price discovery');
+  let symbols=[];
+  await page.route('**/api/v1/quotes?*',async route=>{
+    const response=await route.fetch();const body=await response.json();
+    const cases=[
+      {open:'100.0000',close:'110.0000',day_change_pct:'10.0000'},
+      {open:'100.0000',close:'95.0000',day_change_pct:'-5.0000'},
+      {open:'100.0000',close:'100.0000',day_change_pct:'0.0000'},
+      {open:null,close:'102.0000',day_change_pct:null},
+      {open:'100.0000',close:'99.0000',day_change_pct:'-1.0000',freshness:'stale',session_date:'2026-10-15',eligible_for_simulation:false},
+      {open:null,close:null,day_change_pct:null,freshness:'missing',session_date:null,eligible_for_simulation:false},
+    ];
+    body.items=body.items.map((quote,index)=>({...quote,...(cases[index]||{})}));
+    symbols=body.items.slice(0,6).map(q=>q.symbol);
+    body.all_current=false;
+    await route.fulfill({response,json:body});
+  });
+  await page.setViewportSize({width:1440,height:1000});
+  await page.goto('/#/portfolio/'+id);
+  await expect.poll(()=>symbols.length).toBe(6);
+  const card=index=>page.getByRole('article',{name:symbols[index]+' stock information',exact:true});
+  await expect(card(0)).toContainText('NSE');
+  await expect(card(0).locator('dt')).toHaveText(['Open','Close','Day change']);
+  await expect(card(0).locator('dd')).toHaveText(['₹100.00','₹110.00','↗ +10.00%']);
+  await expect(card(0).locator('time')).toHaveAttribute('datetime','2026-10-16');
+  await expect(card(0)).toContainText('16 Oct 2026');
+  await expect(card(0)).toContainText('Latest close');
+  await expect(card(0)).toContainText('Synthetic prices');
+  await expect(card(1).locator('.portfolio-stock-move')).toHaveText('↘ -5.00%');
+  await expect(card(1).locator('.portfolio-stock-move')).toHaveClass(/is-down/);
+  await expect(card(2).locator('.portfolio-stock-move')).toHaveText('→ 0.00%');
+  await expect(card(2).locator('.portfolio-stock-move')).toHaveClass(/is-flat/);
+  await expect(card(3).locator('dd')).toHaveText(['Unavailable','₹102.00','Unavailable']);
+  await expect(card(3).getByRole('button',{name:'Add '+symbols[3],exact:true})).toBeEnabled();
+  await expect(card(4)).toContainText('Earlier close');
+  await expect(card(4).locator('time')).toHaveAttribute('datetime','2026-10-15');
+  await expect(card(4).getByRole('button',{name:'Add '+symbols[4],exact:true})).toBeDisabled();
+  await expect(card(5).locator('dd')).toHaveText(['Unavailable','Unavailable','Unavailable']);
+  await expect(card(5)).toContainText('Awaiting prices');
+  await expect(card(5)).toContainText('No trading session');
+  await expect(card(5).getByRole('button',{name:'Add '+symbols[5],exact:true})).toBeDisabled();
+  await card(0).getByRole('button',{name:'Add '+symbols[0],exact:true}).click();
+  await page.getByRole('spinbutton',{name:symbols[0]+' weight percent',exact:true}).fill('20');
+  const search=page.getByRole('searchbox',{name:'Search eligible stocks'});
+  await search.fill(symbols[1]);
+  await expect(page.locator('.portfolio-stock')).toHaveCount(1);
+  await expect(card(1).locator('.portfolio-stock-move')).toHaveText('↘ -5.00%');
+  await search.fill('');
+  await expect(page.getByRole('spinbutton',{name:symbols[0]+' weight percent',exact:true})).toHaveValue('20');
+  await page.getByRole('region',{name:'Stock discovery',exact:true}).screenshot({path:'/tmp/investiq-stock-prices-desktop.png'});
+  await page.setViewportSize({width:390,height:844});
+  await button(page,'Explore stocks').click();
+  await expect(card(0).locator('dd')).toHaveText(['₹100.00','₹110.00','↗ +10.00%']);
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);
+  await page.getByRole('region',{name:'Stock discovery',exact:true}).screenshot({path:'/tmp/investiq-stock-prices-mobile.png'});
   expect(errors).toEqual([]);
 });

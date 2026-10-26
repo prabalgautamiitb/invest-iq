@@ -116,7 +116,16 @@ class CoachService:
             )
             for v in list(latest.values())[:12]
         ]
-        return build_evidence(record, run, final=final, current=current, lessons=lessons)
+        return build_evidence(
+            record,
+            run,
+            final=final,
+            current=current,
+            lessons=lessons,
+            data_kind="yahoo"
+            if await self.valuations.contests.data_kind(db, contest) == "yahoo"
+            else "synthetic",
+        )
 
     async def evidence(self, principal: Principal, contest_id: UUID) -> CoachEvidence:
         async with self.factory() as db, db.begin():

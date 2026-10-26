@@ -28,7 +28,8 @@ class Sector(Base):
 class Instrument(Base):
     __tablename__ = "instruments"
     __table_args__ = (
-        UniqueConstraint("exchange", "symbol"),
+        UniqueConstraint("exchange", "symbol", "data_kind"),
+        CheckConstraint("data_kind IN ('fixture', 'yahoo')", name="data_kind"),
         CheckConstraint("exchange = 'NSE'", name="exchange"),
         CheckConstraint("kind IN ('equity', 'benchmark')", name="kind"),
         CheckConstraint("market_cap IN ('large', 'mid', 'small')", name="market_cap"),
@@ -124,6 +125,9 @@ class PriceSnapshot(Base):
         UniqueConstraint("run_id", "instrument_id"),
         CheckConstraint("close > 0 AND close <> 'NaN'::numeric", name="positive_close"),
         CheckConstraint("source_published_at >= observed_at", name="publication"),
+        CheckConstraint(
+            "open IS NULL OR (open > 0 AND open <> 'NaN'::numeric)", name="positive_open"
+        ),
     )
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
     run_id: Mapped[UUID] = mapped_column(
@@ -134,6 +138,7 @@ class PriceSnapshot(Base):
     )
     session_date: Mapped[date] = mapped_column(Date, index=True)
     close: Mapped[Decimal] = mapped_column(Numeric(20, 4))
+    open: Mapped[Decimal | None] = mapped_column(Numeric(20, 4))
     observed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     source_published_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     ingested_at: Mapped[datetime] = mapped_column(

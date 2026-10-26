@@ -31,7 +31,7 @@ class CoachEvidence(BaseModel):
     is_current: bool
     metric_version: str
     evidence_version: str = "coach-evidence-v1"
-    data_kind: Literal["synthetic"] = "synthetic"
+    data_kind: Literal["synthetic", "yahoo"] = "synthetic"
     facts: list[Fact]
     lessons: list[LessonEvidence]
     limitations: list[str]

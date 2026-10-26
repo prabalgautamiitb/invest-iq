@@ -90,3 +90,7 @@ Revision `0011_coach` adds `coach_jobs`, `coach_requests`, `coach_reports`, `coa
 
 
 Revision `0012_martin` adds `martin_conversations` and `martin_turns`: private bounded conversations, session-derived ownership, same-owner foreign keys, unique per-user question keys, frozen source evidence, provider policy, queued/running/terminal states and bounded leases/attempts. Successful turns require a complete validated answer; deleting a conversation cascades to its questions/evidence/answers. No decision journal or quiz answer keys enter inference. [Ask Martin contracts](../../investiq-fe/docs/ASK-MARTIN.md).
+
+Revision `0013_yahoo_eod` extends instrument uniqueness to exchange/symbol/source
+and adds an optional positive opening price to daily snapshots. Yahoo and synthetic
+catalogues have separate IDs, preserving existing frozen references and history.

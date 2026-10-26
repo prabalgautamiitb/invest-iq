@@ -115,6 +115,7 @@ async def main() -> None:
         settings = Settings(
             database_url=SecretStr(test_url),
             environment="test",
+            market_data_mode="fixture",
             auth_rate_limit=10000,
             csrf_rate_limit=10000,
             ai_request_limit=1000,
@@ -122,7 +123,7 @@ async def main() -> None:
             ollama_model="browser-test-only",
             rate_limit_prefix=f"investiq:browser:{uuid4()}",
             frontend_url="http://127.0.0.1:5174",
-            cors_origins=["http://127.0.0.1:5174"],
+            cors_origins=["http://127.0.0.1:5174", "http://admin.localhost:5174"],
         )
         engine = make_engine(settings)
         try:

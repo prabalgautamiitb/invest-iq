@@ -1,4 +1,5 @@
 from decimal import ROUND_HALF_UP, Decimal
+from typing import Literal
 
 from investiq.core.errors import AppError
 from investiq.models.valuation import ValuationRecord, ValuationRun
@@ -18,6 +19,7 @@ def build_evidence(
     final: bool,
     current: bool,
     lessons: list[LessonEvidence],
+    data_kind: Literal["synthetic", "yahoo"] = "synthetic",
 ) -> CoachEvidence:
     source = f"valuation:{record.id}:run:{run.id}"
     facts: list[Fact] = []
@@ -127,6 +129,7 @@ def build_evidence(
                 "positions:" + str(worst["instrument_id"]),
             )
     return CoachEvidence(
+        data_kind=data_kind,
         contest_id=run.contest_id,
         record_id=record.id,
         run_id=run.id,
@@ -138,8 +141,12 @@ def build_evidence(
         facts=facts,
         lessons=lessons,
         limitations=[
-            "Educational simulation using synthetic end-of-day prices; not investment "
-            "recommendations or forecasts.",
+            (
+                "Educational simulation using Yahoo end-of-day prices; not investment "
+                if data_kind == "yahoo"
+                else "Educational simulation using synthetic end-of-day prices; not investment "
+            )
+            + "recommendations or forecasts.",
             "The confirmed portfolio is locked. There is no trade history or evidence of "
             "sales, exits, motives or counterfactual returns.",
             "All numbers come from the referenced immutable valuation snapshot. Displayed "

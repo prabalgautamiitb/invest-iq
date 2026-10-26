@@ -1,7 +1,50 @@
 from datetime import date, datetime
+from typing import Annotated
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_validator
+
+ContentText = Annotated[
+    str, StringConstraints(strip_whitespace=True, min_length=1, max_length=10000)
+]
+OptionText = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=500)]
+
+
+class ContentQuestionInput(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+    key: str = Field(pattern=r"^[a-z][a-z0-9_]{0,39}$")
+    prompt: str = Field(min_length=1, max_length=1000)
+    options: list[OptionText] = Field(min_length=2, max_length=10)
+    correct: int = Field(ge=0, le=9, strict=True)
+    explanation: str = Field(min_length=1, max_length=2000)
+
+    @model_validator(mode="after")
+    def valid_options(self) -> "ContentQuestionInput":
+        if self.correct >= len(self.options) or len(set(self.options)) != len(self.options):
+            raise ValueError("Choose a valid answer and use distinct options")
+        return self
+
+
+class LessonContentInput(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+    title: str = Field(min_length=1, max_length=160)
+    xp: int = Field(ge=1, le=1000, strict=True)
+    paragraphs: list[ContentText] = Field(min_length=1, max_length=50)
+    questions: list[ContentQuestionInput] = Field(min_length=1, max_length=20)
+
+    @model_validator(mode="after")
+    def distinct_questions(self) -> "LessonContentInput":
+        if len({q.key for q in self.questions}) != len(self.questions):
+            raise ValueError("Use distinct question keys")
+        return self
+
+
+class CourseContentInput(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+    slug: str = Field(pattern=r"^[a-z][a-z0-9-]{0,79}$")
+    title: str = Field(min_length=1, max_length=160)
+    description: str = Field(min_length=1, max_length=1000)
+    lessons: list[LessonContentInput] = Field(min_length=1, max_length=50)
 
 
 class AnswerInput(BaseModel):

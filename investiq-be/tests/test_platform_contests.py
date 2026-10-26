@@ -197,6 +197,8 @@ async def test_platform_publish_requires_covered_scenario_and_current_baseline(m
     async with api_client(app) as client:
         user = await verified(client, mailer)
         await role(app, user, "admin")
+        sessions = (await client.get("/api/v1/contest-simulation-sessions")).json()
+        assert sessions == ["2026-10-14", "2026-10-15", "2026-10-16"]
         data = await payload(client)
         data["visibility"] = "public"
         c = (await create(client, data)).json()
@@ -209,6 +211,9 @@ async def test_platform_publish_requires_covered_scenario_and_current_baseline(m
             response.status_code == 422
             and response.json()["error"]["code"] == "scenario_coverage_missing"
         )
+        message = response.json()["error"]["message"]
+        assert "through 2026-10-16" in message
+        assert "2026-10-19" in message
         data = historical(data)
         c = (await create(client, data)).json()
         async with app.state.sessions() as db, db.begin():
@@ -276,6 +281,8 @@ async def test_fixed_public_scenario_publishes_only_due_prices_and_retries(
             q["dataset_version"] == "public-fixture-v1" and q["session_date"] == "2026-10-19"
             for q in quotes.json()["items"]
         )
+        sessions = (await client.get("/api/v1/contest-simulation-sessions")).json()
+        assert sessions[-1] == "2026-11-06" and "2026-10-27" in sessions
         assert "2026-11-06" in public_fixture_document()["prices"]
         batch = await PublicContestFixtureProvider().fetch_eod(date(2026, 10, 21))
         assert batch.source_published_at > instant

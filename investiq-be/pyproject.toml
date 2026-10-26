@@ -25,6 +25,7 @@ dependencies = [
   "langchain-ollama==1.1.0",
   "langchain-google-genai==4.4.2",
   "psycopg[binary]==3.3.6",
+  "yfinance==1.4.1",
 ]
 
 [dependency-groups]

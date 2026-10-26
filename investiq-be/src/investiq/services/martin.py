@@ -87,7 +87,7 @@ def answer_for(plan: MartinPlan, sources: list[MartinSource]) -> MartinAnswer:
         intent=plan.intent,
         limitation=(
             "Educational AI explanation grounded in the linked sources. "
-            "Personal metrics use synthetic simulation snapshots; they do not "
+            "Personal metrics use saved simulation snapshots; they do not "
             "establish causes, intentions or future returns."
         ),
     )

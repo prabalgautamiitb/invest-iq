@@ -82,7 +82,9 @@ async def market_settings() -> AsyncIterator[Settings]:
     from investiq.services.market_ingestion import MarketIngestionService
 
     async with migrated_database() as url:
-        config = Settings(database_url=SecretStr(url), environment="test")
+        config = Settings(
+            database_url=SecretStr(url), environment="test", market_data_mode="fixture"
+        )
         engine = make_engine(config)
         try:
             await MarketIngestionService(

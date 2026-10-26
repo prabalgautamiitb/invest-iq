@@ -31,6 +31,11 @@ app.conf.update(
     timezone="UTC",
     enable_utc=True,
     beat_schedule={
+        "market-scan": {
+            "task": "investiq.market.scan",
+            "schedule": settings.market_scan_seconds,
+            "options": {"expires": settings.market_scan_seconds},
+        },
         "martin-scan": {
             "task": "investiq.martin.scan",
             "schedule": settings.ai_scan_seconds,
@@ -124,3 +129,31 @@ def martin_scan() -> dict[str, int]:
 
 
 martin_scan_task = app.task(name="investiq.martin.scan", acks_late=True)(martin_scan)
+
+
+async def execute_market() -> dict[str, object]:
+    from sqlalchemy.ext.asyncio import async_sessionmaker
+
+    from investiq.db.session import make_engine
+
+    if settings.market_data_mode != "yahoo":
+        return {"status": "disabled", "imported": 0}
+    engine = make_engine(settings)
+    try:
+        return await MarketIngestionService(
+            async_sessionmaker(engine, expire_on_commit=False), settings
+        ).sync_yahoo()
+    finally:
+        await engine.dispose()
+
+
+def market_scan() -> dict[str, object]:
+    try:
+        return asyncio.run(execute_market())
+    except AppError as exc:
+        return {"status": "blocked", "error_code": exc.code}
+    except Exception:
+        raise RuntimeError("market_scan_failed; retry on the next scheduled scan") from None
+
+
+market_scan_task = app.task(name="investiq.market.scan", acks_late=True)(market_scan)

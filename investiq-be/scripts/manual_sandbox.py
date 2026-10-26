@@ -222,6 +222,7 @@ async def database() -> AsyncIterator[SandboxSettings]:
             ai_request_limit=100,
             rate_limit_prefix="investiq:manual:" + uuid4().hex,
             public_contest_fixtures_enabled=False,
+            market_data_mode="fixture",
             frontend_url=FRONTEND_ORIGIN,
             cors_origins=[FRONTEND_ORIGIN],
             smtp_host="127.0.0.1",

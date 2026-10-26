@@ -45,6 +45,7 @@ export const contestApi = {
   mine: (params = {}) => request('/me/contests?' + new URLSearchParams(params)),
   invitations: (params = {}) => request('/me/contest-invitations?' + new URLSearchParams(params)),
   template: () => request('/contest-template'),
+  simulationSessions: () => request('/contest-simulation-sessions'),
   create: (input, key) => request('/contests', { method: 'POST', body: input, headers: { 'Idempotency-Key': key } }),
   revise: (contestId, input) => request(`/contests/${id(contestId)}`, { method: 'PUT', body: input }),
   transition: (contestId, action) => request(`/contests/${id(contestId)}/transitions`, { method: 'POST', body: { action } }),
@@ -57,6 +58,9 @@ export const contestApi = {
 };
 
 export const academyApi = {
+  adminCourses: (params = {}) => request('/admin/courses?' + new URLSearchParams(params)),
+  publishCourse: input => request('/admin/courses', { method:'POST', body:input }),
+  publishLesson: (courseId,input) => request(`/admin/courses/${id(courseId)}/lessons`, { method:'POST', body:input }),
   courses: (params = {}) => request('/courses?' + new URLSearchParams(params)),
   enroll: courseId => request(`/courses/${id(courseId)}/enrollment`, { method: 'POST' }),
   progress: () => request('/me/learning'),

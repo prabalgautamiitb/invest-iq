@@ -137,3 +137,16 @@ Results information verification: **97 backend tests and 17 Chromium browser tes
 ## Manual testing without real-time waiting
 
 Admin contests still obey entry deadlines, session-open starts and published EOD valuation. For interactive frontend testing, use the separate [manual contest sandbox](MANUAL-CONTEST-TESTING.md): fresh database/accounts, suggested October 15–16 fixture schedule, isolated session cookie and local buttons for locking, first valuation and final results. It does not change the current public contest or weaken normal API rules.
+
+The creation and draft revision forms read `/api/v1/contest-simulation-sessions`
+from the active API and flag unsupported start/end dates before saving. Publishing
+still checks every exchange session on the server; errors name the active
+coverage range and missing sessions. The disposable manual sandbox deliberately
+uses only October 14–16, 2026: keep entry open on October 14, lock/start on
+October 15, and end on October 16 to use its clock controls. The normal Docker
+application enables the extended scenario through November 6.
+
+For Yahoo-mode contests, the fixed fixture price window above does not apply.
+They use the reviewed exchange calendar and a complete current Yahoo price batch.
+Older synthetic contests keep their original scenario and source. See
+[Yahoo end-of-day setup](YAHOO-EOD.md).

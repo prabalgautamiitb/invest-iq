@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import (
 from investiq.core.config import Settings
 
 # Advance with each schema migration. Readiness rejects an incompatible database.
-SCHEMA_REVISION = "0012_martin"
+SCHEMA_REVISION = "0013_yahoo_eod"
 
 
 def make_engine(settings: Settings) -> AsyncEngine:

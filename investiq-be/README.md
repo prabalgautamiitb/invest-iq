@@ -4,6 +4,12 @@ Phases 0–10 are implemented: foundation, identity/onboarding, synthetic market
 
 InvestIQ is simulation-only. Capital, cash and fees are virtual; Phase 6 calculates and finalizes contest results and rankings, with no real trades, payments, payouts or financial settlement.
 
+## Administrator content publishing
+
+Verified administrators can list courses with `GET /api/v1/admin/courses`, publish a course and its initial lessons with `POST /api/v1/admin/courses`, and append a lesson with `POST /api/v1/admin/courses/{course_id}/lessons`. Course input contains `slug`, `title`, `description`, and `lessons`; lesson input contains `title`, `xp`, `paragraphs`, and `questions`. Each question contains `key`, `prompt`, `options`, a zero-based `correct` index, and `explanation`. See `/docs` for the complete request schemas.
+
+Writes require a valid session, CSRF protection, verified email, and a current database admin role. Publication is transactional and recorded in the audit log. Course URL names are unique; concurrent lesson additions receive distinct ordered positions. Public lesson responses omit correct answers and explanations until a learner submits a quiz. No migration or curriculum reseed is required for authored content.
+
 ## Start the backend
 
 For the complete local Phase 10 stack (API, Celery worker and one Beat scheduler), start Ollama on the host with `llama3.1:8b` installed (`ollama list`; pull it if missing), then:
@@ -162,3 +168,14 @@ Use the isolated [manual frontend sandbox](docs/MANUAL-CONTEST-TESTING.md). Run 
 
 
 Ask Martin now uses private persisted conversations and the existing Ollama/Gemini configuration. Migration `0012_martin` is applied by the Compose app profile; the existing worker/Beat also processes Martin questions. Rebuild/restart the app profile after updating. No extra provider dependency or API key is needed for local Ollama. [Complete chat setup, endpoints and privacy](../investiq-fe/docs/ASK-MARTIN.md).
+
+
+Contest Explorer supports `GET /api/v1/contests?activity=active` for scheduled, open, locked and running contests. The effective lifecycle is evaluated with the server clock and filtered before cursor pagination. Explicit `status` takes precedence, and the default API listing and My Contests behavior are unchanged. Each contest response includes `server_time` so the frontend can calculate consistent countdowns, including in the simulation sandbox. Rewards and prize amounts are not configured by the current contest schema; the Explorer displays that absence.
+
+Contest schedule and holdings-invariant validation return fixed, actionable messages and field locations. The validation handler exposes only an allowlist of application-owned contest messages; raw Pydantic inputs, context and arbitrary messages remain excluded. Chronology is enforced as entry opening < entry closing < contest start < contest end for creation and revision, including admin-created public contests.
+
+### Optional Yahoo daily market prices
+
+Yahoo EOD prices can power new virtual contests, with Nifty 50 as the benchmark.
+Existing synthetic contests retain their source. Migration `0013_yahoo_eod` and
+worker/Beat support are included. See [setup, behavior and limits](docs/YAHOO-EOD.md).

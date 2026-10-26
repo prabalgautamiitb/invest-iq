@@ -96,7 +96,7 @@ class PreviewOut(BaseModel):
     pricing_as_of: datetime
     locks_at: datetime
     calculation_version: Literal["whole-shares-v1"] = "whole-shares-v1"
-    data_kind: Literal["fixture"] = "fixture"
+    data_kind: Literal["fixture", "yahoo"] = "fixture"
 
 
 class SubmissionOut(PreviewOut):

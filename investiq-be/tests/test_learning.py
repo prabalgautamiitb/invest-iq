@@ -26,6 +26,109 @@ from tests.conftest import CapturedMailer, migrated_database
 from tests.helpers import test_client as api_client
 from tests.test_contest import verified
 from tests.test_identity import csrf, register
+from tests.test_platform_contests import role
+
+
+def authored_course():
+    return {
+        "slug": "portfolio-learning-" + uuid4().hex,
+        "title": "Portfolio foundations",
+        "description": "Learn to balance a portfolio.",
+        "lessons": [
+            {
+                "title": "Diversification basics",
+                "xp": 60,
+                "paragraphs": ["Spread exposure across different assets."],
+                "questions": [
+                    {
+                        "key": "spread",
+                        "prompt": "What spreads exposure?",
+                        "options": ["Diversification", "Concentration"],
+                        "correct": 0,
+                        "explanation": "Diversification spreads exposure.",
+                    }
+                ],
+            }
+        ],
+    }
+
+
+async def test_admin_publishes_courses_and_lessons_without_leaking_answers(learning_settings):
+    mailer = CapturedMailer()
+    app = create_app(learning_settings, mailer)
+    async with api_client(app) as admin, api_client(app) as learner:
+        user = await verified(admin, mailer)
+        data = authored_course()
+        assert (await admin.get("/api/v1/admin/courses")).status_code == 403
+        assert (
+            await admin.post("/api/v1/admin/courses", json=data, headers=await csrf(admin))
+        ).status_code == 403
+        await role(app, user, "admin")
+        response = await admin.post("/api/v1/admin/courses", json=data, headers=await csrf(admin))
+        assert response.status_code == 201, response.text
+        course_id = response.json()["id"]
+        assert (
+            await admin.post("/api/v1/admin/courses", json=data, headers=await csrf(admin))
+        ).status_code == 409
+        courses = (await learner.get("/api/v1/courses")).json()["items"]
+        course = next(c for c in courses if c["id"] == course_id)
+        lesson_id = course["lessons"][0]["id"]
+        public = (await learner.get("/api/v1/lessons/" + lesson_id)).json()
+        assert public["paragraphs"] == data["lessons"][0]["paragraphs"]
+        assert "correct" not in public["questions"][0]
+        assert "explanation" not in public["questions"][0]
+        await verified(learner, mailer)
+        await enroll(learner, course)
+        answers = await input_for(app, learner, lesson_id)
+        attempt = await submit(learner, lesson_id, answers)
+        assert attempt.json()["xp_awarded"] == 60
+        lesson_data = {**data["lessons"][0], "title": "Risk basics"}
+        headers = await csrf(admin)
+        additions = await asyncio.gather(
+            *[
+                admin.post(
+                    f"/api/v1/admin/courses/{course_id}/lessons", json=lesson_data, headers=headers
+                )
+                for _ in range(2)
+            ]
+        )
+        assert all(r.status_code == 201 for r in additions)
+        assert {r.json()["position"] for r in additions} == {2, 3}
+        assert (await learner.get("/api/v1/lessons/" + lesson_id)).json() == public
+        assert (await submit(learner, lesson_id, answers)).json()["xp_awarded"] == 0
+        assert (await learner.get("/api/v1/me/learning")).json()["xp"] == 60
+        await role(app, user, "user")
+        assert (await admin.get("/api/v1/admin/courses")).status_code == 403
+        assert (
+            await admin.post(
+                f"/api/v1/admin/courses/{course_id}/lessons",
+                json=lesson_data,
+                headers=await csrf(admin),
+            )
+        ).status_code == 403
+
+
+async def test_admin_content_rejects_invalid_questions_and_requires_verification(learning_settings):
+    mailer = CapturedMailer()
+    app = create_app(learning_settings, mailer)
+    async with api_client(app) as admin:
+        data = authored_course()
+        assert (await admin.get("/api/v1/admin/courses")).status_code == 401
+        user = await register(admin, "author@example.com")
+        await role(app, user, "admin")
+        assert (
+            await admin.post("/api/v1/admin/courses", json=data, headers=await csrf(admin))
+        ).status_code == 403
+        await admin.post(
+            "/api/v1/auth/verification/complete",
+            headers=await csrf(admin),
+            json={"token": mailer.token("author@example.com", "verification")},
+        )
+        data["lessons"][0]["questions"][0]["correct"] = 8
+        assert (
+            await admin.post("/api/v1/admin/courses", json=data, headers=await csrf(admin))
+        ).status_code == 422
+        assert (await admin.get("/api/v1/courses")).json()["items"] == []
 
 
 @pytest_asyncio.fixture

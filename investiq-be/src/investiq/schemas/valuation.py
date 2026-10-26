@@ -60,7 +60,7 @@ class LeaderboardOut(BaseModel):
     items: list[RankOut]
     next_cursor: str | None
     calculation_version: str = "eod-valuation-v1"
-    data_kind: Literal["fixture"] = "fixture"
+    data_kind: Literal["fixture", "yahoo"] = "fixture"
 
 
 class MetricsOut(BaseModel):
@@ -87,6 +87,7 @@ class MetricsOut(BaseModel):
 
 
 class PerformanceOut(BaseModel):
+    market_data_kind: Literal["fixture", "yahoo"] = "fixture"
     timing: ResultsTimingOut
     contest_id: UUID
     contest_name: str
@@ -102,6 +103,7 @@ class PerformanceOut(BaseModel):
 
 
 class DashboardItem(BaseModel):
+    market_data_kind: Literal["fixture", "yahoo"] = "fixture"
     contest_id: UUID
     name: str
     status: str

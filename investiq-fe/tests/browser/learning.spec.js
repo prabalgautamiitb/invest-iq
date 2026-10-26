@@ -90,3 +90,85 @@ test('Academy shows the full catalogue and separates enrolled courses from cours
   await expect(cards).toHaveCount(2);
   await expect(page.getByRole('status').filter({hasText:'complete course catalogue'})).toContainText('2 published courses · 2 enrolled · 0 not enrolled');
 });
+
+async function lessonFields(page,title){
+  await page.getByLabel('Lesson title',{exact:true}).fill(title);
+  await page.getByLabel('Completion XP',{exact:true}).fill('60');
+  await page.getByLabel('Lesson content',{exact:false}).fill('Spread investments across different assets.\n\nReview exposure regularly.');
+  await page.getByLabel('Question text',{exact:true}).fill('What spreads risk?');
+  await page.getByLabel('Answer options',{exact:false}).fill('Diversification\nConcentration');
+  await page.getByLabel('Correct option number',{exact:true}).fill('1');
+  await page.getByLabel('Answer explanation',{exact:true}).fill('Diversification spreads exposure across assets.');
+}
+
+test('admin has a focused workspace and publishes courses and lessons learners can complete',async({page,request,browser})=>{
+  const errors=[];page.on('pageerror',e=>errors.push(e.message));
+  await verifiedAccount(page,request,`content-admin-${randomUUID()}@example.com`);
+  const user=await page.evaluate(async()=> (await (await fetch('/api/v1/me')).json()));
+  const promoted=await request.post('http://127.0.0.1:8081/__browser__/admin/'+user.id,{headers:{'X-Investiq-Browser-Test':'local-disposable-only'}});
+  expect(promoted.ok()).toBeTruthy();
+  await page.goto('/#/dashboard');
+  await page.reload();
+  await expect(page).toHaveURL(/#\/contests\/admin$/);
+  const nav=page.getByRole('navigation',{name:'Admin navigation',exact:true});
+  await expect(nav.getByRole('link')).toHaveCount(2);
+  await expect(nav.getByRole('link',{name:'Contests',exact:true})).toBeVisible();
+  await expect(nav.getByRole('link',{name:'Learning content',exact:true})).toBeVisible();
+  await expect(page.locator('#martin-root')).toBeHidden();
+  await page.goto('/#/portfolio');
+  await expect(page).toHaveURL(/#\/contests\/admin$/);
+  await nav.getByRole('link',{name:'Learning content',exact:true}).click();
+  await page.getByRole('link',{name:'Add course',exact:true}).click();
+  const title='Portfolio practice '+randomUUID().slice(0,8);
+  await page.getByLabel('Course title',{exact:true}).fill(title);
+  await page.getByLabel('URL name',{exact:false}).fill('portfolio-'+randomUUID());
+  await page.getByLabel('Course description',{exact:true}).fill('Build confidence in portfolio construction.');
+  await lessonFields(page,'Diversification in practice');
+  await page.getByRole('button',{name:'Add question',exact:true}).click();
+  await expect(page.locator('.admin-question')).toHaveCount(2);
+  await page.locator('.admin-question').last().getByRole('button',{name:'Remove question',exact:true}).click();
+  await expect(page.getByLabel('Question text',{exact:true})).toHaveValue('What spreads risk?');
+  await page.getByLabel('Correct option number',{exact:true}).fill('3');
+  await page.getByRole('button',{name:'Publish course',exact:true}).click();
+  await expect(page.getByRole('alert')).toContainText('choose a correct option number from 1 to 2');
+  await expect(page.getByLabel('Lesson content',{exact:false})).toHaveValue(/Spread investments/);
+  await page.getByLabel('Correct option number',{exact:true}).fill('1');
+  await page.route('**/api/v1/admin/courses',route=>route.fulfill({status:503,json:{error:{message:'Publishing temporarily unavailable'}}}),{times:1});
+  await page.getByRole('button',{name:'Publish course',exact:true}).click();
+  await expect(page.getByRole('alert')).toContainText('Publishing temporarily unavailable');
+  await expect(page.getByLabel('Course title',{exact:true})).toHaveValue(title);
+  await page.getByRole('button',{name:'Publish course',exact:true}).click();
+  await expect(page.getByRole('heading',{name:title,exact:true})).toBeVisible();
+  await expect(page.getByRole('status').filter({hasText:'Course published'})).toBeVisible();
+  await expect(page.locator('.admin-course-summary')).toContainText('Diversification in practice');
+  await lessonFields(page,'Review your exposure');
+  await page.getByRole('button',{name:'Publish lesson',exact:true}).click();
+  await expect(page.locator('.admin-course-summary li')).toHaveCount(2);
+  await expect(page.getByRole('status').filter({hasText:'Lesson published'})).toBeVisible();
+  await page.reload();
+  await expect(page.locator('.admin-course-summary li')).toHaveCount(2);
+  await page.screenshot({path:'/tmp/investiq-admin-learning-desktop.png',fullPage:true});
+  await page.setViewportSize({width:390,height:844});
+  await expect(page.getByRole('navigation',{name:'Mobile admin navigation'})).toBeVisible();
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBeTruthy();
+  await page.screenshot({path:'/tmp/investiq-admin-learning-mobile.png',fullPage:true});
+
+  const context=await browser.newContext();
+  try{
+    const learner=await context.newPage();
+    await verifiedAccount(learner,request,`content-learner-${randomUUID()}@example.com`);
+    await learner.goto('/#/academy');
+    const card=learner.locator('[data-learning-course]').filter({has:learner.getByRole('heading',{name:title,exact:true})});
+    await expect(card).toBeVisible();
+    await card.getByRole('link',{name:'Diversification in practice',exact:true}).click();
+    await expect(learner.locator('.lessonbody')).toContainText('Review exposure regularly.');
+    await learner.getByRole('button',{name:'Enroll to take this quiz',exact:true}).click();
+    await learner.getByRole('radio').first().check();
+    await learner.getByRole('button',{name:'Submit quiz',exact:true}).click();
+    await expect(learner.getByText('Quiz passed · 1/1 correct · 60 XP awarded',{exact:true})).toBeVisible();
+    await learner.goto('/#/admin/courses');
+    await expect(learner.getByRole('heading',{name:'Admin access required',exact:true})).toBeVisible();
+    await expect(learner.getByRole('link',{name:'Add course',exact:true})).toHaveCount(0);
+  }finally{await context.close();}
+  expect(errors).toEqual([]);
+});

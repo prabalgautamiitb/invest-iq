@@ -2,6 +2,21 @@
 
 This is the complete **editable source project** for the current InvestIQ design, including every page, all interactions, UI refinement, and continuous background animation. It uses **vanilla JavaScript ES modules and Vite**, not React. There is no hidden source or minified bundle needed to customize the application.
 
+## Admin workspace
+
+Run the frontend as usual with `npm run dev`, then open these in separate tabs in the same browser:
+
+- Learner app: **http://localhost:5173** (http://127.0.0.1:5173 also works).
+- Admin app: **http://admin.localhost:5173** — opens the admin sign-in page.
+
+Both addresses use the same frontend server and backend. The different hostnames keep their host-only session cookies separate, so signing in or out of one does not replace the other account. Keep using the admin hostname for admin tabs. A different path or port on the same hostname would still share cookies. No hosts-file entry is needed in browsers supporting `.localhost` loopback resolution, including Chrome. Use the existing admin email and password; public registration is not available on the admin portal.
+
+The admin view also supports `VITE_APP_MODE=admin` when building a dedicated deployed admin frontend. Configure its exact origin in the backend's `INVESTIQ_CORS_ORIGINS` and serve `/api` through the same origin, retaining host-only cookies.
+
+Administrator accounts open a focused workspace with two navigation items: **Contests** (`#/contests/admin`) and **Learning content** (`#/admin/courses`). Learner pages redirect administrators back to contest administration, and Ask Martin is hidden for administrators.
+
+Use **Add InvestIQ contest** to save a draft, review it, and publish its fixed rules. In **Learning content**, use **Add course** to publish a course and its first lesson, or **Add lesson** on an existing course. Lessons include plain-text paragraphs, completion XP, and one or more multiple-choice questions with answer explanations. Publishing makes the content immediately available in Learn. Existing lessons, quiz attempts, and earned XP are preserved.
+
 ## Start developing
 
 Use Node.js 22.12 or newer (Node 24 also works).
@@ -131,3 +146,25 @@ AI Insights now opens one report at a time. **Overview** contains up to three ke
 ## Ask Martin
 
 The circular Martin avatar opens private educational chat on workspace pages. Sign in and verify your email, choose a learning or performance question, and send it. Replies cite approved Academy passages and your own recorded contest evidence. Follow-ups, paginated chat history, cancellation, retry and deletion are connected to the backend. Keep Ollama and the backend worker/Beat running. See [setup, API, privacy and grounding](docs/ASK-MARTIN.md).
+
+
+## Contest Explorer and joining page
+
+Explorer cards use the discovery layout: host/type, learning level, prize availability, virtual capital, free entry, joined count, seat progress, countdown, dates and a single **View contest** action. Portfolio, performance and leaderboard shortcuts remain in My Contests. No Trending/Friends categories, prize amounts, XP or coin awards are invented; the current contest contract configures practice simulations with no prize pool.
+
+Discovery requests `activity=active` to show upcoming/open/locked/running contests, with filtering applied before pagination. An explicit status filter can show past/finalizing contests. Countdown timestamps come from the backend's `server_time`, and update without rerendering search or forms. The detail page includes join/full/joined states, rules and entry deadline, seat progress, rewards availability, copy-link, and up to five persisted public standings. Unavailable standings leave the contest and join flow usable. Draft publication, revisions, cancellation and private invitations remain available to their authorized hosts. My Contests is unchanged.
+
+Presentation lives in `src/features/contest-explorer.js` and `src/styles/contests.css`. Rebuild the backend API to use the new activity filter and server timestamp; no migration is required.
+
+Contest creation/revision validates the IST schedule in order: entry opens → entry closes → contest starts → contest ends. Invalid ordering highlights the affected inputs, explains the correction, and blocks the POST without discarding values. The form also checks holdings limits and the eligible-stock minimum. Server validation details map back to fields; generic calendar/publication errors remain visible in the form summary. AM/PM selections stay under the host's control.
+
+Yahoo mode adds a Nifty 50 daily market overview to Home and source labels to
+contests/portfolios/results. Catalogue requests follow each contest’s frozen source.
+The backend controls source configuration and imports; the browser uses saved
+prices only. See [Yahoo EOD setup](../investiq-be/docs/YAHOO-EOD.md).
+
+Portfolio stock discovery shows each company’s exchange, sector and market-cap
+category, plus the displayed session’s opening price, closing price and signed
+open-to-close percentage change. Cards label the trading date, source and freshness.
+Missing openings or changes remain unavailable; old closing prices are labelled
+as earlier sessions and cannot be used to add an ineligible holding.

@@ -50,6 +50,11 @@ async def template(contests: Service) -> ContestInput:
     return await contests.template()
 
 
+@router.get("/contest-simulation-sessions", response_model=list[str])
+async def simulation_sessions(contests: Service) -> list[str]:
+    return contests.simulation_sessions()
+
+
 @router.get("/contests", response_model=ContestPage)
 async def listing(
     contests: Service,
@@ -59,6 +64,7 @@ async def listing(
     organizer: Organizer | None = None,
     level: Level | None = None,
     status: Status | None = None,
+    activity: Literal["active"] | None = None,
     scope: Literal["discover", "joined", "hosted", "managed"] = "discover",
     sort: Literal["name", "-name"] = "name",
     cursor: Cursor = None,
@@ -71,6 +77,7 @@ async def listing(
         organizer=organizer,
         level=level,
         status=status,
+        activity=activity,
         scope=scope,
         sort=sort,
         cursor=cursor,

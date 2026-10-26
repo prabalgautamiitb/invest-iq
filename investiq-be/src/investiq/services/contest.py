@@ -10,7 +10,6 @@ from sqlalchemy.sql.elements import ColumnElement
 
 from investiq.adapters.market import (
     EXCHANGE_TZ,
-    FIXTURE_DATASETS,
     fixture_document,
     public_fixture_document,
 )
@@ -43,10 +42,12 @@ from investiq.schemas.contest import (
     Status,
     Visibility,
 )
+from investiq.schemas.market import MarketDataKind
 from investiq.services.exchange_calendar import expected_session
 from investiq.services.identity import IdentityService
 from investiq.services.market import decode_cursor, encode_cursor, fingerprint
-from investiq.services.market_ingestion import ensure_fixture_mode
+from investiq.services.market_ingestion import ensure_market_mode
+from investiq.services.market_sources import price_source
 
 
 def phase(c: Contest, instant: datetime) -> Status:
@@ -72,7 +73,7 @@ class ContestService:
 
     async def seed_draft(self, owner_email: str) -> ContestOut:
         """Local operator seed; never invent an owner, membership, or performance history."""
-        ensure_fixture_mode(self.identity.settings)
+        ensure_market_mode(self.identity.settings)
         key = uuid5(NAMESPACE_URL, "investiq.contest-seed:fixture-v1")
         async with self.factory() as db, db.begin():
             user = await db.scalar(
@@ -103,7 +104,12 @@ class ContestService:
             return await self.output(db, c, user)
 
     async def template(self) -> ContestInput:
-        ensure_fixture_mode(self.identity.settings)
+        ensure_market_mode(self.identity.settings)
+        current_ids = None
+        if self.identity.settings.market_data_mode == "yahoo":
+            from investiq.adapters.yahoo_market import yahoo_catalogue
+
+            current_ids = [UUID(i["id"]) for i in yahoo_catalogue()["instruments"]]
         async with self.factory() as db:
             sessions = (
                 await db.scalars(
@@ -139,8 +145,11 @@ class ContestService:
                         .where(
                             Instrument.active.is_(True),
                             Instrument.kind == "equity",
-                            Instrument.data_kind == "fixture",
+                            Instrument.data_kind == self.identity.settings.market_data_mode,
                             Instrument.id.not_in(blocked),
+                            Instrument.id.in_(current_ids)
+                            if current_ids is not None
+                            else literal(True),
                         )
                         .order_by(Instrument.symbol)
                     )
@@ -151,7 +160,7 @@ class ContestService:
                 .where(
                     Instrument.active.is_(True),
                     Instrument.kind == "benchmark",
-                    Instrument.data_kind == "fixture",
+                    Instrument.data_kind == self.identity.settings.market_data_mode,
                 )
                 .order_by(Instrument.symbol)
                 .limit(1)
@@ -160,7 +169,7 @@ class ContestService:
                 raise AppError(503, "market_not_initialized", "Initialize development market data")
             data = ContestInput(
                 name="My learning league",
-                description="Educational fixture simulation. No monetary prizes.",
+                description="Educational virtual portfolio contest. No monetary prizes.",
                 entry_opens_at=self.clock(),
                 entry_closes_at=start - timedelta(minutes=5),
                 starts_at=start,
@@ -171,7 +180,7 @@ class ContestService:
             return data
 
     async def actor(self, db: AsyncSession, principal: Principal, *, verified: bool = True) -> User:
-        ensure_fixture_mode(self.identity.settings)
+        ensure_market_mode(self.identity.settings)
         user = await self.identity.authenticated_user(db, principal)
         if verified and user.email_verified_at is None:
             raise AppError(403, "verification_required", "Verify your email to continue")
@@ -273,6 +282,14 @@ class ContestService:
         )
         await db.flush()
 
+    async def data_kind(self, db: AsyncSession, c: Contest) -> MarketDataKind:
+        rule = await self.rules(db, c)
+        benchmark = await db.get(Instrument, UUID(rule.rules["benchmark_id"]))
+        kind = benchmark.data_kind if benchmark else None
+        if kind not in {"fixture", "yahoo"}:
+            raise AppError(409, "invalid_contest_universe", "Contest price source is unavailable")
+        return cast(MarketDataKind, kind)
+
     async def output(self, db: AsyncSession, c: Contest, user: User | None) -> ContestOut:
         rule = await self.rules(db, c)
         count = await db.scalar(
@@ -296,6 +313,8 @@ class ContestService:
             )
         )
         return ContestOut(
+            server_time=self.clock(),
+            market_data_kind=await self.data_kind(db, c),
             first_session_closes_at=first_session.closes_at if first_session else None,
             first_results_available_at=first_session.available_at if first_session else None,
             id=c.id,
@@ -324,7 +343,7 @@ class ContestService:
         )
 
     async def validate(self, db: AsyncSession, data: ContestInput) -> None:
-        ensure_fixture_mode(self.identity.settings)
+        ensure_market_mode(self.identity.settings)
         if data.entry_closes_at <= self.clock():
             raise AppError(422, "invalid_schedule", "Entry closing must be in the future")
         first, last = (
@@ -356,6 +375,8 @@ class ContestService:
                 "Start at a supported session open and end at a supported session close",
             )
         ids = data.rules.eligible_instrument_ids
+        benchmark = await db.get(Instrument, data.rules.benchmark_id)
+        kind = benchmark.data_kind if benchmark else None
         eligible = set(
             (
                 await db.scalars(
@@ -363,7 +384,7 @@ class ContestService:
                         Instrument.id.in_(ids),
                         Instrument.active.is_(True),
                         Instrument.kind == "equity",
-                        Instrument.data_kind == "fixture",
+                        Instrument.data_kind == kind,
                     )
                 )
             ).all()
@@ -387,13 +408,13 @@ class ContestService:
             or benchmark is None
             or not benchmark.active
             or benchmark.kind != "benchmark"
-            or benchmark.data_kind != "fixture"
+            or benchmark.data_kind not in {"fixture", "yahoo"}
         ):
             raise AppError(
                 422,
                 "invalid_contest_universe",
-                "Use active fixture equities and benchmark without unsupported "
-                "corporate actions during the contest",
+                "Use active equities and a benchmark from the same price source, "
+                "without unsupported corporate actions during the contest",
             )
 
     async def create(
@@ -452,6 +473,11 @@ class ContestService:
             if c.organizer == "platform" and data.visibility != "public":
                 raise AppError(422, "platform_must_be_public", "InvestIQ contests must be public")
             await self.validate(db, data)
+            benchmark = await db.get(Instrument, data.rules.benchmark_id)
+            if benchmark is None or benchmark.data_kind != await self.data_kind(db, c):
+                raise AppError(
+                    409, "price_source_frozen", "Create a new contest to change its price source"
+                )
             rule = await self.rules(db, c)
             for key, value in data.model_dump(exclude={"rules"}).items():
                 setattr(c, key, value)
@@ -460,10 +486,24 @@ class ContestService:
             await db.flush()
             return await self.output(db, c, user)
 
-    async def validate_platform_publish(self, db: AsyncSession, c: Contest) -> None:
+    def simulation_sessions(self) -> list[str]:
+        if self.identity.settings.market_data_mode == "yahoo":
+            return []  # Yahoo contests use the reviewed calendar, not fixed fixture price dates.
         covered = set(fixture_document()["prices"])
         if self.identity.settings.public_contest_fixtures_enabled:
             covered.update(public_fixture_document()["prices"])
+        return sorted(covered)
+
+    async def validate_platform_publish(self, db: AsyncSession, c: Contest) -> None:
+        kind = await self.data_kind(db, c)
+        covered = sorted(
+            set(fixture_document()["prices"])
+            | (
+                set(public_fixture_document()["prices"])
+                if self.identity.settings.public_contest_fixtures_enabled
+                else set()
+            )
+        )
         days = (
             await db.scalars(
                 select(ExchangeSession.session_date).where(
@@ -474,12 +514,19 @@ class ContestService:
                 )
             )
         ).all()
-        if not days or any(day.isoformat() not in covered for day in days):
+        missing = [day.isoformat() for day in days if day.isoformat() not in covered]
+        if kind == "fixture" and (not days or missing):
             raise AppError(
                 422,
                 "scenario_coverage_missing",
-                "InvestIQ contests must fit the configured fixed simulation price scenario "
-                "(through November 6, 2026 when enabled)",
+                f"This environment supports simulation sessions from {covered[0]} "
+                f"through {covered[-1]}. "
+                + (
+                    f"No simulation prices are configured for: {', '.join(missing)}. "
+                    if missing
+                    else "No covered exchange sessions were found. "
+                )
+                + "Edit the draft schedule to use supported sessions, then publish again.",
             )
         rule = await self.rule_input(db, await self.rules(db, c))
         required = {*rule.eligible_instrument_ids, rule.benchmark_id}
@@ -493,8 +540,7 @@ class ContestService:
                     PriceSnapshot.instrument_id.in_(required),
                     PriceSnapshot.source_published_at <= self.clock(),
                     IngestionRun.status == "succeeded",
-                    IngestionRun.provider == "investiq-synthetic",
-                    IngestionRun.dataset_version.in_(FIXTURE_DATASETS),
+                    price_source(kind, self.clock()),
                 )
             )
         ).all()
@@ -504,8 +550,7 @@ class ContestService:
             raise AppError(
                 409,
                 "platform_prices_unavailable",
-                "Initialize current published simulation prices "
-                "before publishing an InvestIQ contest",
+                "Import a complete current daily price batch before publishing an InvestIQ contest",
             )
 
     async def transition(
@@ -549,7 +594,7 @@ class ContestService:
             return await self.output(db, c, user)
 
     async def get(self, identifier: UUID, principal: Principal | None) -> ContestOut:
-        ensure_fixture_mode(self.identity.settings)
+        ensure_market_mode(self.identity.settings)
         async with self.factory() as db, db.begin():
             user = await self.actor(db, principal, verified=False) if principal else None
             return await self.output(db, await self.load(db, identifier, user), user)
@@ -563,12 +608,13 @@ class ContestService:
         organizer: Organizer | None = None,
         level: Level | None = None,
         status: Status | None = None,
+        activity: Literal["active"] | None = None,
         scope: Literal["discover", "joined", "hosted", "managed"] = "discover",
         sort: Literal["name", "-name"] = "name",
         cursor: str | None = None,
         limit: int = 20,
     ) -> ContestPage:
-        ensure_fixture_mode(self.identity.settings)
+        ensure_market_mode(self.identity.settings)
         instant = self.clock()
         async with self.factory() as db, db.begin():
             user = await self.actor(db, principal, verified=False) if principal else None
@@ -606,7 +652,7 @@ class ContestService:
                 statement = statement.where(Contest.visibility == visibility)
             if level:
                 statement = statement.where(Contest.level == level)
-            if status:
+            if status or activity:
                 effective = case(
                     (Contest.status.in_(["draft", "cancelled", "completed"]), Contest.status),
                     (Contest.ends_at <= instant, "settling"),
@@ -615,7 +661,11 @@ class ContestService:
                     (Contest.entry_opens_at <= instant, "open"),
                     else_="scheduled",
                 )
-                statement = statement.where(effective == status)
+                statement = statement.where(
+                    effective == status
+                    if status
+                    else effective.in_(["scheduled", "open", "locked", "running"])
+                )
             context = fingerprint(
                 {
                     "query": query.strip(),
@@ -623,6 +673,7 @@ class ContestService:
                     "organizer": organizer,
                     "level": level,
                     "status": status,
+                    "activity": activity,
                     "scope": scope,
                     "sort": sort,
                     "user": str(user.id) if user else None,

@@ -1,0 +1,170 @@
+{
+  "version": "yahoo-catalogue-v1",
+  "description": "Curated starter universe of 10 NSE stocks, benchmarked against Nifty 50. Not the full Nifty 50 membership.",
+  "sectors": [
+    {
+      "id": "02a06fe1-cb15-59c6-84ec-74351a806514",
+      "slug": "banking",
+      "name": "Banking"
+    },
+    {
+      "id": "7f84dcd4-7481-5649-a5c0-9c2932228f11",
+      "slug": "energy",
+      "name": "Energy"
+    },
+    {
+      "id": "72a508c8-a607-59ad-a8d5-8bee2309b015",
+      "slug": "fmcg",
+      "name": "FMCG"
+    },
+    {
+      "id": "bc2627c2-6d48-55ee-af94-a4e79527720d",
+      "slug": "it",
+      "name": "IT"
+    },
+    {
+      "id": "b8246843-1ce2-5545-a4ab-208dffd6aa40",
+      "slug": "telecom",
+      "name": "Telecom"
+    },
+    {
+      "id": "f971c063-49eb-508b-ae3e-a2593937cd2c",
+      "slug": "infrastructure",
+      "name": "Infrastructure"
+    }
+  ],
+  "instruments": [
+    {
+      "id": "7b671b06-dbb1-5aba-a925-d4c5e8291889",
+      "symbol": "RELIANCE",
+      "name": "Reliance Industries",
+      "exchange": "NSE",
+      "kind": "equity",
+      "currency": "INR",
+      "sector_id": "7f84dcd4-7481-5649-a5c0-9c2932228f11",
+      "market_cap": "large",
+      "active": true,
+      "ticker": "RELIANCE.NS"
+    },
+    {
+      "id": "5a37917a-840a-5742-9896-a1053c8fdab8",
+      "symbol": "HDFCBANK",
+      "name": "HDFC Bank",
+      "exchange": "NSE",
+      "kind": "equity",
+      "currency": "INR",
+      "sector_id": "02a06fe1-cb15-59c6-84ec-74351a806514",
+      "market_cap": "large",
+      "active": true,
+      "ticker": "HDFCBANK.NS"
+    },
+    {
+      "id": "b81d8389-59c9-5366-8c14-f466fdefba03",
+      "symbol": "TCS",
+      "name": "Tata Consultancy Services",
+      "exchange": "NSE",
+      "kind": "equity",
+      "currency": "INR",
+      "sector_id": "bc2627c2-6d48-55ee-af94-a4e79527720d",
+      "market_cap": "large",
+      "active": true,
+      "ticker": "TCS.NS"
+    },
+    {
+      "id": "7634b96c-9b00-5db9-bbff-8971bd0c0849",
+      "symbol": "INFY",
+      "name": "Infosys",
+      "exchange": "NSE",
+      "kind": "equity",
+      "currency": "INR",
+      "sector_id": "bc2627c2-6d48-55ee-af94-a4e79527720d",
+      "market_cap": "large",
+      "active": true,
+      "ticker": "INFY.NS"
+    },
+    {
+      "id": "02d6b6bf-bd01-5a88-98cf-de3f8384d5eb",
+      "symbol": "ITC",
+      "name": "ITC Limited",
+      "exchange": "NSE",
+      "kind": "equity",
+      "currency": "INR",
+      "sector_id": "72a508c8-a607-59ad-a8d5-8bee2309b015",
+      "market_cap": "large",
+      "active": true,
+      "ticker": "ITC.NS"
+    },
+    {
+      "id": "0eb552bb-9632-5039-8f67-eb18a7677984",
+      "symbol": "WIPRO",
+      "name": "Wipro",
+      "exchange": "NSE",
+      "kind": "equity",
+      "currency": "INR",
+      "sector_id": "bc2627c2-6d48-55ee-af94-a4e79527720d",
+      "market_cap": "large",
+      "active": true,
+      "ticker": "WIPRO.NS"
+    },
+    {
+      "id": "55e6dac8-b1b2-51e3-abaf-57e7ceb75866",
+      "symbol": "SBIN",
+      "name": "State Bank of India",
+      "exchange": "NSE",
+      "kind": "equity",
+      "currency": "INR",
+      "sector_id": "02a06fe1-cb15-59c6-84ec-74351a806514",
+      "market_cap": "large",
+      "active": true,
+      "ticker": "SBIN.NS"
+    },
+    {
+      "id": "144dc029-58da-58d2-a75d-c99fded5ca94",
+      "symbol": "ICICIBANK",
+      "name": "ICICI Bank",
+      "exchange": "NSE",
+      "kind": "equity",
+      "currency": "INR",
+      "sector_id": "02a06fe1-cb15-59c6-84ec-74351a806514",
+      "market_cap": "large",
+      "active": true,
+      "ticker": "ICICIBANK.NS"
+    },
+    {
+      "id": "38e4275d-2a04-5dfa-b084-ec19abdfa19b",
+      "symbol": "LT",
+      "name": "Larsen & Toubro",
+      "exchange": "NSE",
+      "kind": "equity",
+      "currency": "INR",
+      "sector_id": "f971c063-49eb-508b-ae3e-a2593937cd2c",
+      "market_cap": "large",
+      "active": true,
+      "ticker": "LT.NS"
+    },
+    {
+      "id": "4ba772c1-d8c7-57c9-824b-ac8a4d87cc9f",
+      "symbol": "BHARTIARTL",
+      "name": "Bharti Airtel",
+      "exchange": "NSE",
+      "kind": "equity",
+      "currency": "INR",
+      "sector_id": "b8246843-1ce2-5545-a4ab-208dffd6aa40",
+      "market_cap": "large",
+      "active": true,
+      "ticker": "BHARTIARTL.NS"
+    },
+    {
+      "id": "5687a55f-c65e-5505-a586-5577f520c0bf",
+      "symbol": "NIFTY50",
+      "name": "Nifty 50",
+      "exchange": "NSE",
+      "kind": "benchmark",
+      "currency": "POINTS",
+      "sector_id": null,
+      "market_cap": null,
+      "active": true,
+      "ticker": "^NSEI"
+    }
+  ]
+}

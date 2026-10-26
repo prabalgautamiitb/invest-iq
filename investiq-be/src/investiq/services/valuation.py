@@ -11,7 +11,7 @@ from sqlalchemy import func, or_, select
 from sqlalchemy.engine import Row
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from investiq.adapters.market import EXCHANGE_TZ, FIXTURE_DATASETS
+from investiq.adapters.market import EXCHANGE_TZ
 from investiq.analytics.valuation import ValuedHolding, value_portfolio
 from investiq.core.errors import AppError
 from investiq.core.security import Principal
@@ -43,7 +43,8 @@ from investiq.schemas.valuation import (
 )
 from investiq.services.contest import ContestService, phase
 from investiq.services.market import decode_cursor, encode_cursor, fingerprint
-from investiq.services.market_ingestion import ensure_fixture_mode
+from investiq.services.market_ingestion import ensure_market_mode
+from investiq.services.market_sources import price_source
 
 
 class ValuationService:
@@ -107,7 +108,7 @@ class ValuationService:
 
     async def evaluate(self, identifier: UUID, *, max_sessions: int = 10) -> dict[str, Any]:
         """Trusted worker/operator entry; clients cannot supply values, ranks or time."""
-        ensure_fixture_mode(self.settings)
+        ensure_market_mode(self.settings)
         processed = 0
         for _ in range(max_sessions):
             async with self.factory() as db, db.begin():
@@ -209,6 +210,7 @@ class ValuationService:
         rule = await self.contests.rules(db, c)
         rules = await self.contests.rule_input(db, rule)
         identifiers.add(rules.benchmark_id) if submissions else None
+        kind = await self.contests.data_kind(db, c)
         points = {}
         if identifiers:
             rows = (
@@ -222,9 +224,7 @@ class ValuationService:
                         PriceSnapshot.observed_at == day.closes_at,
                         PriceSnapshot.source_published_at <= self.clock(),
                         IngestionRun.status == "succeeded",
-                        IngestionRun.provider == "investiq-synthetic",
-                        IngestionRun.dataset_version.in_(FIXTURE_DATASETS),
-                        IngestionRun.data_kind == "fixture",
+                        price_source(kind, self.clock()),
                     )
                     .order_by(Instrument.id)
                     .with_for_update(read=True, of=[Instrument, PriceSnapshot])
@@ -246,7 +246,7 @@ class ValuationService:
             if (
                 len(points) != len(identifiers)
                 or blocked
-                or any(not i.active or i.data_kind != "fixture" for _, i, _ in points.values())
+                or any(not i.active or i.data_kind != kind for _, i, _ in points.values())
                 or len({p.run_id for p, _, _ in points.values()}) != 1
             ):
                 raise AppError(
@@ -380,7 +380,7 @@ class ValuationService:
         await db.flush()
 
     async def sweep(self, limit: int = 100) -> dict[str, int]:
-        ensure_fixture_mode(self.settings)
+        ensure_market_mode(self.settings)
         async with self.factory() as db:
             # Rotate by oldest attempt so repeatedly blocked contests cannot starve newer work.
             last_attempt = (
@@ -508,7 +508,7 @@ class ValuationService:
         limit: int = 20,
         run_id: UUID | None = None,
     ) -> LeaderboardOut:
-        ensure_fixture_mode(self.settings)
+        ensure_market_mode(self.settings)
         async with self.factory() as db, db.begin():
             user = await self.contests.actor(db, principal, verified=False) if principal else None
             c = await self.contests.load(db, identifier, user)
@@ -610,6 +610,7 @@ class ValuationService:
                 )
             )
             return LeaderboardOut(
+                data_kind=await self.contests.data_kind(db, c),
                 timing=timing,
                 submitted_count=submitted_count or 0,
                 has_joined=viewer_member is not None,
@@ -700,6 +701,7 @@ class ValuationService:
                 await db.execute(query.order_by(ValuationRun.session_date.desc()).limit(limit + 1))
             ).all()
             return PerformanceOut(
+                market_data_kind=await self.contests.data_kind(db, c),
                 timing=await self.results_timing(db, c, run, current, final, error),
                 contest_id=c.id,
                 contest_name=c.name,
@@ -751,6 +753,7 @@ class ValuationService:
             )
             result.append(
                 DashboardItem(
+                    market_data_kind=await self.contests.data_kind(db, c),
                     contest_id=c.id,
                     name=c.name,
                     status=phase(c, self.clock()),

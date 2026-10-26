@@ -27,6 +27,7 @@ async def sandbox(monkeypatch):
         settings = module.SandboxSettings(
             database_url=SecretStr(url),
             environment="test",
+            market_data_mode="fixture",
             auth_rate_limit=10000,
             csrf_rate_limit=10000,
             rate_limit_prefix=str(uuid4()),

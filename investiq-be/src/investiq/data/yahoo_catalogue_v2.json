@@ -1,0 +1,717 @@
+{
+  "version": "yahoo-catalogue-v2",
+  "description": "Official NSE Nifty 50 constituent snapshot, plus the Nifty 50 benchmark. Legacy symbols are retained only for older portfolios.",
+  "source": "https://archives.nseindia.com/content/indices/ind_nifty50list.csv",
+  "retrieved_on": "2026-10-25",
+  "source_sha256": "f5ba4027d935ae72879d5c24bbebf0e8439ec8ed504ffdf4175fde69206244b3",
+  "sectors": [
+    {
+      "id": "4a7fded8-1833-5040-803d-d5159b12421e",
+      "slug": "auto",
+      "name": "Auto"
+    },
+    {
+      "id": "02a06fe1-cb15-59c6-84ec-74351a806514",
+      "slug": "banking",
+      "name": "Banking"
+    },
+    {
+      "id": "5273fb31-8790-5f26-82d4-5d2c5acd2b5c",
+      "slug": "construction-materials",
+      "name": "Construction Materials"
+    },
+    {
+      "id": "87cfda06-6b3c-5f55-866e-f7fba62374e5",
+      "slug": "consumer-durables",
+      "name": "Consumer Durables"
+    },
+    {
+      "id": "b1ea0c68-4304-5d48-b4a0-3c3fc992ead7",
+      "slug": "consumer-services",
+      "name": "Consumer Services"
+    },
+    {
+      "id": "7f84dcd4-7481-5649-a5c0-9c2932228f11",
+      "slug": "energy",
+      "name": "Energy"
+    },
+    {
+      "id": "2d50d4c1-34fb-518c-a47a-9284cfe27b21",
+      "slug": "financials",
+      "name": "Financials"
+    },
+    {
+      "id": "72a508c8-a607-59ad-a8d5-8bee2309b015",
+      "slug": "fmcg",
+      "name": "FMCG"
+    },
+    {
+      "id": "a1e63883-fae9-5e30-88d6-45461d083dba",
+      "slug": "healthcare",
+      "name": "Healthcare"
+    },
+    {
+      "id": "759af2ad-7d69-5f45-ba78-e8c8d62160d6",
+      "slug": "industrials",
+      "name": "Industrials"
+    },
+    {
+      "id": "f971c063-49eb-508b-ae3e-a2593937cd2c",
+      "slug": "infrastructure",
+      "name": "Infrastructure"
+    },
+    {
+      "id": "bc2627c2-6d48-55ee-af94-a4e79527720d",
+      "slug": "it",
+      "name": "IT"
+    },
+    {
+      "id": "bfed21cf-ef7b-56a4-8b57-958b74d6af2b",
+      "slug": "metals-mining",
+      "name": "Metals & Mining"
+    },
+    {
+      "id": "5e1ce1a7-1d82-570e-a4e3-0e3aae051f03",
+      "slug": "power",
+      "name": "Power"
+    },
+    {
+      "id": "498ef4e7-a350-5f82-b0a2-09a642f7012c",
+      "slug": "services",
+      "name": "Services"
+    },
+    {
+      "id": "b8246843-1ce2-5545-a4ab-208dffd6aa40",
+      "slug": "telecom",
+      "name": "Telecom"
+    }
+  ],
+  "instruments": [
+    {
+      "id": "ed85ae52-43f4-583a-8047-4e4732de9b47",
+      "symbol": "ADANIENT",
+      "name": "Adani Enterprises Ltd.",
+      "exchange": "NSE",
+      "kind": "equity",
+      "currency": "INR",
+      "sector_id": "bfed21cf-ef7b-56a4-8b57-958b74d6af2b",
+      "market_cap": "large",
+      "active": true,
+      "ticker": "ADANIENT.NS"
+    },
+    {
+      "id": "c3564c56-55ec-5f3d-a684-8167f0b33457",
+      "symbol": "ADANIPORTS",
+      "name": "Adani Ports and Special Economic Zone Ltd.",
+      "exchange": "NSE",
+      "kind": "equity",
+      "currency": "INR",
+      "sector_id": "498ef4e7-a350-5f82-b0a2-09a642f7012c",
+      "market_cap": "large",
+      "active": true,
+      "ticker": "ADANIPORTS.NS"
+    },
+    {
+      "id": "aef9f785-e31d-59f1-8c70-9c26a2f1963f",
+      "symbol": "APOLLOHOSP",
+      "name": "Apollo Hospitals Enterprise Ltd.",
+      "exchange": "NSE",
+      "kind": "equity",
+      "currency": "INR",
+      "sector_id": "a1e63883-fae9-5e30-88d6-45461d083dba",
+      "market_cap": "large",
+      "active": true,
+      "ticker": "APOLLOHOSP.NS"
+    },
+    {
+      "id": "8016b354-0005-5f13-a3a4-5bba1d354878",
+      "symbol": "ASIANPAINT",
+      "name": "Asian Paints Ltd.",
+      "exchange": "NSE",
+      "kind": "equity",
+      "currency": "INR",
+      "sector_id": "87cfda06-6b3c-5f55-866e-f7fba62374e5",
+      "market_cap": "large",
+      "active": true,
+      "ticker": "ASIANPAINT.NS"
+    },
+    {
+      "id": "4728baff-3532-59e5-b978-b8a1beae1535",
+      "symbol": "AXISBANK",
+      "name": "Axis Bank Ltd.",
+      "exchange": "NSE",
+      "kind": "equity",
+      "currency": "INR",
+      "sector_id": "02a06fe1-cb15-59c6-84ec-74351a806514",
+      "market_cap": "large",
+      "active": true,
+      "ticker": "AXISBANK.NS"
+    },
+    {
+      "id": "1e9dc9fc-1fbd-579c-a061-7d9211845254",
+      "symbol": "BAJAJ-AUTO",
+      "name": "Bajaj Auto Ltd.",
+      "exchange": "NSE",
+      "kind": "equity",
+      "currency": "INR",
+      "sector_id": "4a7fded8-1833-5040-803d-d5159b12421e",
+      "market_cap": "large",
+      "active": true,
+      "ticker": "BAJAJ-AUTO.NS"
+    },
+    {
+      "id": "2e98c5a9-0036-506c-b205-bf236f6c9d22",
+      "symbol": "BAJAJFINSV",
+      "name": "Bajaj Finserv Ltd.",
+      "exchange": "NSE",
+      "kind": "equity",
+      "currency": "INR",
+      "sector_id": "2d50d4c1-34fb-518c-a47a-9284cfe27b21",
+      "market_cap": "large",
+      "active": true,
+      "ticker": "BAJAJFINSV.NS"
+    },
+    {
+      "id": "f346b051-9902-5ef1-b7af-7efc81df7840",
+      "symbol": "BAJFINANCE",
+      "name": "Bajaj Finance Ltd.",
+      "exchange": "NSE",
+      "kind": "equity",
+      "currency": "INR",
+      "sector_id": "2d50d4c1-34fb-518c-a47a-9284cfe27b21",
+      "market_cap": "large",
+      "active": true,
+      "ticker": "BAJFINANCE.NS"
+    },
+    {
+      "id": "9f4e6696-ba0e-507c-8de1-cb72ba02154e",
+      "symbol": "BEL",
+      "name": "Bharat Electronics Ltd.",
+      "exchange": "NSE",
+      "kind": "equity",
+      "currency": "INR",
+      "sector_id": "759af2ad-7d69-5f45-ba78-e8c8d62160d6",
+      "market_cap": "large",
+      "active": true,
+      "ticker": "BEL.NS"
+    },
+    {
+      "id": "4ba772c1-d8c7-57c9-824b-ac8a4d87cc9f",
+      "symbol": "BHARTIARTL",
+      "name": "Bharti Airtel",
+      "exchange": "NSE",
+      "kind": "equity",
+      "currency": "INR",
+      "sector_id": "b8246843-1ce2-5545-a4ab-208dffd6aa40",
+      "market_cap": "large",
+      "active": true,
+      "ticker": "BHARTIARTL.NS"
+    },
+    {
+      "id": "c83de371-435a-565f-9b23-5c1856960f85",
+      "symbol": "BSE",
+      "name": "BSE Ltd.",
+      "exchange": "NSE",
+      "kind": "equity",
+      "currency": "INR",
+      "sector_id": "2d50d4c1-34fb-518c-a47a-9284cfe27b21",
+      "market_cap": "large",
+      "active": true,
+      "ticker": "BSE.NS"
+    },
+    {
+      "id": "b34c9924-d1ac-5e99-9e1b-1581601403a1",
+      "symbol": "CIPLA",
+      "name": "Cipla Ltd.",
+      "exchange": "NSE",
+      "kind": "equity",
+      "currency": "INR",
+      "sector_id": "a1e63883-fae9-5e30-88d6-45461d083dba",
+      "market_cap": "large",
+      "active": true,
+      "ticker": "CIPLA.NS"
+    },
+    {
+      "id": "9403aba7-9625-5d9e-a817-4a3e8a0443a3",
+      "symbol": "COALINDIA",
+      "name": "Coal India Ltd.",
+      "exchange": "NSE",
+      "kind": "equity",
+      "currency": "INR",
+      "sector_id": "7f84dcd4-7481-5649-a5c0-9c2932228f11",
+      "market_cap": "large",
+      "active": true,
+      "ticker": "COALINDIA.NS"
+    },
+    {
+      "id": "f8240ba2-b726-5654-b1dc-dcffc42be5a2",
+      "symbol": "DRREDDY",
+      "name": "Dr. Reddy's Laboratories Ltd.",
+      "exchange": "NSE",
+      "kind": "equity",
+      "currency": "INR",
+      "sector_id": "a1e63883-fae9-5e30-88d6-45461d083dba",
+      "market_cap": "large",
+      "active": true,
+      "ticker": "DRREDDY.NS"
+    },
+    {
+      "id": "348ec8ad-63d8-58bf-94e0-0f025c8c5851",
+      "symbol": "EICHERMOT",
+      "name": "Eicher Motors Ltd.",
+      "exchange": "NSE",
+      "kind": "equity",
+      "currency": "INR",
+      "sector_id": "4a7fded8-1833-5040-803d-d5159b12421e",
+      "market_cap": "large",
+      "active": true,
+      "ticker": "EICHERMOT.NS"
+    },
+    {
+      "id": "ad2f6c3f-a653-5ba4-8579-ac684f00b03d",
+      "symbol": "ETERNAL",
+      "name": "Eternal Ltd.",
+      "exchange": "NSE",
+      "kind": "equity",
+      "currency": "INR",
+      "sector_id": "b1ea0c68-4304-5d48-b4a0-3c3fc992ead7",
+      "market_cap": "large",
+      "active": true,
+      "ticker": "ETERNAL.NS"
+    },
+    {
+      "id": "37f4c8ce-8478-5479-8282-8bc6b8108d30",
+      "symbol": "GRASIM",
+      "name": "Grasim Industries Ltd.",
+      "exchange": "NSE",
+      "kind": "equity",
+      "currency": "INR",
+      "sector_id": "5273fb31-8790-5f26-82d4-5d2c5acd2b5c",
+      "market_cap": "large",
+      "active": true,
+      "ticker": "GRASIM.NS"
+    },
+    {
+      "id": "005d8749-693d-5585-ae78-719de5489be1",
+      "symbol": "HCLTECH",
+      "name": "HCL Technologies Ltd.",
+      "exchange": "NSE",
+      "kind": "equity",
+      "currency": "INR",
+      "sector_id": "bc2627c2-6d48-55ee-af94-a4e79527720d",
+      "market_cap": "large",
+      "active": true,
+      "ticker": "HCLTECH.NS"
+    },
+    {
+      "id": "5a37917a-840a-5742-9896-a1053c8fdab8",
+      "symbol": "HDFCBANK",
+      "name": "HDFC Bank",
+      "exchange": "NSE",
+      "kind": "equity",
+      "currency": "INR",
+      "sector_id": "02a06fe1-cb15-59c6-84ec-74351a806514",
+      "market_cap": "large",
+      "active": true,
+      "ticker": "HDFCBANK.NS"
+    },
+    {
+      "id": "424d45d5-4024-541e-b9de-da504c9e6fd7",
+      "symbol": "HDFCLIFE",
+      "name": "HDFC Life Insurance Company Ltd.",
+      "exchange": "NSE",
+      "kind": "equity",
+      "currency": "INR",
+      "sector_id": "2d50d4c1-34fb-518c-a47a-9284cfe27b21",
+      "market_cap": "large",
+      "active": true,
+      "ticker": "HDFCLIFE.NS"
+    },
+    {
+      "id": "93a27b22-56ad-5b3a-8ba4-77fa7fa99c13",
+      "symbol": "HINDALCO",
+      "name": "Hindalco Industries Ltd.",
+      "exchange": "NSE",
+      "kind": "equity",
+      "currency": "INR",
+      "sector_id": "bfed21cf-ef7b-56a4-8b57-958b74d6af2b",
+      "market_cap": "large",
+      "active": true,
+      "ticker": "HINDALCO.NS"
+    },
+    {
+      "id": "9204caea-356e-5462-b855-f3c0d109de60",
+      "symbol": "HINDUNILVR",
+      "name": "Hindustan Unilever Ltd.",
+      "exchange": "NSE",
+      "kind": "equity",
+      "currency": "INR",
+      "sector_id": "72a508c8-a607-59ad-a8d5-8bee2309b015",
+      "market_cap": "large",
+      "active": true,
+      "ticker": "HINDUNILVR.NS"
+    },
+    {
+      "id": "144dc029-58da-58d2-a75d-c99fded5ca94",
+      "symbol": "ICICIBANK",
+      "name": "ICICI Bank",
+      "exchange": "NSE",
+      "kind": "equity",
+      "currency": "INR",
+      "sector_id": "02a06fe1-cb15-59c6-84ec-74351a806514",
+      "market_cap": "large",
+      "active": true,
+      "ticker": "ICICIBANK.NS"
+    },
+    {
+      "id": "d847e74f-3752-5eb7-8909-59be7ff0c9c4",
+      "symbol": "INDIGO",
+      "name": "InterGlobe Aviation Ltd.",
+      "exchange": "NSE",
+      "kind": "equity",
+      "currency": "INR",
+      "sector_id": "498ef4e7-a350-5f82-b0a2-09a642f7012c",
+      "market_cap": "large",
+      "active": true,
+      "ticker": "INDIGO.NS"
+    },
+    {
+      "id": "7634b96c-9b00-5db9-bbff-8971bd0c0849",
+      "symbol": "INFY",
+      "name": "Infosys",
+      "exchange": "NSE",
+      "kind": "equity",
+      "currency": "INR",
+      "sector_id": "bc2627c2-6d48-55ee-af94-a4e79527720d",
+      "market_cap": "large",
+      "active": true,
+      "ticker": "INFY.NS"
+    },
+    {
+      "id": "02d6b6bf-bd01-5a88-98cf-de3f8384d5eb",
+      "symbol": "ITC",
+      "name": "ITC Limited",
+      "exchange": "NSE",
+      "kind": "equity",
+      "currency": "INR",
+      "sector_id": "72a508c8-a607-59ad-a8d5-8bee2309b015",
+      "market_cap": "large",
+      "active": true,
+      "ticker": "ITC.NS"
+    },
+    {
+      "id": "0bad227f-4558-592a-8377-545fefc70dc5",
+      "symbol": "JIOFIN",
+      "name": "Jio Financial Services Ltd.",
+      "exchange": "NSE",
+      "kind": "equity",
+      "currency": "INR",
+      "sector_id": "2d50d4c1-34fb-518c-a47a-9284cfe27b21",
+      "market_cap": "large",
+      "active": true,
+      "ticker": "JIOFIN.NS"
+    },
+    {
+      "id": "7a3b60db-d24a-5162-8413-3da2b9085aa4",
+      "symbol": "JSWSTEEL",
+      "name": "JSW Steel Ltd.",
+      "exchange": "NSE",
+      "kind": "equity",
+      "currency": "INR",
+      "sector_id": "bfed21cf-ef7b-56a4-8b57-958b74d6af2b",
+      "market_cap": "large",
+      "active": true,
+      "ticker": "JSWSTEEL.NS"
+    },
+    {
+      "id": "1ccda736-248b-5922-8cbe-c42e34d5ca4f",
+      "symbol": "KOTAKBANK",
+      "name": "Kotak Mahindra Bank Ltd.",
+      "exchange": "NSE",
+      "kind": "equity",
+      "currency": "INR",
+      "sector_id": "02a06fe1-cb15-59c6-84ec-74351a806514",
+      "market_cap": "large",
+      "active": true,
+      "ticker": "KOTAKBANK.NS"
+    },
+    {
+      "id": "38e4275d-2a04-5dfa-b084-ec19abdfa19b",
+      "symbol": "LT",
+      "name": "Larsen & Toubro",
+      "exchange": "NSE",
+      "kind": "equity",
+      "currency": "INR",
+      "sector_id": "f971c063-49eb-508b-ae3e-a2593937cd2c",
+      "market_cap": "large",
+      "active": true,
+      "ticker": "LT.NS"
+    },
+    {
+      "id": "d4d658de-d167-54f2-8452-2edc63e02d0a",
+      "symbol": "M&M",
+      "name": "Mahindra & Mahindra Ltd.",
+      "exchange": "NSE",
+      "kind": "equity",
+      "currency": "INR",
+      "sector_id": "4a7fded8-1833-5040-803d-d5159b12421e",
+      "market_cap": "large",
+      "active": true,
+      "ticker": "M&M.NS"
+    },
+    {
+      "id": "a97bf3d6-d092-5456-96b8-8cc3206a9da2",
+      "symbol": "MARUTI",
+      "name": "Maruti Suzuki India Ltd.",
+      "exchange": "NSE",
+      "kind": "equity",
+      "currency": "INR",
+      "sector_id": "4a7fded8-1833-5040-803d-d5159b12421e",
+      "market_cap": "large",
+      "active": true,
+      "ticker": "MARUTI.NS"
+    },
+    {
+      "id": "fd4926aa-7ba3-505a-88a7-a09b9ddac351",
+      "symbol": "MAXHEALTH",
+      "name": "Max Healthcare Institute Ltd.",
+      "exchange": "NSE",
+      "kind": "equity",
+      "currency": "INR",
+      "sector_id": "a1e63883-fae9-5e30-88d6-45461d083dba",
+      "market_cap": "large",
+      "active": true,
+      "ticker": "MAXHEALTH.NS"
+    },
+    {
+      "id": "7a1c2326-4691-55f1-957d-0874436d9037",
+      "symbol": "NESTLEIND",
+      "name": "Nestle India Ltd.",
+      "exchange": "NSE",
+      "kind": "equity",
+      "currency": "INR",
+      "sector_id": "72a508c8-a607-59ad-a8d5-8bee2309b015",
+      "market_cap": "large",
+      "active": true,
+      "ticker": "NESTLEIND.NS"
+    },
+    {
+      "id": "338d623a-00e3-5c71-8d35-64837c350efd",
+      "symbol": "NTPC",
+      "name": "NTPC Ltd.",
+      "exchange": "NSE",
+      "kind": "equity",
+      "currency": "INR",
+      "sector_id": "5e1ce1a7-1d82-570e-a4e3-0e3aae051f03",
+      "market_cap": "large",
+      "active": true,
+      "ticker": "NTPC.NS"
+    },
+    {
+      "id": "d25f888c-0aed-594c-9e22-2f0f11c90ca7",
+      "symbol": "ONGC",
+      "name": "Oil & Natural Gas Corporation Ltd.",
+      "exchange": "NSE",
+      "kind": "equity",
+      "currency": "INR",
+      "sector_id": "7f84dcd4-7481-5649-a5c0-9c2932228f11",
+      "market_cap": "large",
+      "active": true,
+      "ticker": "ONGC.NS"
+    },
+    {
+      "id": "d7541705-b8f9-5894-a81a-d2f98b4c711a",
+      "symbol": "POWERGRID",
+      "name": "Power Grid Corporation of India Ltd.",
+      "exchange": "NSE",
+      "kind": "equity",
+      "currency": "INR",
+      "sector_id": "5e1ce1a7-1d82-570e-a4e3-0e3aae051f03",
+      "market_cap": "large",
+      "active": true,
+      "ticker": "POWERGRID.NS"
+    },
+    {
+      "id": "7b671b06-dbb1-5aba-a925-d4c5e8291889",
+      "symbol": "RELIANCE",
+      "name": "Reliance Industries",
+      "exchange": "NSE",
+      "kind": "equity",
+      "currency": "INR",
+      "sector_id": "7f84dcd4-7481-5649-a5c0-9c2932228f11",
+      "market_cap": "large",
+      "active": true,
+      "ticker": "RELIANCE.NS"
+    },
+    {
+      "id": "c4166e84-6f1e-5baa-9283-ba28e8b06d52",
+      "symbol": "SBILIFE",
+      "name": "SBI Life Insurance Company Ltd.",
+      "exchange": "NSE",
+      "kind": "equity",
+      "currency": "INR",
+      "sector_id": "2d50d4c1-34fb-518c-a47a-9284cfe27b21",
+      "market_cap": "large",
+      "active": true,
+      "ticker": "SBILIFE.NS"
+    },
+    {
+      "id": "55e6dac8-b1b2-51e3-abaf-57e7ceb75866",
+      "symbol": "SBIN",
+      "name": "State Bank of India",
+      "exchange": "NSE",
+      "kind": "equity",
+      "currency": "INR",
+      "sector_id": "02a06fe1-cb15-59c6-84ec-74351a806514",
+      "market_cap": "large",
+      "active": true,
+      "ticker": "SBIN.NS"
+    },
+    {
+      "id": "b6249f1f-6182-54a7-b1e5-d4a37935dc8d",
+      "symbol": "SHRIRAMFIN",
+      "name": "Shriram Finance Ltd.",
+      "exchange": "NSE",
+      "kind": "equity",
+      "currency": "INR",
+      "sector_id": "2d50d4c1-34fb-518c-a47a-9284cfe27b21",
+      "market_cap": "large",
+      "active": true,
+      "ticker": "SHRIRAMFIN.NS"
+    },
+    {
+      "id": "6dd22ead-9184-5426-8e34-c593e9a33468",
+      "symbol": "SUNPHARMA",
+      "name": "Sun Pharmaceutical Industries Ltd.",
+      "exchange": "NSE",
+      "kind": "equity",
+      "currency": "INR",
+      "sector_id": "a1e63883-fae9-5e30-88d6-45461d083dba",
+      "market_cap": "large",
+      "active": true,
+      "ticker": "SUNPHARMA.NS"
+    },
+    {
+      "id": "3e303216-ed2a-56e3-9511-87469f2a12b4",
+      "symbol": "TATACONSUM",
+      "name": "Tata Consumer Products Ltd.",
+      "exchange": "NSE",
+      "kind": "equity",
+      "currency": "INR",
+      "sector_id": "72a508c8-a607-59ad-a8d5-8bee2309b015",
+      "market_cap": "large",
+      "active": true,
+      "ticker": "TATACONSUM.NS"
+    },
+    {
+      "id": "2ec50aa4-2fbf-5d7d-8f71-7d6eeb73ad64",
+      "symbol": "TATASTEEL",
+      "name": "Tata Steel Ltd.",
+      "exchange": "NSE",
+      "kind": "equity",
+      "currency": "INR",
+      "sector_id": "bfed21cf-ef7b-56a4-8b57-958b74d6af2b",
+      "market_cap": "large",
+      "active": true,
+      "ticker": "TATASTEEL.NS"
+    },
+    {
+      "id": "b81d8389-59c9-5366-8c14-f466fdefba03",
+      "symbol": "TCS",
+      "name": "Tata Consultancy Services",
+      "exchange": "NSE",
+      "kind": "equity",
+      "currency": "INR",
+      "sector_id": "bc2627c2-6d48-55ee-af94-a4e79527720d",
+      "market_cap": "large",
+      "active": true,
+      "ticker": "TCS.NS"
+    },
+    {
+      "id": "b6d220bd-1b5d-59ca-bc05-9f86385f63bd",
+      "symbol": "TECHM",
+      "name": "Tech Mahindra Ltd.",
+      "exchange": "NSE",
+      "kind": "equity",
+      "currency": "INR",
+      "sector_id": "bc2627c2-6d48-55ee-af94-a4e79527720d",
+      "market_cap": "large",
+      "active": true,
+      "ticker": "TECHM.NS"
+    },
+    {
+      "id": "a4662bce-430d-5521-9fc2-c69e6bb58b3b",
+      "symbol": "TITAN",
+      "name": "Titan Company Ltd.",
+      "exchange": "NSE",
+      "kind": "equity",
+      "currency": "INR",
+      "sector_id": "87cfda06-6b3c-5f55-866e-f7fba62374e5",
+      "market_cap": "large",
+      "active": true,
+      "ticker": "TITAN.NS"
+    },
+    {
+      "id": "04ed24c9-0218-51a4-8cd0-7c846f8ff1b1",
+      "symbol": "TMPV",
+      "name": "Tata Motors Passenger Vehicles Ltd.",
+      "exchange": "NSE",
+      "kind": "equity",
+      "currency": "INR",
+      "sector_id": "4a7fded8-1833-5040-803d-d5159b12421e",
+      "market_cap": "large",
+      "active": true,
+      "ticker": "TMPV.NS"
+    },
+    {
+      "id": "43f29863-4c04-5584-ae39-f923476e77e1",
+      "symbol": "TRENT",
+      "name": "Trent Ltd.",
+      "exchange": "NSE",
+      "kind": "equity",
+      "currency": "INR",
+      "sector_id": "b1ea0c68-4304-5d48-b4a0-3c3fc992ead7",
+      "market_cap": "large",
+      "active": true,
+      "ticker": "TRENT.NS"
+    },
+    {
+      "id": "2b17d8b1-f298-5811-bf64-090f9579c642",
+      "symbol": "ULTRACEMCO",
+      "name": "UltraTech Cement Ltd.",
+      "exchange": "NSE",
+      "kind": "equity",
+      "currency": "INR",
+      "sector_id": "5273fb31-8790-5f26-82d4-5d2c5acd2b5c",
+      "market_cap": "large",
+      "active": true,
+      "ticker": "ULTRACEMCO.NS"
+    },
+    {
+      "id": "5687a55f-c65e-5505-a586-5577f520c0bf",
+      "symbol": "NIFTY50",
+      "name": "Nifty 50",
+      "exchange": "NSE",
+      "kind": "benchmark",
+      "currency": "POINTS",
+      "sector_id": null,
+      "market_cap": null,
+      "active": true,
+      "ticker": "^NSEI"
+    }
+  ],
+  "legacy_instruments": [
+    {
+      "id": "0eb552bb-9632-5039-8f67-eb18a7677984",
+      "symbol": "WIPRO",
+      "name": "Wipro",
+      "exchange": "NSE",
+      "kind": "equity",
+      "currency": "INR",
+      "sector_id": "bc2627c2-6d48-55ee-af94-a4e79527720d",
+      "market_cap": "large",
+      "active": true,
+      "ticker": "WIPRO.NS"
+    }
+  ]
+}

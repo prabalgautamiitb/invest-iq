@@ -19,6 +19,8 @@
 .portfolio-steps .is-current{border-color:#519a85;background:#18382f}
 .portfolio-steps .is-current .portfolio-step-number,.portfolio-steps .is-complete .portfolio-step-number{background:#9aebcc;color:#12382b}
 .portfolio-rules{margin-bottom:24px}
+.portfolio-universe{margin:20px 0}
+.portfolio-universe p{margin:8px 0 14px;line-height:1.6}
 .portfolio-notice{display:flex;align-items:center;gap:10px;padding:15px 18px;border:1px solid #427660;border-radius:10px;background:#16382d;color:#adebd3;margin:18px 0}
 .portfolio-notice .icon{flex-shrink:0;width:20px}
 .portfolio-builder{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(360px,1fr);align-items:start;gap:24px;margin:24px 0}
@@ -26,17 +28,30 @@
 .portfolio-search{margin:20px 0 14px}
 .portfolio-filters{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .portfolio-search-count{margin:20px 0 8px}
-.portfolio-stock{display:grid;grid-template-columns:34px minmax(0,1fr) auto auto;align-items:center;gap:10px;padding:16px 0;border-bottom:1px solid var(--line)}
+.portfolio-stock{display:grid;grid-template-columns:34px minmax(0,1fr) auto;grid-template-areas:"badge name action" "prices prices prices" "session session session";align-items:center;gap:12px 10px;padding:18px 0;border-bottom:1px solid var(--line)}
 .portfolio-stock:last-child{border-bottom:0}
+.portfolio-stock>.stockbadge{grid-area:badge}
 .portfolio-stock.is-selected .stockbadge{background:#214b3e;color:#a6efcf}
-.portfolio-stock-name{display:grid;gap:5px;min-width:0}
+.portfolio-stock-name{grid-area:name;display:grid;gap:5px;min-width:0}
 .portfolio-stock-name strong{font-size:13px}
 .portfolio-stock-name span{font-size:12px;color:#cad5df;overflow-wrap:anywhere}
 .portfolio-stock small{display:block;font-size:10px;color:var(--muted);line-height:1.5}
-.portfolio-stock-price{text-align:right;max-width:145px}
-.portfolio-stock-price strong{font-size:13px;white-space:nowrap}
-.portfolio-stock-price small{margin-top:5px}
-.portfolio-stock .portfolio-action{padding:9px 12px;font-size:12px}
+.portfolio-stock>.portfolio-action{grid-area:action;padding:9px 12px;font-size:12px}
+.portfolio-stock-prices{grid-area:prices;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:0;padding:12px;background:#0d1c29;border:1px solid var(--line);border-radius:10px}
+.portfolio-stock-prices>div{min-width:0}
+.portfolio-stock-prices dt{font-size:10px;color:var(--muted);margin-bottom:6px}
+.portfolio-stock-prices dd{margin:0;font-size:13px;font-weight:600;font-variant-numeric:tabular-nums;overflow-wrap:anywhere;line-height:1.5}
+.portfolio-stock-prices .is-up{color:#94ebcd}
+.portfolio-stock-prices .is-down{color:#f3aaa4}
+.portfolio-stock-prices .is-flat{color:#c2d0df}
+.portfolio-stock-prices .is-unavailable{color:var(--muted);font-weight:400;font-size:11px}
+.portfolio-stock-session{grid-area:session;display:flex;justify-content:space-between;align-items:start;gap:10px;min-width:0;font-size:10px;color:#b6c5d5;line-height:1.6}
+.portfolio-stock-session>div{min-width:0}
+.portfolio-stock-session small{overflow-wrap:anywhere}
+.portfolio-stock-session .portfolio-stock-reason{text-align:right;max-width:45%}
+.portfolio-stock-freshness{margin-left:6px;color:var(--muted)}
+.portfolio-stock-freshness.is-stale{color:#e5c18a}
+.portfolio-price-help{line-height:1.7;margin:14px 0 0}
 .portfolio-modes{display:grid;grid-template-columns:1fr 1fr;background:#0c1826;border-radius:10px;padding:4px;gap:5px;margin:20px 0}
 .portfolio-modes button{border:1px solid transparent;background:transparent;box-shadow:none;color:var(--muted)}
 .portfolio-modes [aria-pressed=true]{background:#254536;border-color:#477762;color:#b0f2d6;opacity:1}
@@ -75,9 +90,9 @@
 .portfolio-memberships .panel{display:flex;flex-direction:column;align-items:flex-start}
 .portfolio-memberships a{margin-top:auto}
 @media(min-width:1101px){.portfolio-catalogue #server-stockrows{max-height:760px;overflow-y:auto;scrollbar-width:thin;padding-right:6px}}
-@media(max-width:1200px){.portfolio-builder{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}.portfolio-builder>.panel{padding:18px}.portfolio-stock{grid-template-columns:minmax(0,1fr) auto}.portfolio-stock>.stockbadge{display:none}.portfolio-stock-price{grid-column:1;text-align:left;max-width:none}.portfolio-stock>.portfolio-action{grid-column:2;grid-row:1/3}.portfolio-holding{grid-template-columns:minmax(0,1fr) 120px}.portfolio-holding>.portfolio-action{grid-column:1/-1;justify-self:end}.portfolio-overview{grid-template-columns:1fr 1fr}.portfolio-overview>div:nth-child(2){border:0}}
-@media(max-width:1100px){.portfolio-builder{grid-template-columns:1fr}.portfolio-stock{grid-template-columns:34px minmax(0,1fr) auto auto}.portfolio-stock>.stockbadge{display:grid}.portfolio-stock-price{grid-column:auto;text-align:right}.portfolio-stock>.portfolio-action{grid-column:auto;grid-row:auto}.portfolio-holding{grid-template-columns:minmax(0,1fr) 130px auto}.portfolio-holding>.portfolio-action{grid-column:auto}}
-@media(max-width:600px){.portfolio-overview>div{padding:14px;gap:8px}.portfolio-overview .icon{display:none}.portfolio-overview span>strong{font-size:12px}.portfolio-steps{gap:6px}.portfolio-steps li{padding:12px 6px;flex-direction:column;text-align:center;gap:8px}.portfolio-steps li strong{font-size:11px}.portfolio-steps li div>span{display:none}.portfolio-stock{grid-template-columns:minmax(0,1fr) auto}.portfolio-stock>.stockbadge{display:none}.portfolio-stock-price{grid-column:1;text-align:left}.portfolio-stock>.portfolio-action{grid-column:2;grid-row:1/3}.portfolio-holding{grid-template-columns:minmax(0,1fr) 115px}.portfolio-holding>.portfolio-action{grid-column:1/-1}.portfolio-savebar{grid-template-columns:1fr}.portfolio-savebar .portfolio-action{width:100%}.portfolio-filters{gap:8px}.portfolio-workspace .pagehead{flex-wrap:wrap;gap:14px}.portfolio-review-actions>a,.portfolio-review-actions>button{width:100%;justify-content:center}.portfolio-review .visual-panel{padding:16px}}
+@media(max-width:1200px){.portfolio-builder{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}.portfolio-builder>.panel{padding:18px}.portfolio-stock{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"name action" "prices prices" "session session"}.portfolio-stock>.stockbadge{display:none}.portfolio-holding{grid-template-columns:minmax(0,1fr) 120px}.portfolio-holding>.portfolio-action{grid-column:1/-1;justify-self:end}.portfolio-overview{grid-template-columns:1fr 1fr}.portfolio-overview>div:nth-child(2){border:0}}
+@media(max-width:1100px){.portfolio-builder{grid-template-columns:1fr}.portfolio-stock{grid-template-columns:34px minmax(0,1fr) auto;grid-template-areas:"badge name action" "prices prices prices" "session session session"}.portfolio-stock>.stockbadge{display:grid}.portfolio-holding{grid-template-columns:minmax(0,1fr) 130px auto}.portfolio-holding>.portfolio-action{grid-column:auto}}
+@media(max-width:600px){.portfolio-overview>div{padding:14px;gap:8px}.portfolio-overview .icon{display:none}.portfolio-overview span>strong{font-size:12px}.portfolio-steps{gap:6px}.portfolio-steps li{padding:12px 6px;flex-direction:column;text-align:center;gap:8px}.portfolio-steps li strong{font-size:11px}.portfolio-steps li div>span{display:none}.portfolio-stock{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"name action" "prices prices" "session session"}.portfolio-stock>.stockbadge{display:none}.portfolio-holding{grid-template-columns:minmax(0,1fr) 115px}.portfolio-holding>.portfolio-action{grid-column:1/-1}.portfolio-savebar{grid-template-columns:1fr}.portfolio-savebar .portfolio-action{width:100%}.portfolio-filters{gap:8px}.portfolio-workspace .pagehead{flex-wrap:wrap;gap:14px}.portfolio-review-actions>a,.portfolio-review-actions>button{width:100%;justify-content:center}.portfolio-review .visual-panel{padding:16px}}
 
 .portfolio-mobile-tabs{display:none}
 @media(max-width:600px){
@@ -97,3 +112,5 @@
   .portfolio-holding>.portfolio-action{grid-column:auto;grid-row:auto;padding:6px;font-size:10px}
   .portfolio-holding>.portfolio-action .icon{width:14px;height:14px}
 }
+
+@media(max-width:400px){.portfolio-stock-prices{gap:8px;padding:10px}.portfolio-stock-prices dd{font-size:12px}.portfolio-stock-prices dt{font-size:10px}.portfolio-stock-freshness{display:block;margin-left:0}}

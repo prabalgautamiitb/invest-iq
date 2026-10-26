@@ -17,11 +17,17 @@ class Settings(BaseSettings):
     celery_broker_url: SecretStr = SecretStr("redis://127.0.0.1:6380/1")
     valuation_queue: str = Field(default="investiq.valuation", pattern=r"^[a-zA-Z0-9._-]{1,100}$")
     valuation_scan_seconds: int = Field(default=60, ge=10, le=3600)
-    cors_origins: list[str] = ["http://localhost:5173", "http://127.0.0.1:5173"]
+    cors_origins: list[str] = [
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "http://admin.localhost:5173",
+    ]
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR"] = "INFO"
     dependency_timeout_seconds: float = Field(default=3, gt=0, le=30)
     public_contest_fixtures_enabled: bool = False
-    market_data_mode: Literal["fixture", "disabled"] = "fixture"
+    market_data_mode: Literal["fixture", "yahoo", "disabled"] = "fixture"
+    market_scan_seconds: int = Field(default=300, ge=60, le=3600)
+    yahoo_timeout_seconds: int = Field(default=45, ge=5, le=60)
     session_days: int = Field(default=7, ge=1, le=30)
     auth_rate_limit: int = Field(default=10, ge=1)
     auth_rate_window_seconds: int = Field(default=900, ge=1)

@@ -428,3 +428,84 @@ async def test_template_seed_calendar_exclusions_and_terminal_invitations(
         with pytest.raises(AppError) as disabled:
             await app.state.contests.seed_draft("seed-owner@example.com")
         assert disabled.value.status == 503
+
+
+async def test_active_discovery_filters_effective_phase_before_pagination(
+    market_settings: Settings,
+):
+    settings = market_settings.model_copy(
+        update={
+            "auth_rate_limit": 10000,
+            "csrf_rate_limit": 10000,
+            "rate_limit_prefix": str(uuid4()),
+        }
+    )
+    clock, mailer = [ANCHOR], CapturedMailer()
+    app = create_app(settings, mailer, contest_clock=lambda: clock[0])
+    async with api_client(app) as client:
+        await verified(client, mailer)
+        data = await payload(client)
+        opened = await create(client, data)
+        await publish(client, opened["id"])
+        scheduled_data = {
+            **data,
+            "entry_opens_at": "2026-10-19T00:00:00Z",
+            "name": "Upcoming league",
+        }
+        upcoming = await create(client, scheduled_data)
+        await publish(client, upcoming["id"])
+        cancelled = await create(client, {**data, "name": "Cancelled league"})
+        await publish(client, cancelled["id"])
+        await client.post(
+            "/api/v1/contests/" + cancelled["id"] + "/transitions",
+            headers=await csrf(client),
+            json={"action": "cancel"},
+        )
+        await create(client, {**data, "name": "Unpublished league"})
+        completed = await create(client, {**data, "name": "Completed league"})
+        await publish(client, completed["id"])
+        async with app.state.sessions() as db, db.begin():
+            await db.execute(
+                update(Contest)
+                .where(Contest.id == UUID(completed["id"]))
+                .values(status="completed")
+            )
+        page = (
+            await client.get("/api/v1/contests", params={"activity": "active", "limit": 1})
+        ).json()
+        assert page["items"][0]["server_time"] == ANCHOR.isoformat().replace("+00:00", "Z")
+        next_page = (
+            await client.get(
+                "/api/v1/contests",
+                params={"activity": "active", "limit": 1, "cursor": page["next_cursor"]},
+            )
+        ).json()
+        assert {page["items"][0]["id"], next_page["items"][0]["id"]} == {
+            opened["id"],
+            upcoming["id"],
+        }
+        assert next_page["next_cursor"] is None
+        assert (
+            await client.get("/api/v1/contests", params={"cursor": page["next_cursor"]})
+        ).status_code == 422
+        explicit = (
+            await client.get(
+                "/api/v1/contests", params={"activity": "active", "status": "completed"}
+            )
+        ).json()
+        assert [c["id"] for c in explicit["items"]] == [completed["id"]]
+        assert (
+            len(
+                (await client.get("/api/v1/me/contests", params={"scope": "hosted"})).json()[
+                    "items"
+                ]
+            )
+            == 5
+        )
+        clock[0] = datetime(2026, 10, 19, 4, tzinfo=UTC)
+        live = (await client.get("/api/v1/contests", params={"activity": "active"})).json()
+        assert {c["status"] for c in live["items"]} == {"running"}
+        clock[0] = datetime(2026, 10, 23, 13, tzinfo=UTC)
+        assert (await client.get("/api/v1/contests", params={"activity": "active"})).json()[
+            "items"
+        ] == []
