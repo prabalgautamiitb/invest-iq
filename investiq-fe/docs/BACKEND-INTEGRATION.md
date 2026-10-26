@@ -102,7 +102,7 @@ Keep draft versions separate from submitted snapshots. Use uniqueness constraint
 
 A Java/Spring Boot backend can serve these endpoints and the built `dist` assets from the same origin, or run separately behind a reverse proxy. Add a small `api.js` client and loading/error states before connecting page handlers. Keep production credentials and AI/market-provider keys on the server. If using cookie sessions, implement appropriate CSRF handling; restrict cross-origin access to your frontend origin when deploying separately.
 
-The current frontend uses `localStorage` key `investiq-demo-v1`. Retain a distinct demo mode while introducing real accounts; do not silently upload existing demo financial records as real account data. `investiq-ambient-motion` is a presentation preference and can stay browser-local.
+The current frontend uses `localStorage` key `investiq-demo-v1`. Retain a distinct demo mode while introducing real accounts; do not silently upload existing demo financial records as real account data.
 
 ## Development export
 

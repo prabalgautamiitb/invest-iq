@@ -1,7 +1,7 @@
 #martin-root{position:fixed;right:24px;bottom:calc(24px + env(safe-area-inset-bottom));z-index:60;font-family:Inter,Arial,sans-serif;color:#e0eaf5}
 #martin-root[hidden],#martin-root [hidden]{display:none!important}
 #martin-root button,#martin-root a,#martin-root textarea{font:inherit;box-sizing:border-box}
-.martin-launcher{position:relative;display:grid;place-items:center;width:68px;height:68px;min-height:68px;padding:3px;border:0;border-radius:50%;background:linear-gradient(135deg,#a7f3cf,#58d7b4 45%,#79b8ff);color:#e1f8ef;box-shadow:0 8px 28px #0007,0 0 24px #64dfb51f;cursor:pointer;transition:transform .2s ease,box-shadow .2s ease}
+.martin-launcher{position:relative;display:grid;place-items:center;width:68px;height:68px;min-height:68px;padding:3px;border:0;border-radius:50%;background:linear-gradient(135deg,#a7f3cf,#58d7b4 45%,#79b8ff);color:#e1f8ef;box-shadow:0 8px 28px #0007,0 0 24px #64dfb51f;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;transition:box-shadow .2s ease}
 .martin-launcher>svg{display:block;width:100%;height:100%;border-radius:50%;border:2px solid #162c3b;box-sizing:border-box}
 .martin-launcher-caption{position:absolute;right:calc(100% + 12px);top:50%;transform:translateY(-50%);padding:9px 13px;border:1px solid #42625e;border-radius:12px;background:#132b32;color:#d7f3e8;font-size:12px;font-weight:600;white-space:nowrap;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .15s ease}
 .martin-launcher:focus-visible .martin-launcher-caption{opacity:1;visibility:visible}
@@ -43,7 +43,7 @@
 .martin-composer-actions button:disabled{opacity:.65;cursor:not-allowed}
 .martin-composer>p{font-size:10px;line-height:1.6;color:#95a9bd;margin:10px 0 0}
 #martin-root button:focus-visible,#martin-root a:focus-visible,#martin-root textarea:focus-visible{outline:2px solid #83e8c6;outline-offset:3px}
-@media(hover:hover){.martin-prompts button:hover,.martin-modes button:hover{border-color:#66ac98}.martin-resources a:hover{text-decoration:underline}.martin-launcher:hover{transform:translateY(-3px);box-shadow:0 12px 32px #0007,0 0 28px #64dfb536}.martin-launcher:hover .martin-launcher-caption{opacity:1;visibility:visible}}
+@media(hover:hover){.martin-prompts button:hover,.martin-modes button:hover{border-color:#66ac98}.martin-resources a:hover{text-decoration:underline}.martin-launcher:hover{box-shadow:0 12px 32px #0007,0 0 28px #64dfb536}.martin-launcher:hover .martin-launcher-caption{opacity:1;visibility:visible}}
 @media(max-width:600px){#martin-root{right:14px;bottom:calc(86px + env(safe-area-inset-bottom))}.martin-launcher{width:60px;height:60px;min-height:60px;padding:3px}.martin-window{bottom:74px;width:min(390px,calc(100vw - 28px));height:min(620px,calc(100dvh - 180px - env(safe-area-inset-bottom)));border-radius:18px}.martin-header{padding:14px;gap:10px}.martin-body{padding:16px}.martin-composer{padding:12px 14px}.martin-header h2{font-size:16px}.martin-composer textarea{font-size:16px!important}.martin-body h3{font-size:20px}}
 
 @media(prefers-reduced-motion:reduce){.martin-launcher,.martin-launcher-caption{transition:none}.martin-launcher:hover{transform:none}}
@@ -89,3 +89,7 @@
 .martin-announcement{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 
 .martin-source summary{cursor:pointer;color:#a9dfcc;font-size:11px;line-height:1.6}.martin-source[open] summary{margin-bottom:10px}
+
+#martin-root[data-dragging] .martin-launcher{cursor:grabbing;transition:none}
+#martin-root[data-dragging] .martin-launcher-caption{opacity:0;visibility:hidden}
+#martin-root[data-launcher-side="left"] .martin-launcher-caption{left:calc(100% + 12px);right:auto}

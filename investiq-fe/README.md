@@ -79,7 +79,7 @@ The suite starts isolated API/Vite servers on 8081/5174 and a disposable migrate
 
 Landing; login/signup; password reset; five-step onboarding and learning profile; home dashboard; My Contests; Leaderboard; contests and details; portfolio allocation and submission; academy and lesson quizzes; AI insights and journal; marketplace; social feed; profile; separate settings; privacy; terms; missing-page state.
 
-The application currently uses hash routes (`#/portfolio`, etc.). Demo state is stored in `investiq-demo-v1`; ambient-motion preference uses `investiq-ambient-motion`.
+The application currently uses hash routes (`#/portfolio`, etc.). Demo state is stored in `investiq-demo-v1`. The decorative background is static.
 
 The original files named `dist` were also uncompiled source. This project reorganizes that same design into a conventional development setup with separate data, styles, animation modules, and API scaffolding. It does not convert the application to React or implement a backend.
 

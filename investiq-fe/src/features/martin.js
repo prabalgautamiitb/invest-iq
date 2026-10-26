@@ -1,9 +1,12 @@
 import { martinApi as api, contestApi } from '../api/services.js';
+import { floatingLauncher } from '../lib/floating-launcher.js';
 
 // A separate root keeps the conversation stable while workspace pages re-render.
 export function createMartinController({ getAccount, current }) {
   const root = document.createElement('div');
   root.id = 'martin-root';root.hidden = true;document.body.append(root);
+  const floating = floatingLauncher(root);
+  const moveHelp = document.createElement('p');moveHelp.id='martin-move-help';moveHelp.className='martin-announcement';moveHelp.textContent='Drag to move Martin. With the avatar focused, use arrow keys to move or Home to reset its position. Press Enter to open chat.';document.body.append(moveHelp);
   const announcements=document.createElement('p');announcements.className='martin-announcement';announcements.setAttribute('role','status');announcements.setAttribute('aria-live','polite');document.body.append(announcements);let announced='';
   const escape = value => String(value??'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const routes = new Set(['dashboard','home','contests','my-contests','portfolio','build','academy','learn','insights','social','community','marketplace','rewards','profile','settings','leaderboard','performance','contest-history']);
@@ -64,8 +67,10 @@ export function createMartinController({ getAccount, current }) {
     const latest=turns.at(-1),signal=latest?latest.id+latest.status:'';if(open&&signal&&signal!==announced){announced=signal;announcements.textContent=latest.status==='succeeded'?'Martin’s answer is ready.':latest.status==='failed'?'Martin could not answer. You can retry.':'';}
     const body=root.querySelector('.martin-body');if(body)body.scrollTop=error||notice?0:bottom?body.scrollHeight:oldScroll;
     if(focused&&open&&!input()?.disabled){input().focus({preventScroll:true});input().setSelectionRange(start,end);}
+    launcher().setAttribute('aria-describedby','martin-move-help');
+    floating.layout();
   }
-  function sync(){const nextOwner=getAccount()?.id||null;if(!initialized||owner!==nextOwner){reset();owner=nextOwner;initialized=true;draw();}const visible=getAccount()?.role!=='admin'&&routes.has(current().split('/')[0]);root.hidden=!visible;if(!visible&&open){open=false;stop();draw();}if(route!==current()){route=current();const ctx=context();const el=root.querySelector('[data-martin-context]');if(el)el.textContent=ctx.label;const link=root.querySelector('[data-martin-insights]');if(link)link.href='#/'+(getAccount()?ctx.insights:'login');}}
+  function sync(){const nextOwner=getAccount()?.id||null;if(!initialized||owner!==nextOwner){reset();owner=nextOwner;initialized=true;draw();}const visible=getAccount()?.role!=='admin'&&routes.has(current().split('/')[0]);root.hidden=!visible;if(!visible&&open){open=false;stop();draw();}if(route!==current()){route=current();const ctx=context();const el=root.querySelector('[data-martin-context]');if(el)el.textContent=ctx.label;const link=root.querySelector('[data-martin-insights]');if(link)link.href='#/'+(getAccount()?ctx.insights:'login');}floating.layout();}
   function poll(){stop();if(open&&thread&&active()){const token=epoch;pollTimer=setTimeout(()=>{if(token===epoch)refreshTurns();},2500);}}
   async function refreshTurns(){const token=epoch,id=thread?.id;if(!id)return;try{const data=await api.turns(id);if(token!==epoch||thread?.id!==id)return;const merged=new Map(turns.map(t=>[t.id,t]));data.items.forEach(t=>merged.set(t.id,t));const next=[...merged.values()].sort((a,b)=>a.created_at.localeCompare(b.created_at)||a.id.localeCompare(b.id));const changed=JSON.stringify(turns)!==JSON.stringify(next);turns=next;thread=data.conversation;if(changed)draw({bottom:!historyView});poll();}catch(e){if(token===epoch){error=e.message;draw();stop();}}}
   async function load(){if(!getAccount()||loading)return;const token=epoch;loading=true;error='';draw();try{const [settings,chats,mine]=await Promise.all([api.settings(),api.conversations(),contestApi.mine({limit:20})]);if(token!==epoch)return;config=settings;conversations=chats.items;conversationNext=chats.next_cursor;contests=mine.items;contestNext=mine.next_cursor;loaded=true;const ctx=context();if(!thread&&!selectedContest&&contests.some(c=>c.id===ctx.insights.split('/')[1]))selectedContest=ctx.insights.split('/')[1];}catch(e){if(token===epoch)error=e.message;}finally{if(token===epoch){loading=false;draw();if(thread)refreshTurns();}}}
@@ -74,7 +79,7 @@ export function createMartinController({ getAccount, current }) {
   async function send(){if(!canSend()||historyView)return;const payload={question:drafts[mode].trim(),mode,contest_id:mode==='performance'&&selectedContest?selectedContest:null,conversation_id:thread?.id||null};const encoded=JSON.stringify(payload);if(!pending||pending.encoded!==encoded)pending={key:crypto.randomUUID(),payload,encoded};const request=pending,token=epoch;busy=true;error='';notice='';draw();try{const turn=await api.ask(request.payload,request.key);if(token!==epoch)return;pending=null;drafts[mode]='';if(!thread)thread={id:turn.conversation_id,mode,contest_id:payload.contest_id,title:payload.question.slice(0,80)};turns=[...turns.filter(t=>t.id!==turn.id),turn];draw({bottom:true});}catch(e){if(token===epoch)error=e.message;}finally{if(token===epoch){busy=false;draw({bottom:true});poll();if(!input()?.disabled)input().focus({preventScroll:true});}}}
   root.addEventListener('click',async event=>{
     const b=event.target.closest('[data-martin]');if(!b||b.disabled)return;const action=b.dataset.martin;
-    if(action==='toggle'){if(open)close();else{open=true;root.querySelector('#martin-window').hidden=false;launcher().setAttribute('aria-expanded','true');if(!loaded&&getAccount())load();else if(thread)refreshTurns();if(!input()?.disabled)input().focus({preventScroll:true});}return;}
+    if(action==='toggle'){if(open)close();else{open=true;root.querySelector('#martin-window').hidden=false;launcher().setAttribute('aria-expanded','true');floating.layout();if(!loaded&&getAccount())load();else if(thread)refreshTurns();if(!input()?.disabled)input().focus({preventScroll:true});}return;}
     if(action==='close'){close();return;}
     if(action==='mode'){if(Object.hasOwn(prompts,b.dataset.mode)&&!busy)newChat(b.dataset.mode);return;}
     if(action==='new'){if(!busy)newChat();return;}

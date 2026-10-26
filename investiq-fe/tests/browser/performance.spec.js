@@ -76,7 +76,8 @@ test('simulated results, dashboard aggregates, private performance and final his
     await expect(page.locator('tbody')).toContainText('Learner ');
     await expect(page.locator('tbody')).toContainText('· you');
     await page.goto('/#/dashboard');
-    await expect(page.getByRole('heading',{name:'Latest valued portfolios',exact:true})).toBeVisible();
+    await expect(page.getByRole('heading',{name:'Latest valued portfolios',exact:true})).toHaveCount(0);
+    await expect(page.getByRole('heading',{name:'Build and compete',exact:true})).toHaveCount(0);
     await expect(page.getByRole('img',{name:'Portfolio value across 1 published daily snapshots',exact:true})).toBeVisible();
     const insight=page.getByRole('region',{name:'AI guidance',exact:true});
     await expect(insight).toContainText('Get a coach report');
@@ -200,7 +201,9 @@ test('performance API failures have retry states without sample ranks or returns
   await expect(page.getByText('+12.84',{exact:false})).toHaveCount(0);
   await page.unroute('**/api/v1/me/dashboard');
   await page.getByRole('button',{name:'Retry results',exact:true}).click();
-  await expect(page.getByRole('heading',{name:'Latest valued portfolios',exact:true})).toBeVisible();
+  await expect(page.getByRole('region',{name:'Your portfolio analysis',exact:true})).toBeVisible();
+  await expect(page.getByRole('heading',{name:'Latest valued portfolios',exact:true})).toHaveCount(0);
+  await expect(page.getByRole('heading',{name:'Build and compete',exact:true})).toHaveCount(0);
   expect(errors).toEqual([]);
 });
 

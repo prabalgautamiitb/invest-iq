@@ -27,7 +27,11 @@ test('Martin is keyboard accessible, explains sign-in and fits mobile and short 
 test('Martin sends idempotently, answers with citations, supports follow-ups and persists private history',async({page,request})=>{
   const errors=[];page.on('pageerror',e=>errors.push(e.message));await signIn(page,request);
   const draft='What is diversification? <img src=x onerror=alert(1)>';
-  await editor(page).fill(draft);await page.evaluate(()=>{window.martinInput=document.getElementById('martin-question');location.hash='/academy';});
+  await editor(page).fill(draft);
+  const start=await launcher(page).boundingBox();
+  await page.mouse.move(start.x+start.width/2,start.y+start.height/2);await page.mouse.down();await page.mouse.move(130,140,{steps:10});await page.mouse.up();
+  await expect(panel(page)).toBeVisible();await expect(editor(page)).toHaveValue(draft);
+  await page.evaluate(()=>{window.martinInput=document.getElementById('martin-question');location.hash='/academy';});
   await expect(panel(page).locator('[data-martin-context]')).toHaveText('Academy');
   expect(await page.evaluate(()=>window.martinInput===document.getElementById('martin-question'))).toBe(true);
   const keys=[];let interrupted=false;

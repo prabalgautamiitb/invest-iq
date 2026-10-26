@@ -1,6 +1,6 @@
 # Ask Martin
 
-Ask Martin is a private learning companion available through the circular avatar at the bottom right of workspace pages.
+Ask Martin is a private learning companion available through the circular avatar on workspace pages. Drag the avatar with a mouse or touch to move it; its position is remembered in this browser and kept inside the screen, above mobile navigation. A normal click or tap opens chat, which stays within the visible screen. Keyboard users can focus the avatar and use arrow keys to move it (Shift for larger steps), Home to restore the default bottom-right position, and Enter to open chat.
 
 ## Using Martin
 
