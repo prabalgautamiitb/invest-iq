@@ -25,6 +25,7 @@ from investiq.schemas.identity import (
     TokenInput,
 )
 from investiq.services.identity import GENERIC_EMAIL_MESSAGE, IdentityService
+from investiq.services.profile_photo import MAX_UPLOAD
 
 router = APIRouter(tags=["identity"])
 
@@ -196,6 +197,36 @@ async def me(principal: UserContext, identity: Service) -> MeOut:
 @router.patch("/me", response_model=MeOut)
 async def patch_me(data: ProfileUpdate, principal: UserContext, identity: Service) -> MeOut:
     return await identity.patch(principal, data)
+
+
+@router.get("/me/photo")
+async def get_photo(principal: UserContext, identity: Service) -> Response:
+    return Response(
+        content=await identity.photo(principal),
+        media_type="image/jpeg",
+        headers={"Cache-Control": "private, no-store", "X-Content-Type-Options": "nosniff"},
+    )
+
+
+@router.put("/me/photo", response_model=MeOut)
+async def put_photo(request: Request, principal: UserContext, identity: Service) -> MeOut:
+    if request.headers.get("content-type", "").split(";")[0] not in {
+        "image/jpeg",
+        "image/png",
+        "image/webp",
+    }:
+        raise AppError(415, "invalid_photo_type", "Choose a JPEG, PNG, or WebP photo")
+    raw = bytearray()
+    async for chunk in request.stream():
+        raw.extend(chunk)
+        if len(raw) > MAX_UPLOAD:
+            raise AppError(413, "photo_too_large", "Choose a photo under 1 MB after cropping")
+    return await identity.save_photo(principal, bytes(raw))
+
+
+@router.delete("/me/photo", response_model=MeOut)
+async def delete_photo(principal: UserContext, identity: Service) -> MeOut:
+    return await identity.save_photo(principal, None)
 
 
 @router.get("/me/preferences", response_model=PreferencesOut)

@@ -79,6 +79,18 @@ test('simulated results, dashboard aggregates, private performance and final his
     await expect(page.getByRole('heading',{name:'Latest valued portfolios',exact:true})).toHaveCount(0);
     await expect(page.getByRole('heading',{name:'Build and compete',exact:true})).toHaveCount(0);
     await expect(page.getByRole('img',{name:'Portfolio value across 1 published daily snapshots',exact:true})).toBeVisible();
+    const homeCard=page.locator(`[data-home-contest="${id}"]`);
+    await expect(homeCard).toContainText('Latest published close');
+    await expect(homeCard).toContainText('#1');
+    await expect(homeCard.getByRole('link',{name:'View performance',exact:true})).toHaveAttribute('href','#/performance/'+id);
+    const pendingCard=page.locator(`[data-home-contest="${unvaluedId}"]`);
+    await expect(pendingCard).toContainText('No confirmed submission');
+    await expect(pendingCard.getByRole('link',{name:'Build portfolio',exact:true})).toHaveAttribute('href','#/portfolio/'+unvaluedId);
+    await page.setViewportSize({width:390,height:844});
+    await expect(homeCard.getByRole('link',{name:'Standings',exact:true})).toBeVisible();
+    expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+    await homeCard.screenshot({path:'/tmp/investiq-home-contest-card-mobile.png'});
+    await page.setViewportSize({width:1280,height:720});
     const insight=page.getByRole('region',{name:'AI guidance',exact:true});
     await expect(insight).toContainText('Get a coach report');
     await page.getByRole('button',{name:'Generate AI insights',exact:true}).click();

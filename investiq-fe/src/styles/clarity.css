@@ -73,6 +73,31 @@
 
 .home-ai-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
 
+.home-contest-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+.main .home-contest-tile{min-width:0;padding:22px;display:flex;flex-direction:column;border:1px solid #2e4056;background:linear-gradient(145deg,#142234,#0f1a2a)}
+.home-contest-tile>header{display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap}
+.home-contest-symbol{display:grid;place-items:center;flex-shrink:0;width:38px;height:38px;border-radius:12px;background:#1a3d3c;color:#8ee5ca}
+.home-contest-symbol .icon{width:20px;height:20px}
+.home-contest-tile>header>div{flex:1;min-width:100px}
+.home-contest-source{font-size:10px;color:#a1b8cc;letter-spacing:.5px}
+.main .home-contest-tile h3{font-size:17px;line-height:1.5;margin:3px 0 0;overflow-wrap:anywhere}
+.home-contest-tile .contest-state{font-size:10px;margin-top:4px}
+.home-contest-numbers{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr) minmax(0,.8fr);gap:12px;margin:22px 0 18px;padding:18px 0;border-top:1px solid #2b3e53;border-bottom:1px solid #2b3e53}
+.home-contest-numbers dt{font-size:11px;color:#a1b5cb;margin-bottom:8px}
+.home-contest-numbers dd{font-size:19px;line-height:1.4;margin:0;font-weight:600;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.home-contest-main-value dd{font-size:22px;color:#f0f6fd;letter-spacing:-.5px}
+.home-contest-unranked{font-size:12px;font-weight:400;color:#b0c0d1}
+.home-contest-update{display:flex;align-items:flex-start;gap:9px;margin-bottom:20px}
+.home-contest-update>.icon{width:16px;height:16px;flex-shrink:0;margin-top:2px;color:#8dcdbb}
+.main .home-contest-update p{font-size:12px;line-height:1.6;color:#c0d0e0;margin:0}
+.home-contest-update time,.home-contest-update span:not(.icon){display:block;font-size:11px;color:#8da5bd;margin-top:5px}
+.home-contest-tile footer{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:auto}
+.home-contest-tile footer .contest-action{font-size:11px;white-space:normal}
+.home-contests-empty{display:flex;align-items:flex-start;flex-direction:column;gap:14px}
+.main .home-contests-empty h3,.main .home-contests-empty p{margin:0}
+@media(max-width:1100px){.home-contest-list{grid-template-columns:1fr}}
+@media(max-width:600px){.main .home-contest-tile{padding:20px}.home-contest-numbers{grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.home-contest-main-value{grid-column:1/-1}.home-contest-main-value dd{font-size:27px}.home-contest-numbers dd{overflow-wrap:normal}.home-contest-tile footer .contest-action{flex:1;padding:10px 8px}.home-contest-tile>header .contest-state{margin-left:auto}}
+
 /* Contest cards give dates priority and keep the full schedule one click away. */
 .main .contest-scan-card{padding:24px;min-width:0}
 .contest-card-heading{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}

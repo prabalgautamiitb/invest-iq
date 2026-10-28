@@ -1,4 +1,4 @@
-import { request, clearCsrf } from './client.js';
+import { request, clearCsrf, apiUrl } from './client.js';
 
 const rotate = async promise => {
   const result = await promise;
@@ -21,6 +21,10 @@ export const authApi = {
 };
 
 export const profileApi = {
+  photoUrl: version => apiUrl('/me/photo?v=' + encodeURIComponent(version)),
+  photo: () => request('/me/photo', { responseType: 'blob' }),
+  savePhoto: blob => request('/me/photo', { method: 'PUT', body: blob }),
+  removePhoto: () => request('/me/photo', { method: 'DELETE' }),
   get: () => request('/me'),
   update: input => request('/me', { method: 'PATCH', body: input }),
   updatePreferences: input => request('/me/preferences', { method: 'PATCH', body: input }),

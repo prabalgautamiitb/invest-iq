@@ -180,6 +180,7 @@ class MeOut(BaseModel):
     id: UUID
     email: str
     name: str
+    photo_version: UUID | None = None
     role: Literal["user", "admin"]
     email_verified: bool
     weekly_goal: int

@@ -186,3 +186,16 @@ uses the existing saved display name and weekly goal; settings, privacy, session
 and password recovery keep their existing backend flows. Course progress and
 achievements live in the Academy. Subscription information describes free
 simulation access; paid subscriptions and billing are not enabled.
+
+Profile and Profile information include photo upload, crop/reposition, zoom,
+rotation, replacement, and removal. JPG, PNG, and WebP files up to 5 MB can be
+selected; only the edited image is uploaded. The avatar updates in Profile,
+Settings, the header, and the sidebar without discarding unsaved profile fields.
+Photos are saved privately to the account; they are not public community images.
+Apply backend migration `0014_profile_photos` and rebuild the API for photo support.
+
+Home's Your contests section uses responsive cards with portfolio value, signed
+return, rank, snapshot date, and an action appropriate to the submission state.
+Missing results stay unvalued; stale and final snapshots are labelled explicitly.
+Performance and standings links remain visible on mobile. Contest history keeps
+its table layout. Rendering lives in `src/features/home-contests.js`.

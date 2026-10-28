@@ -1,5 +1,6 @@
 // Connected identity, market, contest and portfolio flows share cookie/CSRF handling.
 const API_BASE = (import.meta.env?.VITE_API_BASE_URL || '/api/v1').replace(/\/$/, '');
+export const apiUrl = path => API_BASE + path;
 
 export class ApiError extends Error {
   constructor(message, status, details) {
@@ -25,24 +26,26 @@ async function csrf() {
   return csrfBootstrap;
 }
 
-export async function request(path, { method = 'GET', body, headers = {}, signal } = {}) {
+export async function request(path, { method = 'GET', body, headers = {}, signal, responseType = 'json' } = {}) {
   if (!path.startsWith('/')) throw new Error('API paths must start with /');
   const mutation = !['GET', 'HEAD', 'OPTIONS'].includes(method.toUpperCase());
   const securityHeaders = mutation ? { 'X-CSRF-Token': await csrf() } : {};
   const isForm = typeof FormData !== 'undefined' && body instanceof FormData;
+  const isBlob = typeof Blob !== 'undefined' && body instanceof Blob;
   const response = await fetch(API_BASE + path, {
     method,
     credentials: 'include',
     headers: {
       Accept: 'application/json',
-      ...(body !== undefined && !isForm ? { 'Content-Type': 'application/json' } : {}),
+      ...(body !== undefined && !isForm ? { 'Content-Type': isBlob ? body.type : 'application/json' } : {}),
       ...securityHeaders,
       ...headers,
     },
-    ...(body !== undefined ? { body: isForm ? body : JSON.stringify(body) } : {}),
+    ...(body !== undefined ? { body: isForm || isBlob ? body : JSON.stringify(body) } : {}),
     signal,
   });
   if (response.status === 204) return null;
+  if (response.ok && responseType === 'blob') return response.blob();
   const text = await response.text();
   let data;
   if (text) {

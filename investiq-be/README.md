@@ -10,6 +10,18 @@ Verified administrators can list courses with `GET /api/v1/admin/courses`, publi
 
 Writes require a valid session, CSRF protection, verified email, and a current database admin role. Publication is transactional and recorded in the audit log. Course URL names are unique; concurrent lesson additions receive distinct ordered positions. Public lesson responses omit correct answers and explanations until a learner submits a quiz. No migration or curriculum reseed is required for authored content.
 
+## Profile photos
+
+`GET /me` includes nullable `photo_version`. Authenticated `GET /me/photo` serves
+only the current user's photo. CSRF-protected `PUT /me/photo` accepts raw JPEG,
+PNG, or WebP bytes up to 1 MB; `DELETE /me/photo` restores the initials avatar.
+The browser editor crops larger local photos before upload. Pillow validates the
+decoded image, rejects animation and oversized dimensions, and stores a fresh
+256 × 256 JPEG without original metadata in `profile_photos`. Photo changes are
+audited; image bytes are excluded from ordinary profile JSON and AI context.
+Migration `0014_profile_photos` is additive. Rebuild the API, worker and scheduler
+with the normal Compose command below to install Pillow and apply the migration.
+
 ## Start the backend
 
 For the complete local Phase 10 stack (API, Celery worker and one Beat scheduler), start Ollama on the host with `llama3.1:8b` installed (`ollama list`; pull it if missing), then:

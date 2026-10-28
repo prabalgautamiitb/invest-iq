@@ -1,9 +1,10 @@
+import asyncio
 import hmac
 import logging
 from collections.abc import Awaitable
 from datetime import timedelta
 from typing import Literal, cast
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from redis.asyncio import Redis
 from redis.exceptions import RedisError
@@ -31,6 +32,7 @@ from investiq.models.identity import (
     OnboardingResponse,
     Preferences,
     Privacy,
+    ProfilePhoto,
     QuestionSet,
     Session,
     User,
@@ -48,6 +50,7 @@ from investiq.schemas.identity import (
     RegisterInput,
     SessionOut,
 )
+from investiq.services.profile_photo import normalize_photo
 
 logger = logging.getLogger("investiq.identity")
 RATE_SCRIPT = """
@@ -222,6 +225,9 @@ class IdentityService:
             id=user.id,
             email=user.email,
             name=user.name,
+            photo_version=await db.scalar(
+                select(ProfilePhoto.version).where(ProfilePhoto.user_id == user.id)
+            ),
             role=cast(Literal["user", "admin"], user.role),
             email_verified=user.email_verified_at is not None,
             weekly_goal=user.weekly_goal,
@@ -361,6 +367,37 @@ class IdentityService:
                 setattr(target, key, value)
             user.updated_at = now()
             db.add(AuditEvent(actor_id=user.id, action=action))
+            await db.flush()
+            return await self._view(db, user)
+
+    async def photo(self, principal: Principal) -> bytes:
+        async with self.factory() as db, db.begin():
+            user = await self.authenticated_user(db, principal)
+            photo = await db.get(ProfilePhoto, user.id)
+            if photo is None:
+                raise AppError(404, "photo_not_found", "No profile photo saved")
+            return photo.image
+
+    async def save_photo(self, principal: Principal, raw: bytes | None) -> MeOut:
+        async with self.factory() as db, db.begin():
+            user = await self.authenticated_user(db, principal)
+            photo = await db.get(ProfilePhoto, user.id)
+            if raw is None:
+                if photo is not None:
+                    await db.delete(photo)
+            else:
+                normalized = await asyncio.to_thread(normalize_photo, raw)
+                if photo is None:
+                    db.add(ProfilePhoto(user_id=user.id, image=normalized, version=uuid4()))
+                else:
+                    photo.image, photo.version, photo.updated_at = normalized, uuid4(), now()
+            user.updated_at = now()
+            db.add(
+                AuditEvent(
+                    actor_id=user.id,
+                    action="profile_photo_removed" if raw is None else "profile_photo_updated",
+                )
+            )
             await db.flush()
             return await self._view(db, user)
 

@@ -3,8 +3,9 @@ import { contestTimeline } from './results-info.js';
 import { performanceApi, contestApi, coachApi } from '../api/services.js';
 import { marketApi } from '../api/market.js';
 import { newsPlaceholder } from './market-news.js';
+import { homeContestCards } from './home-contests.js';
 
-export function createPerformanceController({shell,pagehead,esc,link,render,current,getAccount}) {
+export function createPerformanceController({shell,pagehead,esc,link,icon,render,current,getAccount}) {
   let key='',generation=0,loaded=false,loading=false,error='',data=null,homeId='',pollTimer=null;
   const homeRequests=new Map();
   function stop(){clearTimeout(pollTimer);pollTimer=null;}
@@ -105,7 +106,7 @@ export function createPerformanceController({shell,pagehead,esc,link,render,curr
   function dashboard(){
     const wait=pending();
     if(wait)return shell('dashboard',wait);
-    return shell('dashboard',`${pagehead('Your simulation workspace','Hi, '+esc(getAccount()?.name||''),'Follow your contests, review results, and choose your next step.',`<div class="flex">${link('Contest history','contest-history','secondary')}${button('refresh','Refresh results')}</div>`)}${marketSummary()}${homePortfolio()}${summaryCards([['Contests joined',data.joined_count],['Active contests',data.active_count],['Completed contests',data.completed_count],['Contest wins',data.wins]])}${comparisonBars("Your contest returns",data.items.map(c=>({label:c.name,value:c.return_pct})),"Each contest uses its own latest close. These are separate contest returns, not a combined portfolio return.")}<div class="section-heading"><h2>Your contests</h2>${link('My Contests','my-contests','ghost')}</div>${contestTable(data.items)}`);
+    return shell('dashboard',`${pagehead('Your simulation workspace','Hi, '+esc(getAccount()?.name||''),'Follow your contests, review results, and choose your next step.',`<div class="flex">${link('Contest history','contest-history','secondary')}${button('refresh','Refresh results')}</div>`)}${marketSummary()}${homePortfolio()}${summaryCards([['Contests joined',data.joined_count],['Active contests',data.active_count],['Completed contests',data.completed_count],['Contest wins',data.wins]])}${comparisonBars("Your contest returns",data.items.map(c=>({label:c.name,value:c.return_pct})),"Each contest uses its own latest close. These are separate contest returns, not a combined portfolio return.")}<div class="section-heading"><h2>Your contests</h2>${link('My Contests','my-contests','ghost')}</div>${homeContestCards(data.items,{esc,link,icon,amount,percent})}`);
   }
   function contestTable(items){return `<div class="panel tablewrap"><table><thead><tr><th>Contest</th><th>Status</th><th>Snapshot</th><th>Value</th><th>Return</th><th>Rank</th><th></th></tr></thead><tbody>${items.map(c=>`<tr><td>${esc(c.name)}</td><td>${esc(c.status==='settling'?'finalizing results':c.status)}${c.is_final?' · final':''}</td><td>${esc(c.session_date||'Not valued')}${c.session_date&&!c.is_current?' · older snapshot':''}</td><td>${amount(c.total_value)}</td><td>${percent(c.return_pct)}</td><td>${c.rank??'—'}</td><td>${link('Performance','performance/'+c.contest_id,'ghost')}${link('Leaderboard','leaderboard/'+c.contest_id,'ghost')}</td></tr>`).join('')||'<tr><td colspan="7">No recorded contest activity.</td></tr>'}</tbody></table></div>`;}
   function leaderboard(){
