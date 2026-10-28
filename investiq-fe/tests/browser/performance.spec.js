@@ -235,3 +235,30 @@ test('saved drafts show a confirmation action and do not look like ranked submis
     await expect(page.getByRole('region',{name:'Results status'})).toContainText('Contest has not started');
   } finally {await clock(request,normal);}
 });
+
+
+test('Home refreshes a finished AI report when a later daily valuation arrives without navigation',async({page,request})=>{
+  await clock(request,'2026-10-14T13:00:00Z');
+  try{
+    await verifiedAccount(page,request,`home-daily-ai-${randomUUID()}@example.com`);
+    const id=await scenario(page);
+    await clock(request,'2026-10-15T13:00:00Z');
+    await evaluate(request,id);
+    expect((await request.post('http://127.0.0.1:8081/__browser__/coach-daily-work',{headers:harness})).ok()).toBeTruthy();
+    await page.clock.install();
+    await page.goto('/#/dashboard');
+    const insight=page.getByRole('region',{name:'AI guidance',exact:true});
+    await expect(insight).toContainText('2026-10-15 · Interim report');
+    await expect(insight).toContainText('Snapshot highlights');
+    await expect(insight).not.toContainText('being prepared');
+    await expect(insight).not.toContainText('Earlier snapshot');
+    await clock(request,'2026-10-16T13:00:00Z');
+    await evaluate(request,id);
+    expect((await request.post('http://127.0.0.1:8081/__browser__/coach-daily-work',{headers:harness})).ok()).toBeTruthy();
+    await page.clock.fastForward(60000);
+    await expect(insight).toContainText('2026-10-16 · Final report');
+    await expect(insight).not.toContainText('Earlier snapshot');
+    await expect(page.getByRole('img',{name:'Portfolio value across 2 published daily snapshots',exact:true})).toBeVisible();
+    await expect(page.getByLabel('Contest',{exact:true})).toHaveValue(id);
+  }finally{await clock(request,normal);}
+});

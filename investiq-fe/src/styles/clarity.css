@@ -200,3 +200,10 @@
   .my-contest-metric dd,.my-contest-list.has-many .my-contest-metric dd,.my-contest-value dd,.my-contest-list.has-many .my-contest-value dd{font-size:clamp(14px,4.6vw,18px);white-space:nowrap;overflow-wrap:normal}
   .my-contest-submission dd,.my-contest-list.has-many .my-contest-submission dd{font-size:15px;white-space:normal}
 }
+
+/* Use financial direction, rather than the sign of a drawdown magnitude. */
+.performance-change{font-variant-numeric:tabular-nums;font-weight:600;white-space:nowrap}
+.performance-change.is-gain{color:#78e1b9}
+.performance-change.is-loss{color:#f49caa}
+.performance-change.is-flat{color:#c0cede}
+.performance-change.is-unavailable{color:var(--muted);font-weight:400}
