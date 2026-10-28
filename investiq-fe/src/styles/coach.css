@@ -81,3 +81,13 @@
 
 .coach-nav{scroll-margin-top:90px}
 @media(max-width:600px){.coach-context{gap:10px}.coach-context-actions{width:100%;gap:8px}.coach-context-actions .ghost{padding:6px 0;min-height:32px}.coach-nav{scroll-margin-top:140px}}
+
+/* Contest state stays distinct from report-generation status. */
+.coach-contest-status{display:inline-flex;align-items:center;gap:7px;width:fit-content;padding:6px 10px;margin-bottom:12px;border:1px solid #46586c;border-radius:7px;background:#233245;color:#bdccdc;font-size:10px;font-weight:650;line-height:1.3;letter-spacing:.25px;vertical-align:middle}
+.coach-contest-status svg{width:14px;height:14px;flex:none}
+.coach-contest-status.status-live,.coach-contest-status.status-open{color:#92e8c6;background:#173a30;border-color:#326451}
+.coach-contest-status.status-complete{color:#adcefb;background:#1c3049;border-color:#36557c}
+.coach-contest-status.status-upcoming{color:#e9ca98;background:#362f24;border-color:#625038}
+.coach-contest-status.status-cancelled{color:#ecb2ba;background:#3b2935;border-color:#674251}
+.coach-status-dot{width:6px;height:6px;border-radius:50%;background:currentColor;box-shadow:0 0 0 3px #92e8c615;margin:0 3px;flex:none}
+.main .coach-contest-card h2{margin:0 0 16px;line-height:1.5;overflow-wrap:anywhere}

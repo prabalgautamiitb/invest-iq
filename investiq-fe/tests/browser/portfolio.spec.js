@@ -252,9 +252,13 @@ test('stock discovery shows dated opening/closing prices and signed changes with
   await page.goto('/#/portfolio/'+id);
   await expect.poll(()=>symbols.length).toBe(6);
   const card=index=>page.getByRole('article',{name:symbols[index]+' stock information',exact:true});
+  await expect(card(0).locator('.portfolio-stock-expanded')).not.toBeVisible();
+  await card(0).getByLabel('Details for '+symbols[0],{exact:true}).focus();
+  await page.keyboard.press('Enter');
+  await expect(card(0).locator('.portfolio-stock-expanded')).toBeVisible();
   await expect(card(0)).toContainText('NSE');
-  await expect(card(0).locator('dt')).toHaveText(['Open','Close','Day change']);
-  await expect(card(0).locator('dd')).toHaveText(['₹100.00','₹110.00','↗ +10.00%']);
+  await expect(card(0).locator('.portfolio-stock-prices dt')).toHaveText(['Open','Close']);
+  await expect(card(0).locator('.portfolio-stock-quote dd')).toHaveText(['₹110.00','↗ +10.00%']);
   await expect(card(0).locator('time')).toHaveAttribute('datetime','2026-10-16');
   await expect(card(0)).toContainText('16 Oct 2026');
   await expect(card(0)).toContainText('Latest close');
@@ -263,12 +267,12 @@ test('stock discovery shows dated opening/closing prices and signed changes with
   await expect(card(1).locator('.portfolio-stock-move')).toHaveClass(/is-down/);
   await expect(card(2).locator('.portfolio-stock-move')).toHaveText('→ 0.00%');
   await expect(card(2).locator('.portfolio-stock-move')).toHaveClass(/is-flat/);
-  await expect(card(3).locator('dd')).toHaveText(['Unavailable','₹102.00','Unavailable']);
+  await expect(card(3).locator('.portfolio-stock-quote dd')).toHaveText(['₹102.00','Unavailable']);
   await expect(card(3).getByRole('button',{name:'Add '+symbols[3],exact:true})).toBeEnabled();
   await expect(card(4)).toContainText('Earlier close');
   await expect(card(4).locator('time')).toHaveAttribute('datetime','2026-10-15');
   await expect(card(4).getByRole('button',{name:'Add '+symbols[4],exact:true})).toBeDisabled();
-  await expect(card(5).locator('dd')).toHaveText(['Unavailable','Unavailable','Unavailable']);
+  await expect(card(5).locator('.portfolio-stock-quote dd')).toHaveText(['Unavailable','Unavailable']);
   await expect(card(5)).toContainText('Awaiting prices');
   await expect(card(5)).toContainText('No trading session');
   await expect(card(5).getByRole('button',{name:'Add '+symbols[5],exact:true})).toBeDisabled();
@@ -283,8 +287,15 @@ test('stock discovery shows dated opening/closing prices and signed changes with
   await page.getByRole('region',{name:'Stock discovery',exact:true}).screenshot({path:'/tmp/investiq-stock-prices-desktop.png'});
   await page.setViewportSize({width:390,height:844});
   await button(page,'Explore stocks').click();
-  await expect(card(0).locator('dd')).toHaveText(['₹100.00','₹110.00','↗ +10.00%']);
+  await expect(card(0).locator('.portfolio-stock-quote dd')).toHaveText(['₹110.00','↗ +10.00%']);
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);
   await page.getByRole('region',{name:'Stock discovery',exact:true}).screenshot({path:'/tmp/investiq-stock-prices-mobile.png'});
+  for(const width of [360,768,1200,1440]){
+    await page.setViewportSize({width,height:900});
+    expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+    const line=card(1).locator('.portfolio-stock-line');
+    expect(await line.evaluate(el=>{const name=el.querySelector('.portfolio-stock-name').getBoundingClientRect(),quote=el.querySelector('.portfolio-stock-quote').getBoundingClientRect(),add=el.querySelector('button').getBoundingClientRect();return Math.abs((name.top+name.bottom)/2-(quote.top+quote.bottom)/2)<2&&add.left>=quote.right&&el.getBoundingClientRect().height<85;})).toBe(true);
+    await page.getByRole('region',{name:'Stock discovery',exact:true}).screenshot({path:`/tmp/investiq-stock-list-${width}.png`});
+  }
   expect(errors).toEqual([]);
 });

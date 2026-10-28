@@ -169,9 +169,11 @@ contests/portfolios/results. Catalogue requests follow each contest’s frozen s
 The backend controls source configuration and imports; the browser uses saved
 prices only. See [Yahoo EOD setup](../investiq-be/docs/YAHOO-EOD.md).
 
-Portfolio stock discovery shows each company’s exchange, sector and market-cap
-category, plus the displayed session’s opening price, closing price and signed
-open-to-close percentage change. Cards label the trading date, source and freshness.
+Portfolio stock discovery uses compact market rows with company/symbol, latest
+daily close, signed open-to-close percentage change, and an Add control. Expand
+a row to see the full company name, exchange, sector, market-cap category, opening
+and closing prices, trading date, source and freshness. Prices are saved daily
+closes rather than live quotes.
 Missing openings or changes remain unavailable; old closing prices are labelled
 as earlier sessions and cannot be used to add an ineligible holding.
 
