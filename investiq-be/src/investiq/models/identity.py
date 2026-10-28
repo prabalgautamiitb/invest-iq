@@ -21,6 +21,14 @@ from investiq.db.base import Base
 class User(Base):
     __tablename__ = "users"
     __table_args__ = (
+        CheckConstraint(
+            "(subscription_plan IS NULL AND subscription_starts_at IS NULL "
+            "AND subscription_ends_at IS NULL) OR "
+            "(subscription_plan IS NOT NULL AND subscription_plan IN ('student', 'standard') "
+            "AND subscription_starts_at IS NOT NULL AND subscription_ends_at IS NOT NULL "
+            "AND subscription_ends_at > subscription_starts_at)",
+            name="subscription",
+        ),
         CheckConstraint("role IN ('user', 'admin')", name="role"),
         CheckConstraint("weekly_goal IN (35, 75, 105, 210)", name="weekly_goal"),
         CheckConstraint("email = lower(email)", name="normalized_email"),
@@ -32,6 +40,9 @@ class User(Base):
     name: Mapped[str] = mapped_column(String(70))
     role: Mapped[str] = mapped_column(String(10), default="user", server_default="user")
     active: Mapped[bool] = mapped_column(Boolean, default=True, server_default="true")
+    subscription_plan: Mapped[str | None] = mapped_column(String(12))
+    subscription_starts_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    subscription_ends_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     email_verified_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     weekly_goal: Mapped[int] = mapped_column(Integer, default=75, server_default="75")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

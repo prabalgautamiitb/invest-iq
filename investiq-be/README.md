@@ -199,3 +199,21 @@ lists five recent market headlines linking to the original articles. The existin
 worker/Beat fetches the Economic Times Markets RSS hourly during NSE sessions.
 No news API key or database migration is required. See
 [schedule, caching, local setup and tests](docs/MARKET-NEWS.md).
+
+### Subscription activation without billing
+
+Migration `0015_subscriptions` adds account subscription state. `POST
+/api/v1/me/subscription` accepts `{"plan":"student"}` (₹99/month) or
+`{"plan":"standard"}` (₹199/month) with the usual authenticated cookie, CSRF and
+origin checks. It returns `MeOut`, including the persisted plan, monthly price,
+active/expired state, start/end dates, `auto_renew:false` and
+`payments_enabled:false`. `GET /me` and all existing profile responses include
+this state. No payment gateway, charge, invoice, automatic renewal or new feature
+gating is involved. Free access remains available.
+
+Activation lasts one calendar month using IST dates, with month-end clamping.
+Concurrent retries for the active plan return the same dates; a different plan
+returns `409 subscription_active` until the current term ends. Expiry is evaluated
+on reads, and a later activation starts a fresh month. Audit events record each
+new activation once. The Compose app profile applies the migration; host setups
+run `uv run --locked alembic upgrade head` before restarting the API and workers.

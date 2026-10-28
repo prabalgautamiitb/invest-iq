@@ -21,6 +21,7 @@ export const authApi = {
 };
 
 export const profileApi = {
+  startSubscription: plan => request('/me/subscription', { method: 'POST', body: { plan } }),
   photoUrl: version => apiUrl('/me/photo?v=' + encodeURIComponent(version)),
   photo: () => request('/me/photo', { responseType: 'blob' }),
   savePhoto: blob => request('/me/photo', { method: 'PUT', body: blob }),

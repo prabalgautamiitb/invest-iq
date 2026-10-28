@@ -1,10 +1,12 @@
 import asyncio
+import calendar
 import hmac
 import logging
 from collections.abc import Awaitable
-from datetime import timedelta
+from datetime import UTC, timedelta
 from typing import Literal, cast
 from uuid import UUID, uuid4
+from zoneinfo import ZoneInfo
 
 from redis.asyncio import Redis
 from redis.exceptions import RedisError
@@ -49,6 +51,8 @@ from investiq.schemas.identity import (
     QuestionsOut,
     RegisterInput,
     SessionOut,
+    SubscriptionInput,
+    SubscriptionOut,
 )
 from investiq.services.profile_photo import normalize_photo
 
@@ -230,6 +234,15 @@ class IdentityService:
             ),
             role=cast(Literal["user", "admin"], user.role),
             email_verified=user.email_verified_at is not None,
+            subscription=SubscriptionOut(
+                plan=cast(Literal["student", "standard"], user.subscription_plan),
+                status="active" if user.subscription_ends_at > now() else "expired",
+                monthly_price_inr=99 if user.subscription_plan == "student" else 199,
+                starts_at=user.subscription_starts_at,
+                ends_at=user.subscription_ends_at,
+            )
+            if user.subscription_plan and user.subscription_starts_at and user.subscription_ends_at
+            else None,
             weekly_goal=user.weekly_goal,
             preferences=PreferencesOut.model_validate(preferences),
             privacy=PrivacyOut.model_validate(privacy),
@@ -304,6 +317,34 @@ class IdentityService:
     async def me(self, principal: Principal) -> MeOut:
         async with self.factory() as db, db.begin():
             user = await self.authenticated_user(db, principal)
+            return await self._view(db, user)
+
+    async def start_subscription(self, principal: Principal, data: SubscriptionInput) -> MeOut:
+        async with self.factory() as db, db.begin():
+            user = await self.authenticated_user(db, principal)
+            instant = now()
+            if user.subscription_ends_at and user.subscription_ends_at > instant:
+                if user.subscription_plan != data.plan:
+                    raise AppError(
+                        409,
+                        "subscription_active",
+                        "Your current subscription is active. Choose another plan after it ends.",
+                    )
+                # Retrying an accepted activation never extends the active term.
+                return await self._view(db, user)
+            local_start = instant.astimezone(ZoneInfo("Asia/Kolkata"))
+            month = local_start.month % 12 + 1
+            year = local_start.year + (local_start.month == 12)
+            end = local_start.replace(
+                year=year,
+                month=month,
+                day=min(local_start.day, calendar.monthrange(year, month)[1]),
+            )
+            user.subscription_plan = data.plan
+            user.subscription_starts_at = instant
+            user.subscription_ends_at = end.astimezone(UTC)
+            user.updated_at = instant
+            db.add(AuditEvent(actor_id=user.id, action="subscription.started", resource_id=user.id))
             return await self._view(db, user)
 
     async def logout(self, principal: Principal) -> None:

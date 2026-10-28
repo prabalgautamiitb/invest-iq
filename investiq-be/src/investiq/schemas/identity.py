@@ -176,11 +176,26 @@ class OnboardingOut(BaseModel):
     completed_at: datetime
 
 
+class SubscriptionInput(Input):
+    plan: Literal["student", "standard"]
+
+
+class SubscriptionOut(BaseModel):
+    plan: Literal["student", "standard"]
+    status: Literal["active", "expired"]
+    monthly_price_inr: int
+    starts_at: datetime
+    ends_at: datetime
+    auto_renew: bool = False
+    payments_enabled: bool = False
+
+
 class MeOut(BaseModel):
     id: UUID
     email: str
     name: str
     photo_version: UUID | None = None
+    subscription: SubscriptionOut | None = None
     role: Literal["user", "admin"]
     email_verified: bool
     weekly_goal: int

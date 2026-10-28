@@ -203,3 +203,14 @@ return, rank, snapshot date, and an action appropriate to the submission state.
 Missing results stay unvalued; stale and final snapshots are labelled explicitly.
 Performance and standings links remain visible on mobile. Contest history keeps
 its table layout. Rendering lives in `src/features/home-contests.js`.
+
+## Subscription activation preview
+
+Profile → Subscription includes Free, Student (₹99/month) and Standard (₹199/month)
+plans. Signed-in users can start a monthly plan immediately, without checkout or
+payment collection. Activation is saved to the account and shown in Profile and
+Settings after reload. The term is one calendar month in IST (clamped for short
+months); it does not renew automatically. Expired plans fall back to Free access.
+Retries preserve the existing end date, and another plan can be selected after
+an active term ends. All plans currently retain the existing learning features;
+feature restrictions and payment processing are not implemented.

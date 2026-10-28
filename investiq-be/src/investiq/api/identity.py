@@ -22,6 +22,7 @@ from investiq.schemas.identity import (
     RegisterInput,
     ResetInput,
     SessionOut,
+    SubscriptionInput,
     TokenInput,
 )
 from investiq.services.identity import GENERIC_EMAIL_MESSAGE, IdentityService
@@ -197,6 +198,13 @@ async def me(principal: UserContext, identity: Service) -> MeOut:
 @router.patch("/me", response_model=MeOut)
 async def patch_me(data: ProfileUpdate, principal: UserContext, identity: Service) -> MeOut:
     return await identity.patch(principal, data)
+
+
+@router.post("/me/subscription", response_model=MeOut)
+async def start_subscription(
+    data: SubscriptionInput, principal: UserContext, identity: Service
+) -> MeOut:
+    return await identity.start_subscription(principal, data)
 
 
 @router.get("/me/photo")
