@@ -161,8 +161,8 @@
 .community-post-actions .ghost{font-size:11px;padding:7px 8px;min-height:40px;color:#9fb2c7;white-space:nowrap;border-radius:8px}
 .community-post-actions .ghost:hover{background:#203343;color:#e9f2fa}
 .community-post-actions .icon{width:18px;height:18px}
-.community-post-actions .is-liked{color:#f0a5b5}
-.community-post-actions .is-liked .icon{fill:#f0a5b526}
+.community-post-actions .is-upvoted{color:#8de2c4}
+.community-post-actions .is-upvoted .icon{fill:#8de2c426}
 .community-post-actions .is-saved{color:#8de2c4}
 .community-post-actions .community-save{margin-left:auto}
 .community-post-menu{padding:0;margin:0;border:0;position:relative;flex:none;align-self:flex-start}
@@ -306,3 +306,6 @@
 }
 
 .community-post .poll-choice:disabled{opacity:1;color:#aec2d5}
+
+.community-vote-count{display:inline-flex;align-items:center;gap:6px;font-size:11px;color:#9fb2c7;padding:8px}
+.community-upvote,.community-replies,.community-vote-count{font-variant-numeric:tabular-nums}

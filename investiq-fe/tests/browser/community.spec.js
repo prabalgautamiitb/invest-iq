@@ -27,9 +27,12 @@ test('community discovery, membership and personal feeds unlock posts and revoke
   const card=postCard(page,text);
   await expect(card).toHaveCount(1);
   await card.getByRole('button',{name:'Save',exact:true}).click();
-  await card.getByRole('button',{name:'Like · 0',exact:true}).click();
-  await expect(card.getByRole('button',{name:'Unlike · 1',exact:true})).toBeVisible();
-  await card.getByRole('link',{name:'0 replies',exact:true}).click();
+  await expect(card.getByRole('button',{name:'Upvote · 0',exact:true})).toHaveText('0');
+  await card.getByRole('button',{name:'Upvote · 0',exact:true}).click();
+  await expect(card.getByRole('button',{name:'Remove upvote · 1',exact:true})).toHaveText('1');
+  await expect(card.getByRole('button',{name:'Remove upvote · 1',exact:true})).toHaveAttribute('aria-pressed','true');
+  await expect(card.getByRole('link',{name:'View 0 replies',exact:true})).toHaveText('0');
+  await card.getByRole('link',{name:'View 0 replies',exact:true}).click();
   await page.getByLabel('Your reply',{exact:true}).fill('This is a genuine saved reply.');
   await page.getByRole('button',{name:'Reply',exact:true}).click();
   await expect(page.getByText('This is a genuine saved reply.',{exact:true})).toBeVisible();
