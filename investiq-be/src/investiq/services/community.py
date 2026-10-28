@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 from uuid import UUID
 
-from sqlalchemy import func, select, tuple_
+from sqlalchemy import false, func, or_, select, tuple_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from investiq.core.errors import AppError
@@ -70,11 +70,21 @@ class CommunityService:
             raise AppError(403, "admin_required", "Administrator access required")
         return user
 
-    async def visible(self, db: AsyncSession, identifier: UUID, *, lock: bool = False) -> Content:
+    async def require_group(self, db: AsyncSession, user: User | None, identifier: UUID) -> None:
+        if not await db.get(Group, identifier):
+            raise AppError(404, "group_not_found", "Community is unavailable")
+        if not user or (user.role != "admin" and not await db.get(Member, (identifier, user.id))):
+            raise AppError(403, "membership_required", "Join this community to access its posts")
+
+    async def visible(
+        self, db: AsyncSession, identifier: UUID, *, user: User | None, lock: bool = False
+    ) -> Content:
         query = select(Content).where(Content.id == identifier)
         content = await db.scalar(query.with_for_update() if lock else query)
         if not content or content.state != "visible":
             raise AppError(404, "content_not_found", "Community content is unavailable")
+        if content.group_id:
+            await self.require_group(db, user, content.group_id)
         if content.parent_id:
             parent = await db.get(Content, content.parent_id)
             if not parent or parent.state != "visible":
@@ -106,6 +116,7 @@ class CommunityService:
             )
         ).all()
         mine = await db.get(Vote, (row.id, user.id)) if user else None
+        group = await db.get(Group, row.group_id) if row.group_id else None
         return ContentOut(
             id=row.id,
             author=label,
@@ -113,6 +124,7 @@ class CommunityService:
             kind=row.kind,
             body=row.body,
             group_id=row.group_id,
+            group_name=group.name if group else None,
             created_at=row.created_at,
             likes=likes or 0,
             comments=comments or 0,
@@ -134,14 +146,30 @@ class CommunityService:
         parent: UUID | None,
         cursor: str | None,
         limit: int,
+        scope: str = "accessible",
     ) -> ContentPage:
         async with self.factory() as db, db.begin():
             user = await self.viewer(db, principal)
             if saved and not user:
                 raise AppError(401, "unauthenticated", "Sign in to view saved posts")
             if parent:
-                await self.visible(db, parent)
+                await self.visible(db, parent, user=user)
+            if group:
+                await self.require_group(db, user, group)
             query = select(Content).where(Content.state == "visible", Content.parent_id == parent)
+            memberships = select(Member.group_id).where(Member.user_id == user.id) if user else None
+            if not user or user.role != "admin":
+                query = query.where(
+                    or_(Content.group_id.is_(None), Content.group_id.in_(memberships))
+                    if memberships is not None
+                    else Content.group_id.is_(None)
+                )
+            if scope == "joined":
+                query = query.where(
+                    Content.group_id.in_(memberships) if memberships is not None else false()
+                )
+            elif scope == "public":
+                query = query.where(Content.group_id.is_(None))
             if kind:
                 query = query.where(Content.kind == kind)
             if group:
@@ -156,6 +184,7 @@ class CommunityService:
                     "group": str(group),
                     "parent": str(parent),
                     "saved": saved,
+                    "scope": scope,
                     "viewer": str(user.id) if user else None,
                 }
             )
@@ -191,7 +220,7 @@ class CommunityService:
     async def detail(self, principal: Principal | None, identifier: UUID) -> ContentOut:
         async with self.factory() as db, db.begin():
             user = await self.viewer(db, principal)
-            return await self.output(db, await self.visible(db, identifier), user)
+            return await self.output(db, await self.visible(db, identifier, user=user), user)
 
     async def create(
         self, principal: Principal | None, data: ContentInput, key: UUID, parent: UUID | None = None
@@ -210,17 +239,17 @@ class CommunityService:
                         "idempotency_conflict",
                         "This request key was already used for different content",
                     )
-                await self.visible(db, existing.id)
+                await self.visible(db, existing.id, user=user)
                 return await self.output(db, existing, user)
             group_id = data.group_id
             if parent:
-                root = await self.visible(db, parent, lock=True)
+                root = await self.visible(db, parent, user=user, lock=True)
                 if root.parent_id:
                     raise AppError(422, "nested_comment", "Reply to the original post")
                 group_id = root.group_id
             if group_id and not await db.get(Member, (group_id, user.id)):
                 raise AppError(
-                    403, "membership_required", "Join this public group before posting or replying"
+                    403, "membership_required", "Join this community before posting or replying"
                 )
             if data.kind == "poll" and (
                 not data.closes_at or not now() < data.closes_at <= now() + timedelta(days=30)
@@ -242,12 +271,36 @@ class CommunityService:
             return await self.output(db, row, user)
 
     async def groups(
-        self, principal: Principal | None, cursor: str | None, limit: int
+        self,
+        principal: Principal | None,
+        cursor: str | None,
+        limit: int,
+        scope: str = "all",
+        q: str = "",
     ) -> GroupPage:
         async with self.factory() as db, db.begin():
             user = await self.viewer(db, principal)
-            context = fingerprint({"groups": True, "viewer": str(user.id) if user else None})
+            q = q.strip()
+            context = fingerprint(
+                {"groups": True, "viewer": str(user.id) if user else None, "scope": scope, "q": q}
+            )
             query = select(Group)
+            if scope in {"joined", "created"}:
+                if user is None:
+                    raise AppError(401, "unauthenticated", "Sign in to view your communities")
+                if scope == "joined":
+                    query = query.where(
+                        Group.id.in_(select(Member.group_id).where(Member.user_id == user.id))
+                    )
+                else:
+                    query = query.where(Group.creator_id == user.id)
+            if q:
+                query = query.where(
+                    or_(
+                        Group.name.icontains(q, autoescape=True),
+                        Group.description.icontains(q, autoescape=True),
+                    )
+                )
             if cursor:
                 name, identifier = decode_cursor(cursor, context)
                 query = query.where(
@@ -264,22 +317,32 @@ class CommunityService:
             rows = rows[:limit]
             result = []
             for row in rows:
-                members = await db.scalar(
-                    select(func.count()).select_from(Member).where(Member.group_id == row.id)
-                )
-                result.append(
-                    GroupOut(
-                        id=row.id,
-                        name=row.name,
-                        description=row.description,
-                        members=members or 0,
-                        joined=bool(user and await db.get(Member, (row.id, user.id))),
-                    )
-                )
+                result.append(await self.group_output(db, row, user))
             return GroupPage(
                 items=result,
                 next_cursor=encode_cursor(rows[-1].name, rows[-1].id, context) if more else None,
             )
+
+    async def group_output(self, db: AsyncSession, row: Group, user: User | None) -> GroupOut:
+        members = await db.scalar(
+            select(func.count()).select_from(Member).where(Member.group_id == row.id)
+        )
+        posts = await db.scalar(
+            select(func.count())
+            .select_from(Content)
+            .where(
+                Content.group_id == row.id, Content.parent_id.is_(None), Content.state == "visible"
+            )
+        )
+        return GroupOut(
+            id=row.id,
+            name=row.name,
+            description=row.description,
+            members=members or 0,
+            joined=bool(user and await db.get(Member, (row.id, user.id))),
+            owned=bool(user and row.creator_id == user.id),
+            posts=posts or 0,
+        )
 
     async def group_detail(self, principal: Principal | None, identifier: UUID) -> GroupOut:
         async with self.factory() as db, db.begin():
@@ -287,16 +350,7 @@ class CommunityService:
             row = await db.get(Group, identifier)
             if not row:
                 raise AppError(404, "group_not_found", "Group is unavailable")
-            members = await db.scalar(
-                select(func.count()).select_from(Member).where(Member.group_id == row.id)
-            )
-            return GroupOut(
-                id=row.id,
-                name=row.name,
-                description=row.description,
-                members=members or 0,
-                joined=bool(user and await db.get(Member, (row.id, user.id))),
-            )
+            return await self.group_output(db, row, user)
 
     async def create_group(self, principal: Principal | None, data: GroupInput) -> UUID:
         async with self.factory() as db, db.begin():
@@ -313,6 +367,7 @@ class CommunityService:
             db.add(row)
             await db.flush()
             db.add(Member(group_id=row.id, user_id=user.id))
+            db.add(AuditEvent(actor_id=user.id, action="community.created", resource_id=row.id))
             return row.id
 
     async def membership(
@@ -328,6 +383,14 @@ class CommunityService:
                 db.add(Member(group_id=identifier, user_id=user.id))
             elif not enabled and member:
                 await db.delete(member)
+            if enabled != bool(member):
+                db.add(
+                    AuditEvent(
+                        actor_id=user.id,
+                        action="community.joined" if enabled else "community.left",
+                        resource_id=identifier,
+                    )
+                )
 
     async def interact(
         self,
@@ -341,7 +404,7 @@ class CommunityService:
         async with self.factory() as db, db.begin():
             user = await self.viewer(db, principal, write=True)
             assert user is not None
-            row = await self.visible(db, identifier, lock=True)
+            row = await self.visible(db, identifier, user=user, lock=True)
             if action == "save" and row.parent_id:
                 raise AppError(
                     422, "save_post_only", "Save the original post to keep this discussion"

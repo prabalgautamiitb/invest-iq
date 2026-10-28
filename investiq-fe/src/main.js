@@ -12,6 +12,7 @@ import './styles/contests.css';
 import './styles/admin.css';
 import './styles/market-news.css';
 import './styles/account.css';
+import './styles/community.css';
 
 // Preserve the rendering order: app first, then progressive motion layers.
 import './app.js';

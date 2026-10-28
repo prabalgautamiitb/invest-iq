@@ -4,9 +4,17 @@
 
 Connect the existing Community screen to shared PostgreSQL activity: public posts and replies, likes, private saved posts, polls, public learning groups, reports and administrator moderation. Phases 0–8 are prerequisites. No dependency or external service is added.
 
-All groups and posts in this slice are **public**. Anyone can read; only active, email-verified accounts can participate. Joining a group is required to publish posts or replies there. Other public interactions do not require group membership. Creating a group joins its creator once. Leaving a group does not delete published content. Private groups, invitations, attachments, rich text, nested replies, editing, contributor reputation, trending algorithms and automatic moderation are outside this slice.
+Communities are discoverable by name and description, but their posts, replies,
+reactions and polls require current membership (or administrator access for
+moderation). Verified accounts can join openly, and creators join automatically.
+My feed contains only joined communities; saved lists also exclude communities
+that the viewer has left. Direct post/reply URLs enforce the same rule. Existing
+ungrouped discussions remain public in General discussion. Leaving does not delete
+posts or saves; rejoining restores access. Invitations, attachments, rich text,
+nested replies, editing, reputation and automatic moderation remain outside this slice.
+See [the current community feed contract](COMMUNITIES.md).
 
-The feed starts empty. Browser fixtures, sample authors, likes, poll totals, memberships and old local posts are never imported. No community activity is seeded. Create a genuine public group through the Community screen to start a discussion; test data exists only in disposable test databases. Prices and portfolios remain simulated, and community participation does not award XP, coins or contest ratings.
+The feed starts empty. Browser fixtures, sample authors, likes, poll totals, memberships and old local posts are never imported. No community activity is seeded. Create a genuine community through the Community screen to start a discussion; test data exists only in disposable test databases. Prices and portfolios remain simulated, and community participation does not award XP, coins or contest ratings.
 
 ## Schema and ownership
 
@@ -14,7 +22,7 @@ Migration `0010_community`, after `0009_rewards`, adds eight tables. Identifiers
 
 | Table | Purpose and constraints |
 | --- | --- |
-| `community_groups` | Unique name (3–80 characters), description (1–500 at API boundary), creator FK and created timestamp; public visibility is an API contract, not a user-selectable privilege |
+| `community_groups` | Unique name (3–80 characters), description (1–500 at API boundary), creator FK and created timestamp; discoverable metadata and member-only content are an API contract, not a user-selectable privilege |
 | `community_members` | Composite group/user PK, representing an explicit current membership; creators count only after insertion |
 | `community_content` | UUID author FK, request UUID/hash, optional root parent and group FKs, kind, 1–4,000-character body, JSONB options, poll closing time, state and creation time; unique author/request key; author/parent/group/time indexes |
 | `community_reactions` | Composite content/user PK; one like per account per content |
@@ -31,7 +39,7 @@ A content trigger freezes body, author, parent, group, options, closing time, cr
 
 ## Privacy and moderation
 
-Author names are resolved against **current** `user_privacy.public` on each read. Other viewers see `Private learner` by default; authors see their own display name. Changing the preference affects old posts and replies too. This is a display-name preference, not a private-content setting: post text and group content are public. Names and private state are kept in memory on the frontend and cleared on account changes.
+Author names are resolved against **current** `user_privacy.public` on each read. Other viewers see `Private learner` by default; authors see their own display name. Changing the preference affects old posts and replies too. This is a display-name preference, not a private-content setting: group content requires membership, while general discussions remain public. Names and private state are kept in memory on the frontend and cleared on account changes.
 
 Authors may soft-delete visible content. Verified accounts may report visible posts or replies once per content; retries do not duplicate reports. Reports are private to current administrators. Hide excludes content from feeds, saved lists, details and interaction APIs. Hiding/deleting a root also makes its replies unavailable. Restore can reveal moderator-hidden content; it cannot recover author-deleted content. Dismiss resolves reports without changing content visibility. Every decision stores its reason and an audit event in the same transaction. The moderation screen includes reviewed reports so an administrator can restore hidden content later.
 

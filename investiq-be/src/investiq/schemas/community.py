@@ -50,7 +50,9 @@ class GroupOut(BaseModel):
     description: str
     members: int
     joined: bool
-    visibility: Literal["public"] = "public"
+    visibility: Literal["members"] = "members"
+    owned: bool = False
+    posts: int = 0
 
 
 class ContentOut(BaseModel):
@@ -60,6 +62,7 @@ class ContentOut(BaseModel):
     kind: str
     body: str
     group_id: UUID | None
+    group_name: str | None = None
     created_at: datetime
     likes: int
     liked: bool

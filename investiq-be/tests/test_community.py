@@ -125,12 +125,13 @@ async def test_groups_comments_membership_and_parent_visibility(community_settin
         ).status_code == 403
         assert (await client.get("/api/v1/community/groups")).json()["items"][0]["members"] == 0
         assert (
-            len(
-                (await client.get("/api/v1/community/posts", params={"group": group})).json()[
-                    "items"
-                ]
-            )
-            == 1
+            await client.get("/api/v1/community/posts", params={"group": group})
+        ).status_code == 403
+        assert (await client.get(f"/api/v1/community/posts/{root}")).status_code == 403
+        await client.put(
+            f"/api/v1/community/groups/{group}/membership",
+            json={"enabled": True},
+            headers=await csrf(client),
         )
         await client.delete(f"/api/v1/community/posts/{root}", headers=await csrf(client))
         assert (await client.get(url)).status_code == 404
@@ -365,3 +366,110 @@ async def test_community_write_rate_limit_is_separate_from_auth(community_settin
         response = await post(client, body="Another post")
         assert response.status_code == 429 and response.headers["Retry-After"] == "60"
         assert len((await client.get("/api/v1/community/posts")).json()["items"]) == 1
+
+
+async def test_joined_feeds_gate_every_read_and_interaction_and_revoke_saved_access(
+    community_settings,
+):
+    mailer = CapturedMailer()
+    async with (
+        api_client(create_app(community_settings, mailer)) as alice,
+        api_client(create_app(community_settings, mailer)) as bob,
+        api_client(create_app(community_settings, mailer)) as guest,
+    ):
+        await verified(alice, mailer, "circle-owner@example.com")
+        await verified(bob, mailer, "circle-member@example.com")
+
+        async def group(client, name):
+            response = await client.post(
+                "/api/v1/community/groups",
+                json={"name": name, "description": "Discuss investing together"},
+                headers=await csrf(client),
+            )
+            assert response.status_code == 201
+            return response.json()["id"]
+
+        first = await group(alice, "A members circle")
+        own = await group(bob, "B members circle")
+        await group(bob, "C members circle")
+        private = (await post(alice, body="Only A members may read this", group_id=first)).json()[
+            "id"
+        ]
+        reply = (
+            await alice.post(
+                f"/api/v1/community/posts/{private}/comments",
+                json={"body": "A members reply"},
+                headers={**await csrf(alice), "Idempotency-Key": str(uuid4())},
+            )
+        ).json()["id"]
+        own_post = (await post(bob, body="Only B members may read this", group_id=own)).json()["id"]
+        public = (await post(alice, body="A general discussion anyone can read")).json()["id"]
+        for viewer in [bob, guest]:
+            assert (await viewer.get("/api/v1/community/groups/" + first)).json()[
+                "visibility"
+            ] == "members"
+            for path in [
+                f"/posts/{private}",
+                f"/posts/{reply}",
+                f"/posts/{private}/comments",
+                f"/posts?group={first}",
+            ]:
+                result = await viewer.get("/api/v1/community" + path)
+                assert result.status_code == 403
+                assert "Only A members" not in result.text
+            visible = (await viewer.get("/api/v1/community/posts")).json()["items"]
+            assert private not in {p["id"] for p in visible}
+        for name, body in [
+            ("like", {"enabled": True}),
+            ("save", {"enabled": True}),
+            ("vote", {"option": 0}),
+        ]:
+            assert (await action(bob, private, name, body)).status_code == 403
+        assert (
+            await action(
+                bob, private, "reports", {"reason": "Cannot read this private post"}, "POST"
+            )
+        ).status_code == 403
+        assert (await post(bob, group_id=first)).status_code == 403
+        assert (await guest.get(f"/api/v1/community/posts/{public}")).status_code == 200
+        assert (await guest.get("/api/v1/community/posts?scope=joined")).json()["items"] == []
+        assert (await guest.get("/api/v1/community/groups?scope=joined")).status_code == 401
+        membership = f"/api/v1/community/groups/{first}/membership"
+        assert (
+            await bob.put(membership, json={"enabled": True}, headers=await csrf(bob))
+        ).status_code == 200
+        assert (await bob.get(f"/api/v1/community/posts/{private}")).status_code == 200
+        await action(bob, private, "save", {"enabled": True})
+        joined = (await bob.get("/api/v1/community/posts?scope=joined&limit=1")).json()
+        next_page = (
+            await bob.get(
+                "/api/v1/community/posts",
+                params={"scope": "joined", "limit": 1, "cursor": joined["next_cursor"]},
+            )
+        ).json()
+        assert {joined["items"][0]["id"], next_page["items"][0]["id"]} == {private, own_post}
+        assert public not in {p["id"] for p in joined["items"] + next_page["items"]}
+        assert (
+            await bob.get(
+                "/api/v1/community/posts",
+                params={"scope": "public", "cursor": joined["next_cursor"]},
+            )
+        ).status_code == 422
+        directory = (
+            await bob.get("/api/v1/community/groups?scope=joined&q=A%20members&limit=1")
+        ).json()
+        assert [g["id"] for g in directory["items"]] == [first]
+        assert directory["items"][0]["posts"] == 1
+        assert not directory["items"][0]["owned"]
+        created = (await bob.get("/api/v1/community/groups?scope=created")).json()["items"]
+        assert len(created) == 2 and all(g["owned"] for g in created)
+        await bob.put(membership, json={"enabled": False}, headers=await csrf(bob))
+        assert (await bob.get(f"/api/v1/community/posts/{private}")).status_code == 403
+        assert (await bob.get("/api/v1/community/posts?saved=true")).json()["items"] == []
+        assert private not in {
+            p["id"] for p in (await bob.get("/api/v1/community/posts?scope=joined")).json()["items"]
+        }
+        await bob.put(membership, json={"enabled": True}, headers=await csrf(bob))
+        assert (await bob.get("/api/v1/community/posts?saved=true")).json()["items"][0][
+            "id"
+        ] == private

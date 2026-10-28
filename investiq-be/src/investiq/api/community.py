@@ -55,8 +55,9 @@ async def feed(
     saved: bool = False,
     cursor: Annotated[str | None, Query(max_length=1024)] = None,
     limit: Annotated[int, Query(ge=1, le=50)] = 20,
+    scope: Literal["accessible", "joined", "public"] = "accessible",
 ) -> ContentPage:
-    return await community.feed(principal, kind, group, saved, None, cursor, limit)
+    return await community.feed(principal, kind, group, saved, None, cursor, limit, scope)
 
 
 @router.post("/posts", response_model=ContentOut, status_code=201)
@@ -140,8 +141,10 @@ async def groups(
     principal: Viewer,
     cursor: Annotated[str | None, Query(max_length=1024)] = None,
     limit: Annotated[int, Query(ge=1, le=100)] = 20,
+    scope: Literal["all", "joined", "created"] = "all",
+    q: Annotated[str, Query(max_length=80)] = "",
 ) -> GroupPage:
-    return await community.groups(principal, cursor, limit)
+    return await community.groups(principal, cursor, limit, scope, q)
 
 
 @router.get("/groups/{identifier}", response_model=GroupOut)
