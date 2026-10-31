@@ -66,6 +66,30 @@ class Settings(BaseSettings):
             else "investiq_dev_session"
         )
 
+    @field_validator("mail_from")
+    @classmethod
+    def validate_mail_from(cls, value: str) -> str:
+        from email.headerregistry import Address
+        from email.utils import formataddr, parseaddr
+
+        message = "Use a sender email address or Name <email@example.com> for MAIL_FROM"
+        if (
+            "\r" in value
+            or "\n" in value
+            or value.count("<") != value.count(">")
+            or value.count("<") > 1
+            or ("<" in value and value.index("<") > value.index(">"))
+        ):
+            raise ValueError(message)
+        name, address = parseaddr(value)
+        try:
+            parsed = Address(addr_spec=address)
+        except Exception:
+            raise ValueError(message) from None
+        if not parsed.username or not parsed.domain or any(char.isspace() for char in address):
+            raise ValueError(message)
+        return formataddr((name, address))
+
     @field_validator("frontend_url")
     @classmethod
     def validate_frontend_url(cls, value: str) -> str:
