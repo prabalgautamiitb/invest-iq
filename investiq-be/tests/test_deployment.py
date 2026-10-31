@@ -65,7 +65,9 @@ def test_provider_database_urls_have_verified_asyncpg_tls_and_libpq_checkpoint_u
     assert isinstance(options["ssl"], ssl.SSLContext)
     assert options["ssl"].check_hostname
     assert options["ssl"].verify_mode == ssl.CERT_REQUIRED
-    assert checkpoint_url(config) == "postgresql://user:secret@db.example/db?sslmode=require"
+    assert checkpoint_url(config) == (
+        "postgresql://user:secret@db.example/db?sslmode=verify-full&sslrootcert=system"
+    )
     assert "secret" not in repr(config)
     validate_deployment(config)
 
@@ -98,6 +100,15 @@ def test_release_preflight_rejects_incomplete_hosted_configuration(
 def test_invalid_database_url_is_a_validation_error() -> None:
     with pytest.raises(ValidationError):
         Settings(_env_file=None, database_url="not a connection URL")
+
+
+def test_checkpoint_tls_preserves_explicit_roots_and_local_connections() -> None:
+    custom = hosted_settings(
+        database_url="postgresql://user:secret@db.example/db?sslmode=verify-full&sslrootcert=/ca.pem"
+    )
+    assert checkpoint_url(custom).endswith("sslmode=verify-full&sslrootcert=%2Fca.pem")
+    local = Settings(_env_file=None, database_url="postgresql://user:secret@localhost/db")
+    assert checkpoint_url(local) == "postgresql://user:secret@localhost/db"
 
 
 def test_free_demo_preflight_does_not_require_a_celery_broker() -> None:

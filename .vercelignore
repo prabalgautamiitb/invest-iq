@@ -1,0 +1,16 @@
+.git
+**/.env
+**/.env.*
+**/.venv
+**/node_modules
+**/__pycache__
+**/.pytest_cache
+**/.mypy_cache
+**/.ruff_cache
+**/.vercel
+**/dist
+**/test-results
+**/playwright-report
+**/*.log
+BPP_GroupB2_InterimReport.pdf
+WhatsApp Image 2026-10-10 at 18.20.46.jpeg

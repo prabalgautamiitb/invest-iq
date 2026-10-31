@@ -46,11 +46,14 @@ def connection_options(settings: Settings) -> tuple[URL, dict[str, Any]]:
 
 def postgres_url(settings: Settings) -> str:
     """libpq/psycopg needs its own driver while retaining provider SSL options."""
-    return (
-        make_url(settings.database_url.get_secret_value())
-        .set(drivername="postgresql")
-        .render_as_string(hide_password=False)
-    )
+    url = make_url(settings.database_url.get_secret_value()).set(drivername="postgresql")
+    if url.query.get("sslmode") in {"require", "verify-ca", "verify-full"} and not url.query.get(
+        "sslrootcert"
+    ):
+        # libpq otherwise looks for ~/.postgresql/root.crt, absent in serverless images.
+        # Its system-root mode requires full certificate and hostname verification.
+        url = url.update_query_dict({"sslrootcert": "system", "sslmode": "verify-full"})
+    return url.render_as_string(hide_password=False)
 
 
 def make_engine(settings: Settings) -> AsyncEngine:
