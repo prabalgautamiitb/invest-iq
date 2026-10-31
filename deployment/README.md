@@ -6,6 +6,16 @@ or subscriptions have been activated. Provider quotas still apply: a free servic
 may pause or reject requests when its allowance is exhausted. Do not enable
 paid plans, auto-upgrades or billing just to bypass a quota.
 
+## Current deployment
+
+- Learner app: https://invest-iq-psi-mocha.vercel.app
+- Admin app: https://invest-iq-admin.vercel.app
+- API region: `iad1`, close to the hosted PostgreSQL database.
+- Both projects deploy from the GitHub repository; production credentials are
+  configured privately in Vercel and the GitHub production environment.
+- The hosted database starts fresh. Register and verify the operator account
+  before assigning its admin role with the documented CLI.
+
 ## Architecture
 
 - Main Vercel Hobby project: Vite frontend and FastAPI, from repository root `.`.
@@ -145,16 +155,16 @@ cd investiq-be
 uv run --locked --env-file ../.env.production.local python -m investiq.jobs.daily
 ```
 
-## 5. Optional free-tier AI
+## 5. Gemini AI (free or paid)
 
 To enable Ask Martin and generated per-contest reports, choose a Gemini model
-currently eligible for your account's **free tier**, use a project without paid
-billing, and set `INVESTIQ_AI_PROVIDER=gemini`, `INVESTIQ_GEMINI_MODEL` and
+available to your account (free-tier or paid usage is supported), and set `INVESTIQ_AI_PROVIDER=gemini`, `INVESTIQ_GEMINI_MODEL` and
 `INVESTIQ_GEMINI_API_KEY` in both Vercel and the GitHub production secret. Do not
 use local Ollama URLs from Vercel. A provider key does not itself prove free-tier
-eligibility; verify that in Google AI Studio.
+eligibility or prices; verify those in Google AI Studio. Gemini billing is
+independent of the free hosting configuration.
 
-The default shared cap is **20 attempted model generations per UTC day**, across
+The default shared cap is **20 generation attempts per UTC day**, across
 all users, web requests, daily jobs and retries. `INVESTIQ_FREE_DEMO_AI_DAILY_LIMIT`
 can be lowered. Requests fail closed if the allowance check is unavailable.
 Failed calls also consume allowance; cached/idempotent answers do not. This limits

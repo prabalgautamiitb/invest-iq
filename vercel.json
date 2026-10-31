@@ -13,7 +13,8 @@
       "functions": {
         "app.py": {
           "maxDuration": 120,
-          "includeFiles": "src/**"
+          "includeFiles": "src/**",
+          "regions": ["iad1"]
         }
       }
     }
