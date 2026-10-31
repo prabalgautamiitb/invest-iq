@@ -59,7 +59,13 @@ async def create(
         limit=coach.settings.ai_request_limit,
         window_seconds=900,
     )
-    return await coach.create(principal, data, key)
+    result = await coach.create(principal, data, key)
+    if coach.settings.deployment_mode == "free_demo" and result.status in {"queued", "retry"}:
+        from investiq.ai.workflow import sweep
+
+        await sweep(coach, result.id)
+        return await coach.get(principal, result.id)
+    return result
 
 
 @router.get("/jobs", response_model=JobPage)

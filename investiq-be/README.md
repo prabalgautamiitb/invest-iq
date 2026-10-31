@@ -188,8 +188,8 @@ Contest schedule and holdings-invariant validation return fixed, actionable mess
 
 ### Hosted deployment
 
-See the [Vercel deployment guide](../deployment/README.md) for the API, worker,
-scheduler, managed PostgreSQL/Redis, email and Gemini configuration. Hosted
+See the [Vercel deployment guide](../deployment/README.md) for the API,
+daily GitHub Actions job, free PostgreSQL/Redis, email and optional Gemini setup. Hosted
 educational simulations require an explicit production opt-in; local development
 defaults remain unchanged. Run the documented release initialization before
 serving the first production deployment.

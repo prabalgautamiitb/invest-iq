@@ -1,4 +1,4 @@
-"""Shared publisher headlines. HTTP reads never fetch RSS; Celery refreshes Redis."""
+"""Shared publisher headlines. HTTP reads never fetch RSS; scheduled jobs refresh Redis."""
 
 import hashlib
 import html
@@ -130,6 +130,7 @@ class MarketNewsService:
     async def read(self) -> MarketNewsOut:
         at = self.clock()
         _, upcoming = schedule_at(at)
+        daily = self.settings.deployment_mode == "free_demo"
         if not self.settings.market_news_enabled:
             return MarketNewsOut(status="disabled", next_refresh_at=upcoming)
         try:
@@ -139,8 +140,12 @@ class MarketNewsService:
             logger.warning("news_cache_unavailable")
             result = MarketNewsOut()
         result.next_refresh_at = upcoming
+        if daily:
+            result.next_refresh_at = None  # GitHub's daily run has no exact execution guarantee.
+            result.schedule = "Daily after market close on weekdays"
         if result.items and result.updated_at:
-            result.status = "stale" if at - result.updated_at > timedelta(minutes=90) else "ready"
+            threshold = timedelta(hours=36) if daily else timedelta(minutes=90)
+            result.status = "stale" if at - result.updated_at > threshold else "ready"
         return result
 
     async def refresh(self) -> dict[str, object]:
@@ -148,6 +153,8 @@ class MarketNewsService:
             return {"status": "disabled"}
         at = self.clock()
         due, _ = schedule_at(at)
+        if self.settings.deployment_mode == "free_demo":
+            due = at.astimezone(UTC).replace(hour=0, minute=0, second=0, microsecond=0)
         cached = await self.read()
         if cached.items and (due is None or (cached.updated_at and cached.updated_at >= due)):
             return {"status": "not_due"}

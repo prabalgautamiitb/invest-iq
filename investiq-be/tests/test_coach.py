@@ -242,6 +242,63 @@ async def due(app, identifier):
         )
 
 
+async def test_free_demo_manual_report_completes_without_worker_and_replays(coach_settings):
+    settings = coach_settings.model_copy(update={"deployment_mode": "free_demo"})
+    clock, model = [ENTRY], MockCoach()
+    app = create_app(
+        settings, CapturedMailer(), contest_clock=lambda: clock[0], coach_provider=model
+    )
+    async with api_client(app) as client:
+        _, contest, _, _ = await setup_scenario(app, client, clock)
+        key = str(uuid4())
+        response = await request_job(client, contest["id"], key=key)
+        assert response.status_code == 202 and response.json()["status"] == "succeeded"
+        assert response.json()["report"] and len(model.calls) == 1
+        replay = await request_job(client, contest["id"], key=key)
+        assert replay.json()["id"] == response.json()["id"] and len(model.calls) == 1
+
+
+async def test_free_demo_daily_import_precedes_valuations_and_reports(coach_settings, monkeypatch):
+    from unittest.mock import AsyncMock
+
+    from investiq.jobs.daily import process
+    from investiq.services.market_ingestion import MarketIngestionService
+
+    settings = coach_settings.model_copy(update={"deployment_mode": "free_demo"})
+    clock, model = [ENTRY], MockCoach()
+    app = create_app(
+        settings, CapturedMailer(), contest_clock=lambda: clock[0], coach_provider=model
+    )
+    async with api_client(app) as client:
+        await verified(client, app.state.identity.mailer)
+        contest, _, _, _ = await scenario(client)
+
+        # Fixture prices stand in for an external import. No real provider request in tests.
+        async def imported(*args, **kwargs):
+            assert not model.calls
+            clock[0] = FIRST
+            return {"status": "ready", "imported": 1}
+
+        monkeypatch.setattr(MarketIngestionService, "sync_yahoo", imported)
+        monkeypatch.setattr(
+            app.state.market_news, "refresh", AsyncMock(return_value={"status": "updated"})
+        )
+        result = await process(app)
+        assert result["status"] == "ok" and result["reports_queued"] == 1
+        assert result["reports_processed"] == 1 and len(model.calls) == 1
+        jobs = (
+            await client.get("/api/v1/me/coach/jobs", params={"contest_id": contest["id"]})
+        ).json()
+        assert jobs["items"][0]["status"] == "succeeded"
+        monkeypatch.setattr(
+            MarketIngestionService,
+            "sync_yahoo",
+            AsyncMock(return_value={"status": "ready", "imported": 0}),
+        )
+        assert (await process(app))["reports_queued"] == 0
+        assert len(model.calls) == 1
+
+
 async def test_evidence_job_concurrency_report_citations_and_owner_isolation(coach_settings):
     clock, model = [ENTRY], MockCoach()
     app = create_app(

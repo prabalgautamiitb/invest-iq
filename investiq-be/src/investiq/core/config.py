@@ -16,6 +16,8 @@ class Settings(BaseSettings):
     database_pool_size: int = Field(default=5, ge=1, le=20)
     database_max_overflow: int = Field(default=5, ge=0, le=20)
     hosted_simulation_enabled: bool = False
+    deployment_mode: Literal["worker", "free_demo"] = "worker"
+    free_demo_ai_daily_limit: int = Field(default=20, ge=1, le=100)
     redis_url: SecretStr = SecretStr("redis://127.0.0.1:6380/0")
     celery_broker_url: SecretStr = SecretStr("redis://127.0.0.1:6380/1")
     valuation_queue: str = Field(default="investiq.valuation", pattern=r"^[a-zA-Z0-9._-]{1,100}$")

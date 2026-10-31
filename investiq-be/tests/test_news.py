@@ -129,6 +129,22 @@ async def test_same_hour_deduplicates_and_next_hour_refreshes():
     assert fetch.await_count == 2
 
 
+async def test_free_demo_refreshes_daily_after_hours_and_labels_the_schedule():
+    redis, fetch = memory_redis(), AsyncMock(return_value=[article()])
+    clock = MONDAY + timedelta(hours=12)  # after market hours
+    settings = Settings(_env_file=None, deployment_mode="free_demo")
+    service = MarketNewsService(redis, settings, lambda: clock, fetch)
+    assert (await service.refresh())["status"] == "updated"
+    assert (await service.refresh())["status"] == "not_due"
+    first = await service.read()
+    assert first.status == "ready" and first.next_refresh_at is None
+    assert first.schedule.startswith("Daily")
+    clock += timedelta(days=1)
+    await redis.delete(COOLDOWN_KEY)
+    assert (await service.refresh())["status"] == "updated"
+    assert fetch.await_count == 2
+
+
 async def test_failure_or_empty_feed_retains_last_good_snapshot():
     redis = memory_redis()
     snapshot = MarketNewsOut(items=[article()], updated_at=MONDAY, status="ready")

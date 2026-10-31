@@ -100,6 +100,12 @@ def test_invalid_database_url_is_a_validation_error() -> None:
         Settings(_env_file=None, database_url="not a connection URL")
 
 
+def test_free_demo_preflight_does_not_require_a_celery_broker() -> None:
+    validate_deployment(
+        hosted_settings(deployment_mode="free_demo", celery_broker_url="redis://localhost:6380/1")
+    )
+
+
 @pytest.mark.integration
 async def test_bootstrap_is_repeatable_and_does_not_invent_users_or_market_prices(
     identity_settings: Settings,

@@ -1,84 +1,68 @@
-# InvestIQ on Vercel
+# InvestIQ: free demo deployment
 
-This directory prepares the existing application for an HTTPS educational deployment.
-No cloud resources or production accounts are created by these files. Existing local
-accounts/data remain local unless deliberately exported and restored. Subscriptions
-remain activation-only: no billing, payment collection or renewal is introduced.
+The default configuration targets a small, non-commercial MBA demo using free
+plans. It starts no Vercel Daemons, Celery workers or scheduler. No paid resources
+or subscriptions have been activated. Provider quotas still apply: a free service
+may pause or reject requests when its allowance is exhausted. Do not enable
+paid plans, auto-upgrades or billing just to bypass a quota.
 
-## Deployment layout
+## Architecture
 
-Use the **repository root**, not `investiq-fe`, for the main Vercel project.
-`../vercel.json` defines:
+- Main Vercel Hobby project: Vite frontend and FastAPI, from repository root `.`.
+  `vercel.json` routes `/api/*` to the API and other paths to the frontend.
+- Separate Vercel Hobby admin project: frontend from `investiq-fe`, proxying to
+  the main API. Both projects can use their included `vercel.app` addresses.
+- Neon Free PostgreSQL: application data and persisted results. Free-demo mode
+  closes database connections after use so an idle database can suspend.
+- Upstash **Free** Redis: normal TCP/TLS (`rediss://`), for authentication rate
+  limits, optional AI allowance and cached news. No queue broker is needed.
+- Brevo Free (or another free authenticated SMTP relay): verification/reset email.
+- Daily processing: a standard Ubuntu GitHub Actions runner in this **public**
+  repository. Nothing runs continuously. Private repositories are deliberately
+  excluded by the workflow's condition to avoid consuming paid runner minutes.
+- Optional Gemini free-tier AI: off initially. Deterministic performance metrics,
+  portfolio results, strengths/weaknesses and lessons still use saved results.
 
-- `web`: Vite frontend from `investiq-fe`, output `dist`.
-- `api`: Python 3.13 FastAPI instance at `investiq-be/app.py`.
-- `/api/*` routes to FastAPI unchanged; all other paths route to the frontend.
-- `worker`: existing Dockerfile/Celery app, concurrency 2, one instance.
-- `scheduler`: the same image with `python -m investiq.jobs.scheduler`.
+Sources checked for this setup:
+[GitHub Actions billing](https://docs.github.com/en/billing/concepts/product-billing/github-actions),
+[Vercel Hobby](https://vercel.com/docs/plans/hobby),
+[Neon Free](https://neon.com/pricing),
+[Upstash Free](https://upstash.com/pricing/redis),
+[Brevo plans](https://help.brevo.com/hc/en-us/articles/208589409-About-Brevo-s-pricing-plans),
+[Gemini free tier](https://ai.google.dev/gemini-api/docs/pricing).
+Recheck free-plan allowances when creating accounts; app configuration cannot
+verify a provider account's billing settings.
 
-The scheduler holds a PostgreSQL session advisory lock per queue. A replacement
-waits for the old scheduler to stop before publishing. A lost database connection
-stops its child Beat process, then exits so the platform can restart it. Use a
-**direct database endpoint**, not a transaction-pooling URL: the scheduler and
-release lock require session affinity. Workers keep the existing persisted job
-claims, idempotency and retry behaviour. Grace periods allow current jobs to finish.
-The scheduler's temporary timing file can be lost on restart; persisted valuation
-and report records prevent creating duplicate results.
+## 1. Create free services and configure secrets
 
-The example region is `iad1`. Select a supported region close to the database for
-both daemons and configure the API region consistently in Vercel. Each daemon requests
-1 GiB memory. Review Vercel quotas/costs before activating them. Services and Daemons
-are beta features; daemons currently run only in production deployments, not previews.
-Use a separate staging project/data/queue for a complete pre-launch rehearsal.
+Create a Neon Free database, Upstash Free database, and a free SMTP account with
+an approved sender. Keep the services in compatible nearby regions. Use a direct
+PostgreSQL endpoint with `sslmode=verify-full`; remove `channel_binding=require`
+because asyncpg does not implement it. Upstash's REST URL/token is not a Redis
+connection string. Use its TLS connection URL instead. Check sender approval and
+email delivery before inviting learners; the app retains email verification.
 
-Official references:
-- https://vercel.com/docs/services
-- https://vercel.com/docs/frameworks/backend/fastapi
-- https://vercel.com/docs/daemons/config-reference
+Copy `deployment/production.env.example` to the ignored root `.env.production.local`.
+Fill placeholders and add the same values to Vercel **Production** settings:
 
-## 1. Provision dependencies
+- `INVESTIQ_DEPLOYMENT_MODE=free_demo`: connections close between transactions;
+  manually requested AI work executes inside the authenticated POST request.
+- `INVESTIQ_ENVIRONMENT=production` and `INVESTIQ_HOSTED_SIMULATION_ENABLED=true`:
+  secure production cookies plus explicit virtual-money simulation opt-in.
+- `INVESTIQ_FRONTEND_URL`: the main learner HTTPS origin.
+- `INVESTIQ_CORS_ORIGINS`: JSON array of exact learner/admin HTTPS origins.
+- `VITE_API_BASE_URL=/api/v1`: same-origin cookie/CSRF requests.
+- `INVESTIQ_AI_PROVIDER=disabled`: no model calls or AI-provider costs initially.
+- SMTP credentials and verified `MAIL_FROM` are required for account email.
 
-Create a dedicated PostgreSQL database, Redis instance supporting normal TCP/TLS
-connections (not REST-only), SMTP credentials/verified sender and Gemini credentials.
-Keep passwords in the provider dashboards/Vercel, never in Git or frontend variables.
-Your selected model must be available to your Gemini account. AI may temporarily be
-explicitly disabled while setting up the other features.
+Do not put credentials in Git or in variables prefixed `VITE_`. Keep production
+credentials out of Preview and CI. Do not shell-source dotenv files; use uv's
+`--env-file` below. Keep the example's rate-limit prefix consistent between the
+web app and daily runner, and separate from development/staging.
 
-Use Redis with persistence/no-eviction for the broker. Different logical database
-numbers are optional; some providers support only database 0. Production, staging,
-and previews must never consume each other's queues or use the same account data.
+## 2. Initialize the hosted database
 
-## 2. Configure the production environment
-
-Copy `production.env.example` to the ignored root `.env.production.local`, fill its
-placeholders, and add those same values to Vercel **Production** environment settings.
-When linked, `vercel env pull --environment=production .env.production.local` can pull
-these values locally. Do not shell-source the file: use uv's `--env-file` option below.
-
-- `INVESTIQ_ENVIRONMENT=production` retains Secure/HttpOnly `__Host-` session cookies.
-- `INVESTIQ_HOSTED_SIMULATION_ENABLED=true` explicitly enables virtual-money market,
-  contest, valuation and bundled educational/sandbox catalogue initialization.
-  Without this flag production market operations remain disabled.
-- `INVESTIQ_DATABASE_URL` accepts `postgres://`, `postgresql://` or
-  `postgresql+asyncpg://` and normalises to asyncpg internally. Set `sslmode=verify-full`.
-  `require` also uses certificate/hostname verification for asyncpg. Provider CA roots
-  can be supplied using `sslrootcert`. Remove `channel_binding=require` from provider
-  URLs: asyncpg does not implement it; the preflight rejects it explicitly.
-- Pool size 1 and overflow 0 limit per-process database usage. Account for API instance
-  scaling, worker processes, the scheduler lock and the release lock when sizing Postgres.
-- `INVESTIQ_CELERY_BROKER_URL` must be `rediss://...?...ssl_cert_reqs=required`.
-- Set explicit HTTPS learner/admin CORS origins (JSON array, without trailing paths).
-  `FRONTEND_URL` is the learner origin used in verification/reset links.
-- Use SMTP STARTTLS (normally port 587), a verified sender and real credentials.
-- `VITE_API_BASE_URL=/api/v1` keeps cookies/CSRF same-origin. No API secrets need a
-  `VITE_` prefix. `API_PROXY_TARGET` is development-only.
-
-Do not copy production credentials into Vercel Preview or CI. Configure a separate
-preview backend/database if needed. Daemons will not run in previews.
-
-## 3. Initialise before the first production promotion
-
-From `investiq-be` with uv installed:
+From `investiq-be`:
 
 ```sh
 uv sync --locked
@@ -86,106 +70,118 @@ uv run --locked --env-file ../.env.production.local python -m investiq.deploy_cl
 uv run --locked --env-file ../.env.production.local python -m investiq.deploy_cli initialize
 ```
 
-`check` validates configuration without contacting providers. `initialize` takes a
-release lock and applies Alembic migrations, initializes the Nifty 50 catalogue and
-reviewed exchange sessions, publishes the bundled courses/lessons and sandbox rewards,
-and sets up AI checkpoint tables. It creates **no users, contests, learner activity,
-portfolio submissions or fabricated market prices**. Reruns preserve published
-content; differing definitions require a new content version. No automatic promotion
-or deployment is part of the command.
+`check` validates settings without contacting providers. `initialize` takes a
+short-lived release lock, migrates the schema, initializes Nifty 50 definitions,
+reviewed exchange sessions, published lessons and sandbox rewards, and AI
+checkpoint tables. It creates no users, contests, submissions or fabricated
+market prices. Reruns preserve published content. Existing local data stays local
+unless deliberately exported/restored. Back up data before subsequent migrations.
 
-The bundled exchange calendar currently covers 2026. Extend/review it before running
-contests outside that supported range. Import Yahoo data through the existing worker
-or an explicit operator import after initialization:
+The reviewed calendar currently covers 2026. Extend it before contests in 2027.
+Market quotes remain unavailable when upstream imports fail; synthetic prices
+never silently replace missing Yahoo prices.
 
-```sh
-uv run --locked --env-file ../.env.production.local python -m investiq.market_cli --yahoo
-```
+## 3. Deploy the main and admin projects
 
-Provider availability must be verified from the hosted region. Failed/missing imports
-remain unavailable and do not get replaced with synthetic prices. This switch does
-not grant any additional market-data usage rights.
+Sign in using `npx vercel login`, connect the GitHub repository, and choose **Hobby**.
+For the main project use Root Directory `.`. Let the two services in root
+`vercel.json` configure their builds; do not override a project-wide output folder.
+The API has a 120-second request limit for a bounded AI call and database work.
+There are no cron HTTP endpoints or publicly callable batch jobs.
 
-For subsequent releases: back up production data, run the release command against
-the target database, then promote the matching build. Only run reviewed migrations;
-code rollback does not roll back database migrations.
-
-## 4. Link and deploy the main application
-
-Once the GitHub URL is supplied, push this repository and connect it to Vercel.
-Use Root Directory `.`. Let the services configuration drive each build; do not
-set a project-wide frontend output directory or build command. The web service
-already specifies `npm run build` and `dist`; the API has `pyproject.toml`/`uv.lock`.
-
-With an authenticated Vercel CLI you can link the project without publishing it:
-
-```sh
-npx vercel link
-```
-
-After step 3 and production environment configuration, deploy/promote the matching
-commit. Check both daemon logs and `/api/v1/health/ready`. Configure Gemini quotas and
-spending limits in the provider dashboard. Do not point hosted Ollama at localhost.
-
-## 5. Deploy the separate admin project
-
-After the main HTTPS origin is known, run from the repository root:
+After the main HTTPS domain is known, run from the root:
 
 ```sh
 node scripts/prepare-admin.mjs https://YOUR_APP_DOMAIN
 ```
 
-This writes `investiq-fe/vercel.json` from the template, proxying `/api/*` to that
-origin. Commit the generated routing before enabling Git deployments for the admin
-project. The main application's routing remains in the repository-root config.
-
-Create a second Vercel project with Root Directory `investiq-fe`, framework Vite,
-build `npm run build`, output `dist`. Set `VITE_APP_MODE=admin` and
-`VITE_API_BASE_URL=/api/v1`. It needs no database, mail or AI credentials. Include
-its final HTTPS origin in the main backend's CORS list, then redeploy.
-
-Register and verify the operator account through the learner app, then assign its
-role through the backend CLI (never a public role-grant endpoint):
+Commit the generated `investiq-fe/vercel.json`, then create a second Vercel project
+with Root Directory `investiq-fe`, Vite, build `npm run build`, output `dist`.
+Set `VITE_APP_MODE=admin` and `VITE_API_BASE_URL=/api/v1`. No backend credentials
+belong in this frontend project. Add its actual HTTPS origin to the backend CORS
+list and redeploy. Register/verify an operator account, then grant its role locally:
 
 ```sh
 cd investiq-be
 uv run --locked --env-file ../.env.production.local python -m investiq.cli set-role ADMIN_EMAIL admin
 ```
 
-Use the separate admin origin to sign in. Check verification/reset URLs return to
-the intended learner origin and admin authentication is enforced after redirects.
+No custom domain purchase is required. Subscriptions in the app remain simulation
+activations: no payment gateway, charge or renewal is introduced.
 
-## 6. Verify the complete deployment
+## 4. Enable the free daily update
 
-From the repository root:
+In GitHub Settings → Environments, create `production` and restrict it to `main`.
+Add environment secret `INVESTIQ_PRODUCTION_ENV`: the complete contents of your
+filled production dotenv file (never the placeholder example). GitHub Actions
+writes it into a temporary private file and removes it after use. Ensure workflow
+logs never print the file. Do not add production secrets to the test CI job.
+
+Add repository Actions variable `FREE_DEMO_JOBS_ENABLED=true`. In Actions, select
+**Daily simulation update** and use **Run workflow** on `main` to verify it.
+The workflow is deliberately opt-in, has no push/PR trigger, uses read-only repo
+permissions, and has a 20-minute timeout with a 15-minute processing deadline.
+It performs no migrations or deployments.
+
+The schedule is **20:47 IST Monday–Friday** (`17 15 * * 1-5` UTC). GitHub may delay
+or skip a scheduled run; this is not an exact-time service. Public-repository
+schedules can be disabled after 60 days of repository inactivity. Check Actions
+before your presentation and rerun manually if necessary:
+[GitHub workflow controls](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/disable-and-enable-workflows).
+
+The job imports up to five missing published daily closes, evaluates due contest
+portfolios (up to five catch-up passes), reconciles rewards, refreshes shared news,
+queues/attempts up to 20 reports and processes up to five queued chat requests.
+Expired chat leases become failures that the learner can retry.
+A database advisory lock prevents overlapping daily runs. Existing publication,
+valuation and report idempotency prevents duplicate results. The lock/connection
+exists only during this short job, not between days. Larger backlogs require
+another manual run. Missing prices and blocked results remain labelled as such.
+
+To run the same update manually from your own machine:
+
+```sh
+cd investiq-be
+uv run --locked --env-file ../.env.production.local python -m investiq.jobs.daily
+```
+
+## 5. Optional free-tier AI
+
+To enable Ask Martin and generated per-contest reports, choose a Gemini model
+currently eligible for your account's **free tier**, use a project without paid
+billing, and set `INVESTIQ_AI_PROVIDER=gemini`, `INVESTIQ_GEMINI_MODEL` and
+`INVESTIQ_GEMINI_API_KEY` in both Vercel and the GitHub production secret. Do not
+use local Ollama URLs from Vercel. A provider key does not itself prove free-tier
+eligibility; verify that in Google AI Studio.
+
+The default shared cap is **20 attempted model generations per UTC day**, across
+all users, web requests, daily jobs and retries. `INVESTIQ_FREE_DEMO_AI_DAILY_LIMIT`
+can be lowered. Requests fail closed if the allowance check is unavailable.
+Failed calls also consume allowance; cached/idempotent answers do not. This limits
+app usage, not provider billing: only a free, non-billed provider account prevents
+paid API charges. Provider rate/model/token quotas can be lower than the app cap.
+
+Manual answers/reports await one bounded generation during their POST request,
+using only the already authorized turn/job. Existing database leases prevent
+concurrent duplicate processing. A dropped connection or process interruption
+may leave a durable queued/running item; the daily job recovers it. Normal worker
+mode remains available for local Docker development. Daily reports update after
+the daily valuation run; news refreshes daily rather than hourly in this setup.
+
+## 6. Verify before sharing
 
 ```sh
 node scripts/deployment-smoke.mjs https://YOUR_APP_DOMAIN
 ```
 
-The read-only script checks frontend HTML, health/readiness, CSRF bootstrap,
-no-store headers and secure production-cookie flags. It never prints CSRF/session
-credentials. Then verify in a browser:
+Check email verification/login/reset, learner/admin sessions side by side, contest
+creation/publication/join/submission, a manual daily run, prices/values/standings,
+AI if enabled, lessons, community, profile photos, subscription activation and
+mobile navigation. Check reloads preserve private user data. Readiness checks
+exercise dependencies, so do not schedule frequent external uptime polling that
+keeps the database awake.
 
-1. Registration, verification email, login, logout and password recovery.
-2. Learner/admin sessions open side by side; CSRF failures/cross-origin mutations blocked.
-3. Published contests, joins, saving/reviewing/confirming a portfolio, stock filters/sorting.
-4. Yahoo daily imports and valuations, private holdings and public leaderboard results.
-5. Daily AI report generation/refresh and an Ask Martin answer via Gemini.
-6. Course enrollment/quiz, community membership/feed, photo upload, subscription activation.
-7. Narrow mobile layouts, polling/refresh, error states and user data after reload.
-
-CI runs lint/type/unit/integration checks against disposable/test databases. Browser
-checks remain available with `npx playwright test` in `investiq-fe`; the test harness
-owns a separate migrated database and requires local Postgres/Redis/Mailpit. A full
-hosted smoke pass is still required after actual provisioning and deployment.
-
-## What is still needed from the owner
-
-- The GitHub repository URL and permission to push.
-- Vercel account/project connection, with Services/Daemons available and appropriate quotas.
-- PostgreSQL, Redis, SMTP and Gemini resources/credentials added through secure settings.
-- Learner/admin domain choices and the verified sender address.
-- Whether existing local accounts/results should be migrated or the hosted app starts empty.
-
-No live deployment or provider integration has been performed by this preparation.
+Free tiers have finite compute/storage/request/email allowances and no promise of
+production reliability. Usage caps should stop features rather than trigger paid
+upgrades. No provider credentials have been provisioned by these code changes;
+real hosted builds, emails, imports and end-to-end smoke checks remain required.

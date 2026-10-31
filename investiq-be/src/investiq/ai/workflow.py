@@ -77,10 +77,13 @@ def workflow(
         return {}
 
     async def generate(state: CoachState) -> dict[str, Any]:
+        from investiq.services.ai_budget import reserve_generation
+
         # Recheck on resumes too: authorization nodes may already be checkpointed.
         await authorized_evidence()
         evidence = CoachEvidence.model_validate(state["evidence"])
         adapter = service.provider or LangChainCoach(service.settings, provider, model)
+        await reserve_generation(service.identity)
         result = await adapter.generate(evidence)
         async with service.factory() as db, db.begin():
             attempt = await db.get(CoachAttempt, (identifier, number))
@@ -163,7 +166,7 @@ async def run_job(
         await graph.ainvoke(None if previous.values else {"job_id": str(identifier)}, graph_config)
 
 
-async def sweep(service: CoachService) -> dict[str, int]:
+async def sweep(service: CoachService, identifier: UUID | None = None) -> dict[str, int]:
     """Durable DB queue; one AI generation leaves the second Celery slot for valuation."""
     async with service.factory() as guard, guard.begin():
         if not await guard.scalar(select(func.pg_try_advisory_xact_lock(742020))):
@@ -176,6 +179,7 @@ async def sweep(service: CoachService) -> dict[str, int]:
                         CoachJob.status == "running",
                         CoachJob.leased_until < now(),
                         CoachJob.attempts >= 3,
+                        *([CoachJob.id == identifier] if identifier else []),
                     )
                     .with_for_update(skip_locked=True)
                     .limit(100)
@@ -192,6 +196,7 @@ async def sweep(service: CoachService) -> dict[str, int]:
                 select(CoachJob)
                 .where(
                     CoachJob.attempts < 3,
+                    *([CoachJob.id == identifier] if identifier else []),
                     or_(
                         and_(
                             CoachJob.status.in_(["queued", "retry"]),
@@ -244,6 +249,7 @@ async def sweep(service: CoachService) -> dict[str, int]:
                         "authorization_revoked",
                         "evidence_invalid",
                         "provider_configuration_changed",
+                        "daily_ai_limit",
                     }
                     job.status, job.error_code = "failed" if terminal else "retry", code
                     job.next_attempt_at, job.updated_at = (

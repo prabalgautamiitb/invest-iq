@@ -1,0 +1,47 @@
+name: Daily simulation update
+on:
+  schedule:
+    # 20:47 IST, after the daily close is expected. GitHub schedules can be delayed.
+    - cron: '17 15 * * 1-5'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: production-daily
+  cancel-in-progress: false
+jobs:
+  daily:
+    # Standard runners are free for public repositories. Explicitly opt in after setup.
+    if: github.ref == 'refs/heads/main' && github.event.repository.private == false && vars.FREE_DEMO_JOBS_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: production
+    defaults:
+      run:
+        working-directory: investiq-be
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: false
+      - run: uv sync --locked --no-dev --python 3.13
+      - name: Load private production settings
+        env:
+          PRODUCTION_ENV: ${{ secrets.INVESTIQ_PRODUCTION_ENV }}
+        run: |
+          python - <<'PY'
+          import os
+          from pathlib import Path
+          value = os.environ.get('PRODUCTION_ENV', '')
+          if not value.strip():
+              raise SystemExit('Add INVESTIQ_PRODUCTION_ENV to the production environment secrets')
+          path = Path(os.environ['RUNNER_TEMP']) / 'investiq.env'
+          fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+          with os.fdopen(fd, 'w') as stream:
+              stream.write(value)
+          PY
+      - name: Import closes, value portfolios and refresh reports
+        run: uv run --locked --no-dev --env-file "$RUNNER_TEMP/investiq.env" python -m investiq.jobs.daily
+      - name: Remove private settings
+        if: always()
+        run: rm -f "$RUNNER_TEMP/investiq.env"

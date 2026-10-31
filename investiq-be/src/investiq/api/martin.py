@@ -45,7 +45,12 @@ async def ask(
         limit=martin.settings.martin_request_limit,
         window_seconds=900,
     )
-    return await martin.create(principal, data, key)
+    result = await martin.create(principal, data, key)
+    if martin.settings.deployment_mode == "free_demo" and result.status == "queued":
+        await martin.sweep(result.id)
+        # Reusing the key returns the same owned turn, including its completed answer.
+        return await martin.create(principal, data, key)
+    return result
 
 
 @router.get("/conversations", response_model=MartinConversationPage)
@@ -77,7 +82,14 @@ async def control(
     await martin.identity.rate_limit(
         "martin_control", str(principal.user_id), limit=40, window_seconds=900
     )
-    return await martin.control(principal, identifier, action)
+    result = await martin.control(principal, identifier, action)
+    if martin.settings.deployment_mode == "free_demo" and action == "retry":
+        await martin.sweep(result.id)
+        async with martin.factory() as db, db.begin():
+            user = await martin.identity.authenticated_user(db, principal)
+            turn = await martin.owned_turn(db, user.id, identifier)
+            return MartinTurnOut.model_validate(turn)
+    return result
 
 
 @router.delete("/conversations/{identifier}", status_code=204)

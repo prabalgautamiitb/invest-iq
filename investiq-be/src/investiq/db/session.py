@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import (
     async_sessionmaker,
     create_async_engine,
 )
+from sqlalchemy.pool import NullPool
 
 from investiq.core.config import Settings
 
@@ -54,6 +55,9 @@ def postgres_url(settings: Settings) -> str:
 
 def make_engine(settings: Settings) -> AsyncEngine:
     url, options = connection_options(settings)
+    if settings.deployment_mode == "free_demo":
+        # Return every connection after its transaction so hosted Postgres can sleep.
+        return create_async_engine(url, poolclass=NullPool, connect_args=options)
     return create_async_engine(
         url,
         pool_pre_ping=True,

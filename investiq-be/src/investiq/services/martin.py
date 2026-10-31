@@ -574,11 +574,17 @@ class MartinService:
                 return False
         return True
 
-    async def sweep(self) -> dict[str, int]:
+    async def sweep(self, identifier: UUID | None = None) -> dict[str, int]:
+        from investiq.services.ai_budget import reserve_generation
+
         async with self.factory() as db, db.begin():
             await db.execute(
                 update(MartinTurn)
-                .where(MartinTurn.status == "running", MartinTurn.leased_until <= now())
+                .where(
+                    MartinTurn.status == "running",
+                    MartinTurn.leased_until <= now(),
+                    *([MartinTurn.id == identifier] if identifier else []),
+                )
                 .values(
                     status="failed",
                     error_code="worker_interrupted",
@@ -588,7 +594,10 @@ class MartinService:
             )
             turn = await db.scalar(
                 select(MartinTurn)
-                .where(MartinTurn.status == "queued")
+                .where(
+                    MartinTurn.status == "queued",
+                    *([MartinTurn.id == identifier] if identifier else []),
+                )
                 .order_by(MartinTurn.created_at, MartinTurn.id)
                 .with_for_update(skip_locked=True)
                 .limit(1)
@@ -643,6 +652,7 @@ class MartinService:
         generated = None
         try:
             async with asyncio.timeout(75):
+                await reserve_generation(self.identity)
                 generated = await (
                     self.provider or LangChainMartin(self.settings, provider, model)
                 ).generate(question, sources, history)
@@ -650,7 +660,14 @@ class MartinService:
         except AppError as exc:
             error = (
                 exc.code
-                if exc.code in {"provider_timeout", "invalid_model_output", "provider_unavailable"}
+                if exc.code
+                in {
+                    "provider_timeout",
+                    "invalid_model_output",
+                    "provider_unavailable",
+                    "daily_ai_limit",
+                    "rate_limit_unavailable",
+                }
                 else "provider_unavailable"
             )
         except TimeoutError:

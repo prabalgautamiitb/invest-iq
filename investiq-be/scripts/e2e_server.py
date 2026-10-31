@@ -187,7 +187,14 @@ async def main() -> None:
 
             harness_only(request)
             queued = await queue_daily(application.state.coach)
-            return {"queued": queued, **await sweep(application.state.coach)}
+            # Model the bounded daily batch, including jobs left by earlier browser cases.
+            processed = 0
+            for _ in range(20):
+                result = await sweep(application.state.coach)
+                processed += result["processed"]
+                if not result["processed"]:
+                    break
+            return {"queued": queued, "processed": processed}
 
         await BrowserTestServer(
             uvicorn.Config(

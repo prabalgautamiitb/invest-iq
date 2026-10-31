@@ -94,6 +94,39 @@ async def chat(client, identifier, **params):
     return await client.get(f"/api/v1/me/martin/conversations/{identifier}", params=params)
 
 
+async def test_free_demo_answers_only_the_requested_turn_without_a_worker(martin_settings):
+    settings = martin_settings.model_copy(
+        update={"deployment_mode": "free_demo", "free_demo_ai_daily_limit": 1}
+    )
+    model = MockMartin()
+    app = create_app(settings, CapturedMailer(), martin_provider=model)
+    async with api_client(app) as first, api_client(app) as second:
+        await verified(first, app.state.identity.mailer)
+        # Leave another user's earlier turn queued, as after an interrupted request.
+        app.state.martin.settings = settings.model_copy(update={"deployment_mode": "worker"})
+        waiting = (await ask(first)).json()
+        assert waiting["status"] == "queued"
+        app.state.martin.settings = settings
+        await verified(second, app.state.identity.mailer)
+        key = str(uuid4())
+        answer = await ask(second, key=key)
+        assert answer.status_code == 202 and answer.json()["status"] == "succeeded"
+        assert len(model.calls) == 1
+        replay = await ask(second, key=key)
+        assert replay.json()["id"] == answer.json()["id"] and len(model.calls) == 1
+        # A different account's queued request must not have been processed.
+        history = (await chat(first, waiting["conversation_id"])).json()
+        assert history["items"][0]["status"] == "queued"
+        denied = (await ask(second, question="Is diversification good?")).json()
+        assert denied["status"] == "failed" and denied["error_code"] == "daily_ai_limit"
+        assert len(model.calls) == 1
+        retry = await second.post(
+            f"/api/v1/me/martin/turns/{denied['id']}/retry", headers=await csrf(second)
+        )
+        assert retry.status_code == 200 and retry.json()["error_code"] == "daily_ai_limit"
+        assert len(model.calls) == 1
+
+
 async def test_private_chat_idempotency_multiturn_cursor_delete_and_auth(martin_settings):
     model = MockMartin()
     app = create_app(martin_settings, CapturedMailer(), martin_provider=model)

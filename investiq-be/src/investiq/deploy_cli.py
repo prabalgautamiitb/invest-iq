@@ -30,10 +30,12 @@ def validate_deployment(settings: Settings) -> None:
     if url.query.get("sslmode") not in {"require", "verify-ca", "verify-full"}:
         raise ValueError("Use a direct PostgreSQL URL with sslmode=verify-full (or require)")
     connection_options(settings)
-    for name, raw in [
+    redis_urls = [
         ("REDIS_URL", settings.redis_url),
-        ("CELERY_BROKER_URL", settings.celery_broker_url),
-    ]:
+    ]
+    if settings.deployment_mode == "worker":
+        redis_urls.append(("CELERY_BROKER_URL", settings.celery_broker_url))
+    for name, raw in redis_urls:
         parsed = urlsplit(raw.get_secret_value())
         if parsed.scheme != "rediss":
             raise ValueError(f"INVESTIQ_{name} must use Redis TCP over TLS (rediss://)")
