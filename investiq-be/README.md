@@ -186,6 +186,14 @@ Contest Explorer supports `GET /api/v1/contests?activity=active` for scheduled, 
 
 Contest schedule and holdings-invariant validation return fixed, actionable messages and field locations. The validation handler exposes only an allowlist of application-owned contest messages; raw Pydantic inputs, context and arbitrary messages remain excluded. Chronology is enforced as entry opening < entry closing < contest start < contest end for creation and revision, including admin-created public contests.
 
+### Hosted deployment
+
+See the [Vercel deployment guide](../deployment/README.md) for the API, worker,
+scheduler, managed PostgreSQL/Redis, email and Gemini configuration. Hosted
+educational simulations require an explicit production opt-in; local development
+defaults remain unchanged. Run the documented release initialization before
+serving the first production deployment.
+
 ### Optional Yahoo daily market prices
 
 Yahoo EOD prices can power new virtual contests, with Nifty 50 as the benchmark.

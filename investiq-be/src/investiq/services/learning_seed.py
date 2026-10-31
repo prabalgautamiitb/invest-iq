@@ -51,7 +51,10 @@ class SeedCourse(BaseModel):
 
 
 async def seed_curriculum(factory: async_sessionmaker[AsyncSession], settings: Settings) -> None:
-    if settings.environment not in {"development", "test"}:
+    if (
+        settings.environment not in {"development", "test"}
+        and not settings.hosted_simulation_enabled
+    ):
         raise AppError(
             403, "development_curriculum_only", "This curriculum seed is for development and tests"
         )

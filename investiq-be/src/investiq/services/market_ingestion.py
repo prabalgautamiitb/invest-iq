@@ -33,7 +33,9 @@ from investiq.services.market_sources import YAHOO_DATASET, YAHOO_PROVIDER
 
 
 def ensure_market_mode(settings: Settings) -> None:
-    if settings.environment == "production" or settings.market_data_mode == "disabled":
+    if (settings.environment == "production" and not settings.hosted_simulation_enabled) or (
+        settings.market_data_mode == "disabled"
+    ):
         raise AppError(503, "market_data_disabled", "Market data is disabled in this environment")
 
 

@@ -156,3 +156,6 @@
   .portfolio-stock-details>summary{width:24px;min-height:44px;top:12px}
   .portfolio-catalogue #server-stockrows{padding-right:0}
 }
+
+.portfolio-stock-sort{margin:12px 0 0}
+.portfolio-stock-sort select{width:100%;min-height:44px}

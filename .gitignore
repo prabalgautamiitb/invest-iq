@@ -22,3 +22,6 @@ playwright-report/
 .DS_Store
 *.log
 celerybeat-schedule*
+
+# Vercel project links, pulled environment files and build output
+.vercel/

@@ -8,7 +8,7 @@ export function createPortfolioController({ shell: layout, pagehead, esc, link, 
   const shell = (active, body) => layout(active, body + (getAccount()?.email_verified ? newsPlaceholder() : ''));
   let generation = 0, key = '', loading = false, loaded = false, error = '', operationError = '', busy = false;
   let data = null, positions = new Map(), mode = 'weight', dirty = false, reviewed = null, submitKey = '';
-  let query = '', sector = '', cap = '', notice = '', operation = 0, view = '', mobilePanel = 'stocks';
+  let query = '', sector = '', cap = '', stockSort = 'symbol-asc', notice = '', operation = 0, view = '', mobilePanel = 'stocks';
   const stamp = value => new Date(value).toLocaleString('en-IN',{ timeZone:'Asia/Kolkata',dateStyle:'medium',timeStyle:'short' }) + ' IST';
   // Formatting only: server decimal strings remain the only monetary source.
   const amount = value => { const [whole,decimals] = String(value).split('.'); const fraction=decimals?.replace(/0+$/,''); const prefix=whole.slice(0,-3); return '₹' + (prefix?prefix.replace(/\B(?=(\d{2})+(?!\d))/g,',')+',':'') + whole.slice(-3) + (fraction ? '.'+fraction : ''); };
@@ -31,7 +31,7 @@ export function createPortfolioController({ shell: layout, pagehead, esc, link, 
   }
   async function load(cursor = '') {
     const expected = routeKey(), token = ++generation, id = activeId();
-    if(view !== expected) {view=expected;operationError='';notice='';query='';sector='';cap='';}
+    if(view !== expected) {view=expected;operationError='';notice='';query='';sector='';cap='';stockSort='symbol-asc';}
     if(key !== expected && busy) { busy=false; operation++; }
     key = expected; loading = true; error = '';
     try {
@@ -99,10 +99,29 @@ export function createPortfolioController({ shell: layout, pagehead, esc, link, 
     const formatted=value.toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:value!==0&&Math.abs(value)<0.01?4:2});
     return `<dd class="portfolio-stock-move is-${direction}" aria-label="${direction==='flat'?'No change':direction==='up'?'Up':'Down'} ${esc(formatted)} percent from open"><span aria-hidden="true">${value>0?'↗':value<0?'↘':'→'}</span> ${value>0?'+':''}${esc(formatted)}%</dd>`;
   }
+  const stockSortOptions=[['symbol-asc','Name: A–Z'],['price-asc','Price: low to high'],['price-desc','Price: high to low'],['return-desc','Day return: high to low'],['return-asc','Day return: low to high']];
+  function orderedStocks(items,quotes){
+    const bySymbol=(a,b)=>a.symbol.localeCompare(b.symbol)||a.id.localeCompare(b.id);
+    if(stockSort==='symbol-asc')return items.sort(bySymbol);
+    const price=stockSort.startsWith('price'),direction=stockSort.endsWith('asc')?1:-1;
+    const value=i=>{
+      const q=quotes.get(i.id);
+      if(!hasNumber(q?.close)||Number(q.close)<=0)return null;
+      if(price)return Number(q.close);
+      return hasNumber(q?.open)&&Number(q.open)>0&&hasNumber(q?.day_change_pct)?Number(q.day_change_pct):null;
+    };
+    return items.sort((a,b)=>{
+      const av=value(a),bv=value(b);
+      // Missing quotes stay last in both directions; zero and losses remain sortable.
+      if(av===null||bv===null)return av===bv?bySymbol(a,b):av===null?1:-1;
+      return direction*(av-bv)||bySymbol(a,b);
+    });
+  }
   function stockRows() {
     const {items,quotes,contest:c,draft}=data,r=c.rules;
     const editable=draft.editable&&c.status==='open';
     const matched=items.filter(i=>(!query||(i.name+' '+i.symbol).toLowerCase().includes(query.trim().toLowerCase()))&&(!sector||i.sector?.id===sector)&&(!cap||i.market_cap===cap));
+    orderedStocks(matched,quotes);
     return `<p class="small portfolio-search-count" role="status">${matched.length} of ${items.length} eligible stocks</p>${matched.length?'<div class="portfolio-stock-columns" aria-hidden="true"><span>Stock</span><span>Latest close</span><span>Change %</span><span></span></div>':''}${matched.length?matched.map(i=>{
       const q=quotes.get(i.id),selected=positions.has(i.id),unavailable=!q?.eligible_for_simulation;
       const reason=selected?'In your draft':!editable?'Entry closed':q?.blocked_reason?q.blocked_reason:unavailable?'Latest closing price required':positions.size>=r.max_holdings?'Holding limit reached':'';
@@ -128,7 +147,7 @@ export function createPortfolioController({ shell: layout, pagehead, esc, link, 
       <details class="page-details portfolio-rules"><summary>Contest rules, schedule &amp; pricing</summary>${contestTimeline(c,{esc,stamp})}<p>${c.market_data_kind==='yahoo'?'Yahoo Finance EOD · virtual portfolio':'Synthetic EOD simulation'} · ${quoteMeta?'Expected session '+esc(quoteMeta.expected_session_date):'Quote information unavailable.'} · Simulated cost ${r.simulated_cost_bps/100}% · Rule version ${c.rule_version}.</p><p>Weights allocate a fee-reserved budget and round down to whole shares. Unused funds remain as cash. A new confirmed version can replace your submission before entry closes.</p></details>
       ${quoteError?`<p class="callout" role="alert">${esc(quoteError)}. Your draft and history remain available; review needs complete current prices.</p>`:''}
       ${notice?`<p class="portfolio-notice" role="status">${icon('check')}${esc(notice)}</p>`:''}${operationError?`<p class="callout" id="portfolio-operation-error" role="alert" tabindex="-1">${esc(operationError)}</p>`:''}
-      <div class="portfolio-builder" data-mobile-view="${mobilePanel}"><div class="portfolio-mobile-tabs" role="group" aria-label="Portfolio workspace"><button type="button" data-portfolio-action="mobile-stocks" aria-pressed="${mobilePanel==='stocks'}">${icon('search')} Explore stocks</button><button type="button" data-portfolio-action="mobile-draft" aria-pressed="${mobilePanel==='draft'}">${icon('wallet')} Your draft <span class="pill neutral">${positions.size}</span></button></div><section class="panel portfolio-catalogue" aria-label="Stock discovery"><div class="row"><div><span class="eyebrow">01 · Discover</span><h2>Choose your stocks</h2></div><span class="pill neutral">${stockCount} contest stocks</span></div><p class="small">${c.market_data_kind==='yahoo'?'Market prices':'Practice scenario · synthetic prices'} · Choose from this contest’s fixed stock list.</p><label class="field portfolio-search">Search eligible stocks<input type="search" id="portfolio-search" placeholder="Search by company or symbol" value="${esc(query)}"></label><div class="portfolio-filters"><label class="field">Sector<select id="portfolio-sector"><option value="">All sectors</option>${[...sectors].map(([id,name])=>`<option value="${esc(id)}" ${sector===id?'selected':''}>${esc(name)}</option>`).join('')}</select></label><label class="field">Market cap<select id="portfolio-cap"><option value="">All market caps</option>${['large','mid','small'].map(x=>`<option value="${x}" ${cap===x?'selected':''}>${x[0].toUpperCase()+x.slice(1)} cap</option>`).join('')}</select></label></div><p class="small portfolio-price-help">Latest daily close · change from the session open. Expand a row for price details.</p><div id="server-stockrows">${stockRows()}</div></section>
+      <div class="portfolio-builder" data-mobile-view="${mobilePanel}"><div class="portfolio-mobile-tabs" role="group" aria-label="Portfolio workspace"><button type="button" data-portfolio-action="mobile-stocks" aria-pressed="${mobilePanel==='stocks'}">${icon('search')} Explore stocks</button><button type="button" data-portfolio-action="mobile-draft" aria-pressed="${mobilePanel==='draft'}">${icon('wallet')} Your draft <span class="pill neutral">${positions.size}</span></button></div><section class="panel portfolio-catalogue" aria-label="Stock discovery"><div class="row"><div><span class="eyebrow">01 · Discover</span><h2>Choose your stocks</h2></div><span class="pill neutral">${stockCount} contest stocks</span></div><p class="small">${c.market_data_kind==='yahoo'?'Market prices':'Practice scenario · synthetic prices'} · Choose from this contest’s fixed stock list.</p><label class="field portfolio-search">Search eligible stocks<input type="search" id="portfolio-search" placeholder="Search by company or symbol" value="${esc(query)}"></label><div class="portfolio-filters"><label class="field">Sector<select id="portfolio-sector"><option value="">All sectors</option>${[...sectors].map(([id,name])=>`<option value="${esc(id)}" ${sector===id?'selected':''}>${esc(name)}</option>`).join('')}</select></label><label class="field">Market cap<select id="portfolio-cap"><option value="">All market caps</option>${['large','mid','small'].map(x=>`<option value="${x}" ${cap===x?'selected':''}>${x[0].toUpperCase()+x.slice(1)} cap</option>`).join('')}</select></label></div><label class="field portfolio-stock-sort">Sort stocks<select id="portfolio-sort">${stockSortOptions.map(([value,label])=>`<option value="${value}" ${stockSort===value?'selected':''}>${label}</option>`).join('')}</select></label><p class="small portfolio-price-help">Latest daily close · change from the session open. Expand a row for price details.</p><div id="server-stockrows">${stockRows()}</div></section>
       <section class="panel portfolio-editor" aria-label="Portfolio draft"><div class="row"><div><span class="eyebrow">02 · Allocate</span><h2>Your contest draft</h2></div><span class="pill neutral">${positions.size} / ${r.max_holdings}</span></div><p class="small">Revision ${draft.revision} · <span id="portfolio-dirty">${dirty?'Unsaved changes':'Saved on server'}</span></p><div class="portfolio-modes" role="group" aria-label="Allocation method">${button('mode','Weight %',`data-mode="weight" aria-pressed="${mode==='weight'}"`,!editable||mode==='weight')}${button('mode','Quantity',`data-mode="quantity" aria-pressed="${mode==='quantity'}"`,!editable||mode==='quantity')}</div><div id="portfolio-allocation-summary" aria-live="polite">${allocationSummary()}</div>
       <div class="portfolio-holdings">${positions.size?[...positions].map(([id,value])=>{const i=items.find(i=>i.id===id);return `<div class="portfolio-holding"><div><strong>${esc(i?.symbol||id)}</strong><span class="small">${esc(i?.sector?.name||'Unclassified')}</span></div><div class="portfolio-holding-input"><input name="portfolio-position" aria-label="${esc(i?.symbol||id)} ${mode==='quantity'?'quantity':'weight percent'}" data-position-id="${id}" type="number" min="${mode==='quantity'?'1':'0.0001'}" max="${mode==='quantity'?'1000000000':'100'}" step="${mode==='quantity'?'1':'0.0001'}" placeholder="0" value="${esc(value)}" ${busy||!editable?'disabled':''}><span>${mode==='quantity'?'shares':'%'}</span></div>${button('remove','Remove',`data-id="${id}" aria-label="Remove ${esc(i?.symbol||id)}"`,!editable)}</div>`;}).join(''):`<div class="empty portfolio-empty">${icon('wallet')}<h3>Your strategy starts here</h3><p>Add ${r.min_holdings}–${r.max_holdings} stocks, or use starter weights to explore the builder.</p></div>`}</div>
       <div class="portfolio-tools">${button('example','Use starter weights','',!editable)}${button('equal','Equalize weights','',!editable||mode!=='weight'||!positions.size)}</div><p class="small">Starter weights use the first available stocks; they are a learning shortcut, not a recommendation.</p>
@@ -160,6 +179,10 @@ export function createPortfolioController({ shell: layout, pagehead, esc, link, 
     }
   }
   function change(element) {
+    if(element.id==='portfolio-sort'){
+      if(!stockSortOptions.some(([value])=>value===element.value))return;
+      stockSort=element.value;document.getElementById('server-stockrows').innerHTML=stockRows();return;
+    }
     if(element.id==='portfolio-search') return;
     else if(element.id==='portfolio-sector') sector=element.value;
     else if(element.id==='portfolio-cap') cap=element.value;

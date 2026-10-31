@@ -1,0 +1,38 @@
+name: Application checks
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: investiq-fe
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: investiq-fe/package-lock.json
+      - run: npm ci
+      - run: npm run check
+      - run: npm run build
+  backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: investiq-be
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - run: uv sync --locked --python 3.13
+      - run: docker compose up -d --wait postgres redis mailpit
+      - run: uv run --locked alembic upgrade head
+      - run: uv run --locked ruff check src tests/test_deployment.py app.py
+      - run: uv run --locked mypy
+      - run: uv run --locked pytest
+      - if: always()
+        run: docker compose down -v

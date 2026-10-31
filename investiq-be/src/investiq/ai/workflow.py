@@ -10,13 +10,13 @@ from langgraph.graph import END, START, StateGraph
 from psycopg import AsyncConnection
 from psycopg.rows import dict_row
 from sqlalchemy import and_, func, or_, select
-from sqlalchemy.engine import make_url
 
 from investiq.adapters.coach import LangChainCoach
 from investiq.ai.evidence import validate_plan
 from investiq.core.config import Settings
 from investiq.core.errors import AppError
 from investiq.core.security import now
+from investiq.db.session import postgres_url
 from investiq.models.coach import CoachAttempt, CoachJob
 from investiq.schemas.coach import CoachEvidence, CoachPlan
 from investiq.services.coach import CoachService
@@ -30,11 +30,7 @@ class CoachState(TypedDict, total=False):
 
 
 def checkpoint_url(settings: Settings) -> str:
-    return (
-        make_url(settings.database_url.get_secret_value())
-        .set(drivername="postgresql")
-        .render_as_string(hide_password=False)
-    )
+    return postgres_url(settings)
 
 
 async def setup_checkpoints(settings: Settings) -> None:

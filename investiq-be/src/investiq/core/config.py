@@ -13,6 +13,9 @@ class Settings(BaseSettings):
     database_url: SecretStr = SecretStr(
         "postgresql+asyncpg://investiq:investiq_local@127.0.0.1:5433/investiq"
     )
+    database_pool_size: int = Field(default=5, ge=1, le=20)
+    database_max_overflow: int = Field(default=5, ge=0, le=20)
+    hosted_simulation_enabled: bool = False
     redis_url: SecretStr = SecretStr("redis://127.0.0.1:6380/0")
     celery_broker_url: SecretStr = SecretStr("redis://127.0.0.1:6380/1")
     valuation_queue: str = Field(default="investiq.valuation", pattern=r"^[a-zA-Z0-9._-]{1,100}$")
@@ -81,11 +84,26 @@ class Settings(BaseSettings):
     @field_validator("database_url")
     @classmethod
     def validate_database(cls, value: SecretStr) -> SecretStr:
-        url = value.get_secret_value()
-        PostgresDsn(url)
-        if not url.startswith("postgresql+asyncpg://"):
-            raise ValueError("Use the postgresql+asyncpg driver")
-        return value
+        from sqlalchemy.engine import make_url
+        from sqlalchemy.exc import ArgumentError
+
+        try:
+            url = make_url(value.get_secret_value())
+        except ArgumentError:
+            raise ValueError("Use a PostgreSQL connection URL") from None
+        if url.drivername not in {"postgres", "postgresql", "postgresql+asyncpg"}:
+            raise ValueError("Use a PostgreSQL connection URL")
+        canonical = url.set(drivername="postgresql+asyncpg")
+        if "ssl" in canonical.query:
+            if "sslmode" in canonical.query:
+                raise ValueError("Specify sslmode only once")
+            mode = canonical.query["ssl"]
+            if not isinstance(mode, str):
+                raise ValueError("Specify sslmode only once")
+            canonical = canonical.update_query_dict({"sslmode": mode})
+            canonical = canonical.difference_update_query(["ssl"])
+        PostgresDsn(canonical.render_as_string(hide_password=False))
+        return SecretStr(canonical.render_as_string(hide_password=False))
 
     @field_validator("redis_url", "celery_broker_url")
     @classmethod

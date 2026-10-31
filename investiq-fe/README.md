@@ -170,7 +170,9 @@ The backend controls source configuration and imports; the browser uses saved
 prices only. See [Yahoo EOD setup](../investiq-be/docs/YAHOO-EOD.md).
 
 Portfolio stock discovery uses compact market rows with company/symbol, latest
-daily close, signed open-to-close percentage change, and an Add control. Expand
+daily close, signed open-to-close percentage change, and an Add control. Sort by
+name, closing price, or daily return (price/return support both directions).
+Unavailable values remain last, and sorting preserves filters and draft allocations. Expand
 a row to see the full company name, exchange, sector, market-cap category, opening
 and closing prices, trading date, source and freshness. Prices are saved daily
 closes rather than live quotes.
@@ -203,6 +205,13 @@ return, rank, snapshot date, and an action appropriate to the submission state.
 Missing results stay unvalued; stale and final snapshots are labelled explicitly.
 Performance and standings links remain visible on mobile. Contest history keeps
 its table layout. Rendering lives in `src/features/home-contests.js`.
+
+## Hosted deployment
+
+Follow the [Vercel deployment guide](../deployment/README.md) for the main app and
+separate admin project. The main app uses same-origin `/api/v1` requests; the
+admin project proxies those requests to the main deployment. Production secrets
+belong in Vercel environment settings, never in frontend build variables.
 
 ## Subscription activation preview
 

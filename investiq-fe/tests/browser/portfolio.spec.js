@@ -299,3 +299,47 @@ test('stock discovery shows dated opening/closing prices and signed changes with
   }
   expect(errors).toEqual([]);
 });
+
+test('stock ordering uses numeric prices and signed daily returns, keeps missing quotes last and preserves allocations',async({page,request})=>{
+  await signup(page,request);
+  const id=await league(page,'Sortable discovery');
+  await page.route('**/api/v1/quotes?*',async route=>{
+    const response=await route.fetch(),body=await response.json();
+    body.items=body.items.sort((a,b)=>a.symbol.localeCompare(b.symbol)).map((q,index)=>({...q,
+      ...(index===0?{open:'1',close:'2',day_change_pct:'100'}:
+        index===1?{open:'20',close:'10',day_change_pct:'-50'}:
+        index===2?{open:'100',close:'100',day_change_pct:'0'}:
+        {open:null,close:null,day_change_pct:null,eligible_for_simulation:false}),
+    }));
+    await route.fulfill({response,json:body});
+  });
+  await page.goto('/#/portfolio/'+id);
+  const order=page.getByRole('combobox',{name:'Sort stocks',exact:true});
+  const rows=page.locator('.portfolio-stock');
+  await expect(rows).toHaveCount(16);
+  const initial=await rows.locator('.portfolio-stock-name strong').allTextContents();
+  const [low,mid,high]=initial;
+  await page.getByRole('button',{name:'Add '+low,exact:true}).click();
+  const allocation=page.getByRole('spinbutton',{name:low+' weight percent',exact:true});
+  await allocation.fill('17.5');
+  for(const [value,expected] of [
+    ['price-asc',[low,mid,high]],['price-desc',[high,mid,low]],
+    ['return-desc',[low,high,mid]],['return-asc',[mid,high,low]],
+  ]){
+    await order.focus();
+    await order.selectOption(value);
+    await expect(rows.locator('.portfolio-stock-name strong')).toHaveText([...expected,...initial.slice(3)]);
+    await expect(allocation).toHaveValue('17.5');
+    await expect(page.locator('#portfolio-dirty')).toHaveText('Unsaved changes');
+    await expect(order).toBeFocused();
+  }
+  await page.getByRole('searchbox',{name:'Search eligible stocks',exact:true}).fill(low);
+  await expect(rows).toHaveCount(1);
+  await expect(order).toHaveValue('return-asc');
+  await page.getByRole('searchbox',{name:'Search eligible stocks',exact:true}).fill('');
+  await page.setViewportSize({width:360,height:844});
+  await button(page,'Explore stocks').click();
+  await order.selectOption('price-desc');
+  await expect(rows.first().locator('.portfolio-stock-name strong')).toHaveText(high);
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+});

@@ -1,6 +1,9 @@
+import ssl
 from collections.abc import AsyncIterator
+from typing import Any
 
 from fastapi import Request
+from sqlalchemy.engine import URL, make_url
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
     AsyncSession,
@@ -14,16 +17,49 @@ from investiq.core.config import Settings
 SCHEMA_REVISION = "0015_subscriptions"
 
 
+def connection_options(settings: Settings) -> tuple[URL, dict[str, Any]]:
+    """Translate libpq provider URLs into asyncpg arguments without logging credentials."""
+    url = make_url(settings.database_url.get_secret_value())
+    options: dict[str, Any] = {
+        "timeout": settings.dependency_timeout_seconds,
+        "server_settings": {"timezone": "UTC"},
+    }
+    mode = url.query.get("sslmode")
+    if mode is not None:
+        if mode not in {"disable", "require", "verify-ca", "verify-full"}:
+            raise ValueError("Use sslmode=verify-full (or require) for a hosted database")
+        if mode == "disable":
+            options["ssl"] = False
+        else:
+            root = url.query.get("sslrootcert")
+            if root is not None and not isinstance(root, str):
+                raise ValueError("Specify one SSL root certificate")
+            # Hosted connections always verify the CA and hostname, including 'require'.
+            options["ssl"] = ssl.create_default_context(cafile=root)
+    binding = url.query.get("channel_binding")
+    if binding not in {None, "disable", "prefer"}:
+        raise ValueError("asyncpg does not support channel_binding=require; use verified TLS")
+    url = url.difference_update_query(["sslmode", "sslrootcert", "channel_binding"])
+    return url, options
+
+
+def postgres_url(settings: Settings) -> str:
+    """libpq/psycopg needs its own driver while retaining provider SSL options."""
+    return (
+        make_url(settings.database_url.get_secret_value())
+        .set(drivername="postgresql")
+        .render_as_string(hide_password=False)
+    )
+
+
 def make_engine(settings: Settings) -> AsyncEngine:
+    url, options = connection_options(settings)
     return create_async_engine(
-        settings.database_url.get_secret_value(),
+        url,
         pool_pre_ping=True,
-        pool_size=5,
-        max_overflow=5,
-        connect_args={
-            "timeout": settings.dependency_timeout_seconds,
-            "server_settings": {"timezone": "UTC"},
-        },
+        pool_size=settings.database_pool_size,
+        max_overflow=settings.database_max_overflow,
+        connect_args=options,
     )
 
 
