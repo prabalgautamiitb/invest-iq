@@ -12,7 +12,8 @@
       "entrypoint": "app:app",
       "functions": {
         "app.py": {
-          "maxDuration": 120
+          "maxDuration": 120,
+          "includeFiles": "src/**"
         }
       }
     }
