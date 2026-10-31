@@ -1,0 +1,32 @@
+.public-nav-mobile{display:none}
+.public-nav .brand,.public-nav .toplinks>a{white-space:nowrap}
+@media(max-width:700px){
+  .public-nav{position:relative;z-index:30;display:flex;align-items:center;gap:12px;padding:16px 18px;min-height:76px}
+  .public-nav>.brand{margin-right:auto;font-size:clamp(20px,5.5vw,24px);flex-shrink:0;gap:9px}
+  .public-nav>.toplinks{display:none!important}
+  .public-nav-mobile{display:flex;align-items:center;gap:8px;flex-shrink:0}
+  .public-nav-menu{margin:0;padding:0;border:0}
+  .public-nav .public-nav-cta{min-height:42px;padding:10px 14px;font-size:12px;line-height:1.2;white-space:nowrap}
+  .public-nav-menu>summary{display:flex;align-items:center;justify-content:center;list-style:none;width:42px;height:42px;border:1px solid #304159;border-radius:50%;background:#142132;color:#dce8ed;cursor:pointer;touch-action:manipulation}
+  .public-nav-menu>summary::-webkit-details-marker{display:none}
+  .public-nav-menu>summary:focus-visible{outline:2px solid #63dfbc;outline-offset:4px}
+  .public-nav-hamburger{display:flex;width:20px;height:20px}
+  .public-nav-hamburger svg{width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round}
+  .public-nav-close{display:none}
+  .public-nav-menu[open] .public-nav-close{display:flex}
+  .public-nav-menu[open] .public-nav-hamburger{display:none}
+  .public-nav-menu[open]>summary{border-color:#4b9c8b;background:#1a3439;color:#7ee5c4}
+  .public-nav-dropdown{position:absolute;top:calc(100% - 2px);left:18px;right:18px;padding:20px 12px 12px;border:1px solid #304159;border-radius:18px;background:#101c2c;box-shadow:0 20px 40px #0006}
+  .public-nav-dropdown>.eyebrow{display:block;padding:0 12px 12px;font-size:10px}
+  .public-nav-dropdown>a{display:flex;align-items:center;gap:12px;min-height:50px;padding:12px;border-radius:10px;color:#e1eaf4;font-size:14px;font-weight:500}
+  .public-nav-dropdown>a>span:nth-child(2){flex:1}
+  .public-nav-dropdown>a>.icon:last-child{width:16px;color:#91a5b9}
+  .public-nav-dropdown>a:hover,.public-nav-dropdown>a:focus-visible{background:#213349}
+  .public-nav-dropdown>.public-nav-login{margin-top:8px;border-top:1px solid #304159;border-radius:0 0 10px 10px;color:#82e6c5}
+}
+@media(max-width:360px){
+  .public-nav{padding-inline:12px;gap:8px}
+  .public-nav>.brand{font-size:20px;gap:7px}
+  .public-nav .public-nav-cta{padding-inline:11px}
+  .public-nav-dropdown{left:12px;right:12px}
+}

@@ -43,7 +43,20 @@ function toast(message){const el=document.getElementById('toast');el.textContent
 const chart=()=>`<svg class="chart" viewBox="0 0 520 175" role="img" aria-label="Illustrative monthly performance: portfolio up 8.42 percent; benchmark up 4.20 percent"><defs><linearGradient id="chart-fill" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#37cfa1" stop-opacity=".2"/><stop offset="1" stop-color="#37cfa1" stop-opacity="0"/></linearGradient></defs><line x1="0" y1="30" x2="520" y2="30"/><line x1="0" y1="80" x2="520" y2="80"/><line x1="0" y1="130" x2="520" y2="130"/><path class="fill" d="M0 130 40 125 68 134 100 104 130 111 160 87 190 93 220 66 255 75 288 55 320 64 350 37 380 45 415 21 450 30 485 11 520 15V148H0Z"/><path class="bench" d="M0 132 50 127 100 123 150 110 200 115 250 100 300 90 350 85 400 77 460 68 520 58"/><path class="mainline" d="M0 130 40 125 68 134 100 104 130 111 160 87 190 93 220 66 255 75 288 55 320 64 350 37 380 45 415 21 450 30 485 11 520 15"/><text x="0" y="170">Oct 1</text><text x="230" y="170">Oct 15</text><text x="480" y="170">Oct 31</text></svg>`;
 const score=()=>Math.min(950,620+state.completed.length*35+state.tasks.length*12+(state.onboard?50:0));
 const gauge=()=>`<div class="gauge"><svg viewBox="0 0 180 144" role="img" aria-label="InvestIQ learning score ${score()} out of 1000"><path class="gtrack" d="M33 126 A74 74 0 1 1 147 126"/><path class="gvalue" d="M33 126 A74 74 0 1 1 147 126" pathLength="100" stroke-dasharray="${score()/10} 100"/></svg><div class="gtext"><div class="small">InvestIQ learning score</div><div class="num">${score()}</div><div class="small">OUT OF 1,000</div></div></div>`;
-function nav(){if(isAdminPortal)return `<nav class="mvp-authnav">${brand()}<span class="pill neutral">Administration</span></nav>`;return `<nav class="topnav">${brand()}<div class="toplinks"><a href="#/academy">Academy</a><a href="#/contests">Contests</a><a href="#/login">Log in</a>${link('Get started '+icon('arrow'),'signup')}</div></nav>`}
+function nav(){if(isAdminPortal)return `<nav class="mvp-authnav">${brand()}<span class="pill neutral">Administration</span></nav>`;return `<nav class="topnav public-nav" aria-label="Main navigation">${brand()}<div class="toplinks"><a href="#/academy">Academy</a><a href="#/contests">Contests</a><a href="#/login">Log in</a>${link('Get started '+icon('arrow'),'signup')}</div><div class="public-nav-mobile">${link('Get started','signup','primary public-nav-cta')}<details class="public-nav-menu"><summary aria-label="Navigation menu"><span class="public-nav-hamburger" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg></span><span class="public-nav-close">${icon('close')}</span></summary><div class="public-nav-dropdown"><span class="eyebrow">Explore InvestIQ</span><a href="#/contests">${icon('trophy')}<span>Explore contests</span>${icon('arrow')}</a><a href="#/academy">${icon('book')}<span>Academy</span>${icon('arrow')}</a><a href="#/login" class="public-nav-login">${icon('user')}<span>Log in</span>${icon('arrow')}</a></div></details></div></nav>`}
+// Native details keeps the compact navigation keyboard accessible.
+document.addEventListener('click',event=>{
+  const menu=app.querySelector('.public-nav-menu[open]');
+  if(menu&&!menu.contains(event.target))menu.open=false;
+});
+document.addEventListener('keydown',event=>{
+  if(event.key!=='Escape')return;
+  const menu=app.querySelector('.public-nav-menu[open]');
+  if(!menu)return;
+  const restoreFocus=menu.contains(document.activeElement);
+  menu.open=false;
+  if(restoreFocus)menu.querySelector('summary').focus();
+});
 const serverContests = createContestController({shell,pagehead:(...args)=>pagehead(...args),esc,money,link,icon,toast,render,current,getAccount:()=>account});
 const serverPortfolio = createPortfolioController({shell,icon,pagehead:(...args)=>pagehead(...args),esc,link,render,current,getAccount:()=>account});
 createMarketNews({root:app,esc});
