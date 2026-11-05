@@ -15,7 +15,7 @@ from sqlalchemy.pool import NullPool
 from investiq.core.config import Settings
 
 # Advance with each schema migration. Readiness rejects an incompatible database.
-SCHEMA_REVISION = "0015_subscriptions"
+SCHEMA_REVISION = "0016_virtual_wallet"
 
 
 def connection_options(settings: Settings) -> tuple[URL, dict[str, Any]]:

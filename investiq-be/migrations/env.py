@@ -16,6 +16,7 @@ from investiq.models import (  # noqa: F401 -- register domain metadata
     portfolio,
     rewards,
     valuation,
+    wallet,
 )
 
 

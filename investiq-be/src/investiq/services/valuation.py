@@ -45,6 +45,7 @@ from investiq.services.contest import ContestService, phase
 from investiq.services.market import decode_cursor, encode_cursor, fingerprint
 from investiq.services.market_ingestion import ensure_market_mode
 from investiq.services.market_sources import price_source
+from investiq.services.wallet import update_contest
 
 
 class ValuationService:
@@ -167,6 +168,14 @@ class ValuationService:
                 try:
                     async with db.begin_nested():
                         await self.value_day(db, c, run, day)
+                        await update_contest(
+                            db,
+                            c.id,
+                            self.clock(),
+                            run_id=run.id,
+                            session_date=day.session_date,
+                            final=day.session_date == sessions[-1].session_date,
+                        )
                 except AppError as exc:
                     run.status, run.error_code = "blocked", exc.code
                     await db.flush()

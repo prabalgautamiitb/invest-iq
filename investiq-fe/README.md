@@ -1,5 +1,10 @@
 # InvestIQ — complete frontend development source
 
+## Shared virtual wallet
+
+Accounts start with ₹10,00,000 in virtual funds. New contest entries reserve the frozen contest capital from available funds; daily valuations update invested value, and final results return it to the available balance. Cancellation and unsubmitted entries return principal. Existing memberships remain pre-wallet activity and do not change the wallet. Open `/#/wallet` for balances, active investments and recent transactions. See [wallet accounting, migration and rollout](../investiq-be/docs/WALLET.md).
+
+
 This is the complete **editable source project** for the current InvestIQ design, including every page, all interactions, UI refinement, and continuous background animation. It uses **vanilla JavaScript ES modules and Vite**, not React. There is no hidden source or minified bundle needed to customize the application.
 
 ## Daily AI Insights

@@ -33,7 +33,8 @@ test('admin publishes an InvestIQ contest and another learner joins, submits and
     await expect(learner.getByRole('heading',{name:'InvestIQ shared public challenge',exact:true})).toBeVisible();
     await verifiedAccount(learner,request,`platform-learner-${randomUUID()}@example.com`);
     await learner.goto('/#/contests/'+id);
-    await learner.getByRole('button',{name:'Join contest',exact:true}).click();
+    learner.once('dialog',d=>d.accept());
+    await learner.getByRole('button',{name:/Reserve .* join/}).click();
     await expect(learner).toHaveURL(/#\/my-contests$/);
     await learner.locator('.main').getByRole('link',{name:'Portfolio',exact:true}).click();
     await learner.getByRole('button',{name:'Use starter weights',exact:true}).click();

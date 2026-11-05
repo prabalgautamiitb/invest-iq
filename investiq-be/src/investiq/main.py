@@ -25,6 +25,7 @@ from investiq.api.news import router as news_router
 from investiq.api.portfolio import router as portfolio_router
 from investiq.api.rewards import router as rewards_router
 from investiq.api.valuation import router as valuation_router
+from investiq.api.wallet import router as wallet_router
 from investiq.core.config import Settings
 from investiq.core.errors import error_response, install_error_handlers
 from investiq.core.logging import configure_logging
@@ -153,4 +154,5 @@ def create_app(
     app.include_router(community_router, prefix="/api/v1")
     app.include_router(rewards_router, prefix="/api/v1")
     app.include_router(valuation_router, prefix="/api/v1")
+    app.include_router(wallet_router, prefix="/api/v1")
     return app

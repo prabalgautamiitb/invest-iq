@@ -55,6 +55,7 @@ from investiq.schemas.identity import (
     SubscriptionOut,
 )
 from investiq.services.profile_photo import normalize_photo
+from investiq.services.wallet import lock_wallet
 
 logger = logging.getLogger("investiq.identity")
 RATE_SCRIPT = """
@@ -282,6 +283,7 @@ class IdentityService:
                 db.add(user)
                 await db.flush()
                 db.add_all([Preferences(user_id=user.id), Privacy(user_id=user.id)])
+                await lock_wallet(db, user.id)
                 previous.revoked_at = now()
                 raw = await self._new_session(db, user)
                 verification = self._issue(db, user, "verification")

@@ -48,6 +48,7 @@ test('create, revise, publish, invite, accept and persist real contest membershi
   await page.getByRole('button',{name:'Create invitation',exact:true}).click();
   await expect(page.locator('article').filter({hasText:guestEmail})).toContainText('pending');
   await guest.goto('/#/my-contests');
+  guest.once('dialog',d=>d.accept());
   await guest.getByRole('button',{name:'Accept invitation',exact:true}).click();
   await expect(guest.getByText('Joined',{exact:true})).toBeVisible();
   await guest.reload();
@@ -55,7 +56,8 @@ test('create, revise, publish, invite, accept and persist real contest membershi
   await guest.getByRole('link',{name:'View contest',exact:true}).click();
   await expect(guest.getByText('You joined this contest.',{exact:true})).toBeVisible();
   await expect(guest.getByText('Current rank',{exact:true})).toHaveCount(0);
-  await page.getByRole('button',{name:'Join contest',exact:true}).click();
+  page.once('dialog',d=>d.accept());
+  await page.getByRole('button',{name:/Reserve .* join/}).click();
   await expect(page).toHaveURL(/#\/my-contests$/);
   await expect(page.getByText('Joined',{exact:true})).toBeVisible();
   await page.getByRole('button',{name:'Hosted contests',exact:true}).click();
@@ -128,7 +130,7 @@ test('explorer cards focus on discovery and public detail uses real standings',a
     items[0].joined=false;items[0].member_count=items[0].capacity;
     await page.reload();
     await expect(page.getByText('Contest full',{exact:true})).toBeVisible();
-    await expect(page.getByRole('button',{name:'Join contest',exact:true})).toHaveCount(0);
+    await expect(page.getByRole('button',{name:/Reserve .* join/})).toHaveCount(0);
     expect(errors).toEqual([]);
   } finally {await context.close();}
 });

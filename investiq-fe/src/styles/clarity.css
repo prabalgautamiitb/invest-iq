@@ -207,3 +207,12 @@
 .performance-change.is-loss{color:#f49caa}
 .performance-change.is-flat{color:#c0cede}
 .performance-change.is-unavailable{color:var(--muted);font-weight:400}
+
+/* Keep the cross-contest Home analysis concise; expand evidence when needed. */
+.home-habit-list{list-style:none;padding-left:0;font-size:12px;line-height:1.7}
+.home-habit-list>li{padding:12px 0;border-top:1px solid var(--line)}
+.home-habit-list>li+li{margin-top:0}
+.home-habit-list>li>p{margin:5px 0;color:var(--muted)}
+.home-habit-details{padding:0;border:0;margin-top:8px}
+.home-habit-details>summary{padding:0;color:#9edac9;font-size:11px}
+.home-habit-details p{font-size:12px;line-height:1.7;margin:10px 0}

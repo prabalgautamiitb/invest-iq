@@ -1,5 +1,10 @@
 # InvestIQ backend
 
+## Shared virtual wallet
+
+Accounts start with ₹10,00,000 in virtual funds. New contest entries reserve the frozen contest capital from available funds; daily valuations update invested value, and final results return it to the available balance. Cancellation and unsubmitted entries return principal. Existing memberships remain pre-wallet activity and do not change the wallet. Open `/#/wallet` for balances, active investments and recent transactions. See [wallet accounting, migration and rollout](docs/WALLET.md).
+
+
 Phases 0–10 are implemented: foundation, identity/onboarding, synthetic market data, contests, portfolio submissions and simulated performance. All backend source, infrastructure, migrations, tests, and documentation live here. Registration, login, verification/recovery, profiles, onboarding and settings now use the API. The portfolio catalogue/search/quotes also use the API; prices are explicitly synthetic. Contest discovery, creation, invitations, memberships and My Contests now use the API. Contest members can now save drafts, review server calculations and submit immutable portfolio versions. Valuation, benchmark comparisons, rankings, dashboard metrics and contest result finalization now use persisted snapshots. Courses, lessons, quizzes, XP, achievements and streaks now use persisted learning records. Virtual coin earnings, tiers, sandbox inventory/redemption, ledger and history now use the API. Community posts, replies, likes, private saves, polls, discoverable communities with members-only feeds and administrator moderation now use the API. Private performance-coach jobs/reports and decision journals now use the API, with local Ollama and an explicitly configured Gemini adapter.
 
 InvestIQ is simulation-only. Capital, cash and fees are virtual; Phase 6 calculates and finalizes contest results and rankings, with no real trades, payments, payouts or financial settlement.

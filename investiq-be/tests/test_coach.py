@@ -98,8 +98,8 @@ async def test_overview_uses_one_latest_result_per_contest_and_keeps_unchanged_v
     )
     async with api_client(app) as client:
         await verified(client, app.state.identity.mailer)
-        first, _, path, _ = await scenario(client)
-        second, _, _, _ = await scenario(client)
+        first, _, path, _ = await scenario(client, capital="500000")
+        second, _, _, _ = await scenario(client, capital="500000")
         clock[0] = FIRST
         await app.state.valuations.evaluate(UUID(first["id"]))
         await app.state.valuations.evaluate(UUID(second["id"]))

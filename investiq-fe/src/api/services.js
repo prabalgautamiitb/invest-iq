@@ -35,6 +35,8 @@ export const profileApi = {
   dashboard: () => request('/me/dashboard'),
 };
 
+export const walletApi = { get: () => request('/me/wallet') };
+
 export const portfolioApi = {
   instruments: (params = {}, signal) => request('/instruments?' + new URLSearchParams(params), { signal }),
   getDraft: contestId => request(`/contests/${id(contestId)}/portfolio/draft`),
@@ -81,6 +83,7 @@ export const insightsApi = {
 };
 
 export const performanceApi = {
+  portfolio: () => request('/me/portfolio'),
   leaderboard: (contestId, params = {}) => request(`/contests/${id(contestId)}/leaderboard?` + new URLSearchParams(params)),
   performance: (contestId, params = {}) => request(`/contests/${id(contestId)}/performance?` + new URLSearchParams(params)),
   dashboard: () => request('/me/dashboard'),

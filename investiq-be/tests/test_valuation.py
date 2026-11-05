@@ -31,7 +31,8 @@ FIRST = datetime(2026, 10, 15, 13, tzinfo=UTC)
 FINAL = datetime(2026, 10, 16, 13, tzinfo=UTC)
 
 
-async def scenario(client, private=False):
+async def scenario(client, private=False, capital="1000000"):
+    # Multiple simultaneous contests must fit within the shared virtual wallet.
     data = await payload(client)
     data.update(
         entry_opens_at="2026-10-14T12:40:00Z",
@@ -40,6 +41,7 @@ async def scenario(client, private=False):
         ends_at="2026-10-16T10:00:00Z",
         visibility="private" if private else "public",
     )
+    data["rules"]["capital"] = capital
     c = await create(client, data)
     await publish(client, c["id"])
     path = "/api/v1/contests/" + c["id"]

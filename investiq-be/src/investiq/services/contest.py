@@ -30,6 +30,7 @@ from investiq.models.market import (
     MarketExclusion,
     PriceSnapshot,
 )
+from investiq.models.wallet import VirtualWallet, WalletPosition
 from investiq.schemas.contest import (
     ContestInput,
     ContestOut,
@@ -48,6 +49,7 @@ from investiq.services.identity import IdentityService
 from investiq.services.market import decode_cursor, encode_cursor, fingerprint
 from investiq.services.market_ingestion import ensure_market_mode
 from investiq.services.market_sources import price_source
+from investiq.services.wallet import reserve, update_contest
 
 
 def phase(c: Contest, instant: datetime) -> Status:
@@ -333,6 +335,22 @@ class ContestService:
             member_count=count or 0,
             is_owner=bool(user and c.owner_id == user.id),
             joined=joined,
+            wallet_available=(
+                await db.scalar(
+                    select(VirtualWallet.available).where(VirtualWallet.user_id == user.id)
+                )
+            )
+            if user
+            else None,
+            wallet_backed=bool(
+                user
+                and joined
+                and await db.scalar(
+                    select(WalletPosition.membership_id)
+                    .join(ContestMembership, ContestMembership.id == WalletPosition.membership_id)
+                    .where(ContestMembership.contest_id == c.id, WalletPosition.user_id == user.id)
+                )
+            ),
             entry_opens_at=c.entry_opens_at,
             entry_closes_at=c.entry_closes_at,
             starts_at=c.starts_at,
@@ -589,6 +607,7 @@ class ContestService:
                         409, "invalid_transition", "Cancellation is allowed only before entry locks"
                     )
                 c.status = "cancelled"
+                await update_contest(db, c.id, self.clock(), cancelled=True)
                 self.audit(db, user, "contest_cancelled", c.id)
             await db.flush()
             return await self.output(db, c, user)
@@ -736,7 +755,10 @@ class ContestService:
         if count is not None and count >= c.capacity:
             raise AppError(409, "contest_full", "All contest seats are taken")
         rule = await self.rules(db, c)
-        db.add(ContestMembership(contest_id=c.id, user_id=user.id, rule_id=rule.id))
+        member = ContestMembership(contest_id=c.id, user_id=user.id, rule_id=rule.id)
+        db.add(member)
+        await db.flush()
+        await reserve(db, member, rule.capital)
         self.audit(db, user, "contest_joined", c.id)
         await db.flush()
 

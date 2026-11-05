@@ -1,4 +1,5 @@
-import { returnChart, comparisonBars, allocationChart, portfolioValueChart } from './charts.js';
+import { portfolioOverview } from './portfolio-overview.js';
+import { returnChart, comparisonBars, allocationChart } from './charts.js';
 import { contestTimeline } from './results-info.js';
 import { performanceApi, contestApi, coachApi } from '../api/services.js';
 import { marketApi } from '../api/market.js';
@@ -6,13 +7,12 @@ import { newsPlaceholder } from './market-news.js';
 import { homeContestCards } from './home-contests.js';
 
 export function createPerformanceController({shell,pagehead,esc,link,icon,render,current,getAccount}) {
-  let key='',generation=0,loaded=false,loading=false,error='',data=null,homeId='',pollTimer=null;
-  const homeRequests=new Map();
+  let key='',generation=0,loaded=false,loading=false,error='',data=null,pollTimer=null;
   function stop(){clearTimeout(pollTimer);pollTimer=null;}
   function poll(){
     stop();
-    if(kind()!=='dashboard'||!getAccount()||!data?.home)return;
-    const pending=data.home.jobs?.items?.some(j=>['queued','running','retry'].includes(j.status));
+    if(kind()!=='dashboard'||!getAccount()||!data)return;
+    const pending=Number(data.coachOverview?.pending_reports)>0;
     const expected=routeKey(),token=generation;
     pollTimer=setTimeout(()=>{if(token===generation&&expected===routeKey())load('',true);},pending?5000:60000);
   }
@@ -28,7 +28,7 @@ export function createPerformanceController({shell,pagehead,esc,link,icon,render
   const stamp=x=>new Date(x).toLocaleString('en-IN',{timeZone:'Asia/Kolkata',dateStyle:'medium',timeStyle:'short'})+' IST';
   const kind=()=>({home:'dashboard'}[current().split('/')[0]]||current().split('/')[0]);
   const contestId=()=>current().split('/')[1];
-  function reset(){stop();homeRequests.clear();key='';generation++;loaded=false;loading=false;error='';data=null;homeId='';}
+  function reset(){stop();key='';generation++;loaded=false;loading=false;error='';data=null;}
   function button(action,label,cursor=''){return `<button class="secondary" data-performance-action="${action}" data-cursor="${esc(cursor)}" ${loading?'disabled':''}>${label}</button>`;}
   async function load(more='',background=false) {
     stop();
@@ -38,20 +38,13 @@ export function createPerformanceController({shell,pagehead,esc,link,icon,render
     try {
       let result;
       if(page==='dashboard') {
-        if(more&&data?.home?.performance){
-          const earlier=await performanceApi.performance(data.home.id,{cursor:more});
-          result={...data,home:{...data.home,performance:{...data.home.performance,series:[...data.home.performance.series,...earlier.series],next_cursor:earlier.next_cursor}}};
-        }else{
-          result=await performanceApi.dashboard();
-          const selected=result.items.find(c=>c.contest_id===homeId)||result.items.filter(c=>c.total_value!==null&&c.status!=='cancelled').slice().sort((a,b)=>(b.session_date||'').localeCompare(a.session_date||''))[0]||result.items[0];
-          result.home={id:selected?.contest_id||'',performance:null,jobs:null,settings:null,chartError:'',coachError:'',generateError:''};
-          if(selected){
-            const [valuation,reports,settings]=await Promise.allSettled([performanceApi.performance(selected.contest_id),coachApi.jobs({contest_id:selected.contest_id}),coachApi.settings()]);
-            if(valuation.status==='fulfilled')result.home.performance=valuation.value;else result.home.chartError=valuation.reason.message||'Portfolio values could not be loaded.';
-            if(settings.status==='fulfilled')result.home.settings=settings.value;
-            if(reports.status==='fulfilled')result.home.jobs=reports.value;else result.home.coachError=reports.reason.message||'AI insights could not be loaded.';
-          }
-        }
+        const [dashboard,portfolio,insights]=await Promise.allSettled([performanceApi.dashboard(),performanceApi.portfolio(),coachApi.overview()]);
+        if(dashboard.status==='rejected')throw dashboard.reason;
+        result=dashboard.value;
+        result.portfolio=portfolio.status==='fulfilled'?portfolio.value:null;
+        result.portfolioError=portfolio.status==='rejected'?'Your overall portfolio value is temporarily unavailable. Please refresh results.':'';
+        result.coachOverview=insights.status==='fulfilled'?insights.value:null;
+        result.coachError=insights.status==='rejected'?'Your overall learning analysis could not be loaded. '+insights.reason.message:'';
       }
       else if(page==='contest-history') {
         result=await performanceApi.history(more?{cursor:more}:{});
@@ -74,7 +67,7 @@ export function createPerformanceController({shell,pagehead,esc,link,icon,render
         }
       }
       if(token!==generation || expected!==routeKey()) return;
-      data=result;if(page==='dashboard')homeId=result.home.id;loaded=true;
+      data=result;loaded=true;
     } catch(e) {if(token===generation&&expected===routeKey()){error=e.message;loaded=true;}}
     finally {if(token===generation&&expected===routeKey()){loading=false;if(!background||previous!==JSON.stringify(data)||previousError!==error)render();if(page==='dashboard')poll();}}
   }
@@ -98,16 +91,19 @@ export function createPerformanceController({shell,pagehead,esc,link,icon,render
   function contestCards(items,destination){return `<div class="contest-grid">${items.map(c=>`<article class="panel"><h2>${esc(c.name)}</h2><p>${esc(c.status==='settling'?'finalizing results':c.status)}</p>${link('View '+(destination==='leaderboard'?'leaderboard':'performance'),destination+'/'+(c.contest_id||c.id))}</article>`).join('')||'<section class="panel empty">No contests in this view.</section>'}</div>`;}
   function summaryCards(items){return `<div class="grid4">${items.map(([label,value])=>`<section class="panel stat"><p class="small">${label}</p><div class="num">${value}</div></section>`).join('')}</div>`;}
   function homeInsights(){
-    const h=data.home,p=h.performance;
-    const reports=(h.jobs?.items||[]).filter(j=>j.status==='succeeded'&&j.report);
-    const report=reports.find(j=>j.evidence.run_id===p?.metrics?.run_id)||reports[0];
-    const active=h.jobs?.items?.some(j=>['queued','running','retry'].includes(j.status));
-    const destination=h.id?'insights/'+h.id:'insights';
-    return `<section class="panel home-ai-insights" aria-label="AI guidance"><span class="eyebrow">Review and learn</span><h2>AI insights for you</h2>${h.coachError?`<p role="alert">${esc(h.coachError)}</p>${button('refresh','Retry AI insights')}`:report?`<p class="small">${esc(report.session_date)} · ${report.evidence.is_final?'Final':'Interim'} report${report.evidence.run_id!==p?.metrics?.run_id?' · Earlier snapshot':''}</p>${report.evidence.run_id!==p?.metrics?.run_id?'<p class="callout">This report covers an earlier valuation. Generate an updated report in AI Insights to review the latest results.</p>':''}<h3>Snapshot highlights</h3><ul class="home-insight-list">${report.report.focus.slice(0,2).map(f=>`<li>${esc(f.text)}</li>`).join('')}</ul>${report.report.review_points[0]?`<details class="page-details"><summary>One thing to review</summary><p>${esc(report.report.review_points[0].text)}</p></details>`:''}${report.report.learning_actions[0]?`<div class="home-learning-step"><strong>Your next learning step</strong><p>${esc(report.report.learning_actions[0].title)}</p>${link('Open suggested lesson','academy/'+report.report.learning_actions[0].lesson_id,'secondary')}</div>`:''}`:`<p>${active?'Your coach report is being prepared. Open AI Insights to follow its progress.':!h.id?'Join a contest and confirm a portfolio to start receiving guidance based on your results.':!p?.metrics?'Your personal insights become available after your first published portfolio valuation.':h.settings?.enabled===false?'Your performance summary and learning checks are available in AI Insights. AI-written reports are currently turned off.':'Get a coach report to identify what worked, what to review and a useful next lesson.'}</p>`}${h.generateError?`<p role="alert">${esc(h.generateError)}</p>`:''}<div class="home-ai-actions">${p?.metrics&&h.settings?.enabled&&getAccount()?.email_verified&&!active&&!reports.some(j=>j.evidence.run_id===p.metrics.run_id)?button('home-generate','Generate AI insights'):''}${link(report?'Read full AI report':active?'View report progress':'Open AI Insights',destination,'secondary')}</div><p class="small">Educational guidance from saved simulation results${p?.market_data_kind==='yahoo'?', using Yahoo daily market prices':', using synthetic prices'}.</p></section>`;
+    const overview=data.coachOverview;
+    if(data.coachError)return `<section class="panel home-ai-insights" aria-label="AI guidance"><h2>AI insights for you</h2><p role="alert">${esc(data.coachError)}</p>${button('refresh','Retry AI insights')}</section>`;
+    if(!overview?.valued_contests)return `<section class="panel home-ai-insights" aria-label="AI guidance"><span class="eyebrow">Your learning journey</span><h2>No performance insights yet</h2><p>${overview?.contest_count?'Your analysis will appear after your first confirmed portfolio receives a published valuation.':'Join a contest and confirm a portfolio to start receiving insights grounded in your performance.'}</p>${link('Explore contests','contests','secondary')}</section>`;
+    const points=(items,empty)=>items?.length?`<ul class="home-insight-list home-habit-list">${items.slice(0,2).map(point=>{
+      const brief=point.text.split(/(?<=[.!?])\s+/)[0];
+      return `<li>${point.title?`<strong>${esc(point.title)}</strong>`:''}<p>${esc(brief)}</p>${point.next_step||point.evidence_summary?`<details class="home-habit-details"><summary>What to try next</summary>${brief!==point.text?`<p>${esc(point.text)}</p>`:''}${point.next_step?`<p><strong>Try next:</strong> ${esc(point.next_step)}</p>`:''}<p>${esc(point.why_it_matters)}</p><p>${esc(point.evidence_summary)}</p>${point.assessment_basis?`<p>${esc(point.assessment_basis)}</p>`:''}</details>`:''}</li>`;
+    }).join('')}</ul>`:`<p class="small">${empty}</p>`;
+    return `<section class="panel home-ai-insights" aria-label="AI guidance"><span class="eyebrow">YOUR PERFORMANCE · ACROSS CONTESTS</span><h2>AI insights for you</h2><p class="small">${overview.valued_contests} ${overview.valued_contests===1?'contest with results':'contests with results'} · Latest close ${esc(overview.latest_session_date)}</p>${overview.learning_stage?`<h3>${esc(overview.learning_stage)}</h3>`:''}<p>${esc(overview.learning_summary||'Review your investing habits across all saved contest results.')}</p><h3>Strengths</h3>${points(overview.strengths,'More completed results will help identify habits to build on.')}<h3>Areas to improve</h3>${points(overview.improvements,'Keep reviewing your decisions as more results become available.')}${overview.pending_reports?`<p class="small" role="status">${overview.pending_reports} contest AI ${overview.pending_reports===1?'review is':'reviews are'} updating. These learning checks already use published results.</p>`:''}${data.portfolio?.legacy_contest_count?'<p class="small">Learning analysis includes your pre-wallet contest history; those results remain excluded from the portfolio balance above.</p>':''}<div class="home-ai-actions">${link('View complete analysis','insights','secondary')}</div><p class="small">Evidence-backed learning checks across your contest history. These observations do not establish real-world risk tolerance or investing skill.</p></section>`;
   }
   function homePortfolio(){
-    const h=data.home,p=h.performance,m=p?.metrics;
-    return `<section class="home-portfolio" aria-label="Your portfolio analysis"><div class="section-heading"><h2>Your portfolio</h2>${data.items.length?`<div class="home-contest-picker"><label for="home-portfolio-contest">Contest</label><select id="home-portfolio-contest" ${loading?'disabled':''}>${data.items.map(c=>`<option value="${esc(c.contest_id)}" ${c.contest_id===h.id?'selected':''}>${esc(c.name)}</option>`).join('')}</select></div>`:''}</div><p class="small">Value history and AI guidance follow the selected contest. ${data.joined_count>data.items.length?'Your recent memberships are listed here; open Performance to browse all contests.':''}</p><div class="home-analysis-grid"><div>${m?`<section class="panel home-portfolio-summary"><div><span class="small">Latest portfolio value</span><strong>${amount(m.total_value)}</strong></div><div><span class="small">Net return</span><strong>${percent(m.return_pct)}</strong></div><p class="small">Snapshot ${esc(m.session_date)} · ${p.is_final?'Final':p.is_current?'Current':'Earlier result · awaiting a newer valuation'}</p></section>`:''}${h.chartError?`<section class="panel" role="alert"><h2>Portfolio value over time</h2><p>${esc(h.chartError)}</p>${button('refresh','Retry portfolio chart')}</section>`:portfolioValueChart(p?.series||[])}${p?.next_cursor?button('home-more','Load earlier portfolio values',p.next_cursor):''}${h.id?link('Explore full performance','performance/'+h.id,'secondary'):link('Find a contest','contests','secondary')}</div>${homeInsights()}</div></section>`;
+    const overview=data.portfolio;
+    const portfolio=overview?portfolioOverview(overview,{esc,link,icon,amount,percent}):`<section class="panel" role="alert"><h2>Portfolio value unavailable</h2><p>${esc(data.portfolioError)}</p>${button('refresh','Retry portfolio summary')}</section>`;
+    return `<section class="home-portfolio" aria-label="Your portfolio analysis"><div class="section-heading"><h2>Your portfolio</h2></div><p class="small">Your capital, performance and investing habits at a glance.</p><div class="home-analysis-grid"><div>${portfolio}</div><div>${homeInsights()}</div></div></section>`;
   }
   function marketSummary(){
     if(data?.marketStatus?.mode!=='yahoo')return `<div class="market-context-grid">${newsPlaceholder('carousel')}</div>`;
@@ -141,17 +137,11 @@ export function createPerformanceController({shell,pagehead,esc,link,icon,render
     if(k==='contest-history'){const wait=pending();return shell('my-contests',`${pagehead('Your history','Completed contests','Finalized simulations and cancelled contests.')}${wait||contestTable(data.items)}${!wait&&data.next_cursor?button('more','Load more contests',data.next_cursor):''}${button('refresh','Refresh results')}`);}
     return performance();
   }
-  function change(el){if(el.id==='home-portfolio-contest'&&data?.items.some(c=>c.contest_id===el.value)){homeId=el.value;load();render();}}
-  async function click(buttonEl){if(buttonEl.disabled)return;
-    if(buttonEl.dataset.performanceAction==='home-generate'){
-      const h=data?.home;if(loading||!h?.performance?.metrics)return;
-      const expected=routeKey(),token=generation,requestId=JSON.stringify([getAccount()?.id,h.id,h.performance.metrics.run_id,h.settings?.provider,h.settings?.model]);
-      if(!homeRequests.has(requestId))homeRequests.set(requestId,crypto.randomUUID());
-      loading=true;h.generateError='';render();
-      try{await coachApi.create(h.id,homeRequests.get(requestId));if(token!==generation||expected!==routeKey())return;homeRequests.delete(requestId);await load();}
-      catch(e){if(token===generation&&expected===routeKey()){h.generateError=e.message;loading=false;render();}}
-      return;
-    }
-    if(buttonEl.dataset.performanceAction==='home-more'){load(buttonEl.dataset.cursor);return;}if(buttonEl.dataset.performanceAction==='more')load(buttonEl.dataset.cursor);else if(kind()==='dashboard'){load();render();}else{reset();render();}}
-  return {page,ensure,reset,click,change,deactivate:()=>{stop();if(loading)reset();}};
+  async function click(buttonEl){
+    if(buttonEl.disabled)return;
+    if(buttonEl.dataset.performanceAction==='more')load(buttonEl.dataset.cursor);
+    else if(kind()==='dashboard'){document.dispatchEvent(new CustomEvent('investiq:wallet-changed'));load();render();}
+    else{reset();render();}
+  }
+  return {page,ensure,reset,click,deactivate:()=>{stop();if(loading)reset();}};
 }

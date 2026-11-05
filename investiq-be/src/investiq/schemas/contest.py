@@ -112,6 +112,8 @@ class ContestOut(BaseModel):
     member_count: int
     is_owner: bool
     joined: bool
+    wallet_backed: bool = False
+    wallet_available: Decimal | None = None
     entry_opens_at: datetime
     entry_closes_at: datetime
     starts_at: datetime
